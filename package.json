@@ -1,0 +1,9 @@
+{
+  "name": "aljesat-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "baileys-pro": "^6.8.6",
+    "pino": "^8.21.0"
+  }
+}
