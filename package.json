@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "baileys-pro": "^6.8.6",
+    "@whiskeysockets/baileys": "^6.7.18",
+    "@qadeerxtech/qadeer-btns": "^1.0.2",
     "pino": "^8.21.0"
   }
 }
