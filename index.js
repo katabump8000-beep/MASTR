@@ -47,6 +47,24 @@ console.error = (...args) => { if (logGuard.canLog()) _originalError(...args); }
 console.warn = (...args) => { if (logGuard.canLog()) _originalWarn(...args); };
 
 // ============================================================
+// ⭐ تحميل MessageBuilder (AIRich, Button, ButtonV2, Carousel)
+// ============================================================
+
+(async () => {
+    try {
+        const messageBuilder = await import("./MessageBuilder.js");
+        global.AIRich = messageBuilder.AIRich;
+        global.Button = messageBuilder.Button;
+        global.ButtonV2 = messageBuilder.ButtonV2;
+        global.Carousel = messageBuilder.Carousel;
+        _originalLog("✅ تم تحميل MessageBuilder بنجاح (AIRich متاح)");
+    } catch (e) {
+        _originalError("⚠️ فشل تحميل MessageBuilder:", e.message);
+        _originalError("⚠️ AIRich لن يكون متاحاً");
+    }
+})();
+
+// ============================================================
 // Core
 // ============================================================
 
@@ -82,6 +100,12 @@ const {
 } = require("./mzad");
 const { activeColors, handleColorsCommand } = require("./colors");
 const { activeAnimals, handleAnimalsCommand } = require("./animals");
+const {
+    activeDinoGames,
+    handleDinoCommand,
+    finalizeDino,
+    receiveDinoResult
+} = require("./dino");
 
 // ============================================================
 // Runtime
@@ -398,6 +422,9 @@ function getGamesDetailed() {
         for (const jid of Object.keys(activeMazads || {})) {
             checkGame(jid, activeMazads[jid], "مزاد", 35 * 60 * 1000);
         }
+        for (const jid of Object.keys(activeDinoGames || {})) {
+            checkGame(jid, activeDinoGames[jid], "طائر", 15 * 60 * 1000);
+        }
     } catch {}
 
     return details;
@@ -433,6 +460,9 @@ function getStuckGamesInGroup() {
         for (const jid of Object.keys(activeMazads || {})) {
             check(jid, activeMazads[jid], "مزاد", 35 * 60 * 1000);
         }
+        for (const jid of Object.keys(activeDinoGames || {})) {
+            check(jid, activeDinoGames[jid], "طائر", 15 * 60 * 1000);
+        }
     } catch {}
 
     return stuck;
@@ -447,6 +477,8 @@ function stopSingleGame(entry) {
         } else if (name === "روليت") {
             try { game?.stopGame?.(); } catch {}
             delete activeCasinos[jid];
+        } else if (name === "طائر") {
+            try { delete activeDinoGames[jid]; } catch {}
         } else {
             try { game?.stopGame?.(); } catch {}
             delete activeGames[jid];
@@ -515,6 +547,7 @@ async function handleRestCommand(sock, jid, msg, db) {
             if (activeSaraha[jid]) { activeSaraha[jid]?.stopGame?.(); delete activeSaraha[jid]; stoppedCount++; }
             if (activeCasinos[jid]) { activeCasinos[jid]?.stopGame?.(); delete activeCasinos[jid]; stoppedCount++; }
             if (activeMazads[jid]) { activeMazads[jid]?.stopMazad?.(); delete activeMazads[jid]; stoppedCount++; }
+            if (activeDinoGames[jid]) { delete activeDinoGames[jid]; stoppedCount++; }
         } catch {}
     } else {
         for (const entry of stuck) {
@@ -648,11 +681,53 @@ function createHandlers() {
                         const owner = isOwner(cleanSender, sock, msg);
 
                         // ============================================
+                        // ⭐ معالجة زر "سحب" من لعبة Dino
+                        // ============================================
+                        const btnResponse = msg.message?.buttonsResponseMessage;
+                        if (btnResponse) {
+                            const buttonId = String(btnResponse.selectedButtonId || "");
+
+                            // زر سحب dino
+                            if (buttonId.startsWith("dino_withdraw_")) {
+                                try {
+                                    // نستخرج النتيجة من الـ buttonId
+                                    // الصيغة: dino_withdraw_SCORE_500_EARN_5
+                                    const parts = buttonId.split("_");
+                                    const scoreIdx = parts.indexOf("SCORE");
+                                    const earnIdx = parts.indexOf("EARN");
+
+                                    if (scoreIdx !== -1 && earnIdx !== -1) {
+                                        const score = parseInt(parts[scoreIdx + 1], 10) || 0;
+                                        const earn = parseInt(parts[earnIdx + 1], 10) || 0;
+
+                                        receiveDinoResult(jid, score, earn);
+                                        await finalizeDino(sock, jid, db, saveDb, score, earn);
+
+                                        _originalLog(`✅ Dino withdraw: score=${score}, earn=${earn}`);
+                                    }
+                                } catch (e) {
+                                    _originalError("Dino withdraw error:", e?.message);
+                                }
+                                continue;
+                            }
+                        }
+
+                        // ============================================
                         // 🎮 معالجة اختيار الفعالية من List Message
                         // ============================================
                         const listResponse = msg.message?.listResponseMessage;
                         if (listResponse) {
                             const selectedRowId = String(listResponse.singleSelectReply?.selectedRowId || "");
+
+                            // ⭐ زر بدء Dino من القائمة
+                            if (selectedRowId.startsWith("dino_start_")) {
+                                try {
+                                    await handleDinoCommand(sock, jid, msg, db, saveDb, cleanSender, owner);
+                                } catch (e) {
+                                    _originalError("Dino start error:", e?.message);
+                                }
+                                continue;
+                            }
 
                             // البحث عن الكلمة المفتاحية داخل الـ rowId
                             let matchedCmd = null;
@@ -669,7 +744,8 @@ function createHandlers() {
                                 { keyword: "إيموجي", cmd: "ايموجي" },
                                 { keyword: "ايموجي", cmd: "ايموجي" },
                                 { keyword: "روليت", cmd: "روليت" },
-                                { keyword: "كريستال", cmd: "كريستال" }
+                                { keyword: "كريستال", cmd: "كريستال" },
+                                { keyword: "طائر", cmd: "طائر" } // ⭐ جديد
                             ];
 
                             for (const item of gameKeywords) {
@@ -714,6 +790,16 @@ function createHandlers() {
                                     await sock.sendMessage(jid, {
                                         text: "*❉▬▬▬▬🎰▬▬▬▬❉*\n رجاءا اكتب امر: \n*كريستال 00*\nضع عدد الرهان بدلا من 00\nمثال:  `.كريستال 50`\n*✥▬▬▬▬🎰▬▬▬▬✥*"
                                     }, { quoted: msg }).catch(() => {});
+                                    continue;
+                                }
+
+                                // ⭐ تشغيل Dino مباشرة
+                                if (cmd === "طائر") {
+                                    try {
+                                        await handleDinoCommand(sock, jid, msg, db, saveDb, cleanSender, owner);
+                                    } catch (e) {
+                                        _originalError("Dino start (from menu) error:", e?.message);
+                                    }
                                     continue;
                                 }
 
@@ -833,6 +919,11 @@ function createHandlers() {
                             if (await handleAnimalsCommand(sock, jid, msg, db, saveDb, cleanSender, owner)) continue;
                         }
 
+                        // ⭐ طائر / Dino
+                        if (text === ".طائر" || text === ".dino") {
+                            if (await handleDinoCommand(sock, jid, msg, db, saveDb, cleanSender, owner)) continue;
+                        }
+
                         await handleCommand(sock, jid, msg, {
                             db,
                             sender,
@@ -874,6 +965,9 @@ async function main() {
         _originalLog("╔════════════════════════════════════╗");
         _originalLog("║        🤖 ALJESAT BOT START       ║");
         _originalLog("╚════════════════════════════════════╝");
+
+        // انتظار تحميل MessageBuilder قبل البدء
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
         configureHandlers(createHandlers());
         const sock = await startBot();
