@@ -8,7 +8,10 @@
   "dependencies": {
     "baileys": "^6.7.18",
     "@hapi/boom": "^10.0.1",
-    "@qadeerxtech/qadeer-btns": "^1.0.0",
-    "pino": "^8.21.0"
+    "jimp": "^0.22.12",
+    "pino": "^8.21.0",
+    "file-type": "^17.1.1",
+    "node-webpmux": "^3.2.1",
+    "fluent-ffmpeg": "^2.1.3"
   }
 }
