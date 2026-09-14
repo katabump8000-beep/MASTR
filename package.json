@@ -8,7 +8,7 @@
   "dependencies": {
     "baileys": "^6.7.18",
     "@hapi/boom": "^10.0.1",
-    "jimp": "^0.22.12",
+    "jimp": "^1.6.0", 
     "pino": "^8.21.0",
     "file-type": "^17.1.1",
     "node-webpmux": "^3.2.1",
