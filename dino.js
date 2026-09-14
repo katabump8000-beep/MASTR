@@ -1,25 +1,16 @@
 // ============================================================
 // dino.js
 // ALJESAT BOT
-// لعبة Dino Runner (الطائر) - مع AIRich وأزرار HTML
+// لعبة الطائر - Dino Runner
 // المطور: الجيسي
 // ============================================================
 
 "use strict";
 
-// ============================================================
-// الحالة النشطة للعبة
-// ============================================================
-
 const activeDinoGames = Object.create(null);
 
-// كولداون اللعبة: 5 دقائق لكل مجموعة
 const DINO_COOLDOWN = 5 * 60 * 1000;
-
-// حد الربح الأقصى
 const MAX_EARN = 1000;
-
-// كل 100 نقطة = 1 رصيد
 const SCORE_PER_COIN = 100;
 
 // ============================================================
@@ -256,35 +247,26 @@ function jump(){
   if(dino.grounded){dino.vy=-12;dino.grounded=false}
 }
 
-function finalizeResult(){
-  if(finalized)return false;
-  finalized=true;
+function sendWithdraw(){
+  if(!started){statusEl.textContent='⚠️ ابدأ اللعب أولاً';return}
+  if(finalized){statusEl.textContent='✅ تم إرسال النتيجة بالفعل';return}
+
   score=Math.floor(distance/10);
   earn=Math.floor(score/SCORE_PER_COIN);
   if(earn>MAX_EARN)earn=MAX_EARN;
   scoreEl.textContent=score;earnEl.textContent=earn;
-  return {score:score,earn:earn};
-}
-
-// ⭐ إرسال النتيجة للبوت عبر location.href (يفتح واتساب)
-function sendResultToBot(){
-  const result=finalizeResult();
-  if(!result)return;
-  statusEl.textContent='✅ تم إرسال النتيجة';
+  finalized=true;
   gameOver=true;
+  statusEl.textContent='✅ تم إرسال النتيجة للبوت';
 
-  // الصيغة: DINO_WITHDRAW_SCORE_500_EARN_5
-  const payload='DINO_WITHDRAW_SCORE_'+result.score+'_EARN_'+result.earn;
-  const encoded=encodeURIComponent(payload);
-
-  // نحاول إرسال النتيجة عبر location.href (يفتح واتساب مع النص)
+  // نستخدم Web Share API لإرسال النتيجة للبوت
+  const payload='dino_withdraw_SCORE_'+score+'_EARN_'+earn;
   try{
     if(navigator.share){
-      navigator.share({title:'dino_result',text:payload}).catch(()=>{
-        try{window.location.href='https://wa.me/?text='+encoded}catch(e){}
-      });
-    }else{
-      try{window.location.href='https://wa.me/?text='+encoded}catch(e){}
+      navigator.share({title:'dino_result',text:payload}).catch(()=>{});
+    } else {
+      // fallback: نفتح واتساب
+      try{window.location.href='whatsapp://send?text='+encodeURIComponent(payload)}catch(e){}
     }
   }catch(err){}
 }
@@ -292,8 +274,8 @@ function sendResultToBot(){
 jumpBtn.addEventListener('click',e=>{e.preventDefault();jump()});
 jumpBtn.addEventListener('touchstart',e=>{e.preventDefault();jump()},{passive:false});
 
-withdrawBtn.addEventListener('click',e=>{e.preventDefault();sendResultToBot()});
-withdrawBtn.addEventListener('touchstart',e=>{e.preventDefault();sendResultToBot()},{passive:false});
+withdrawBtn.addEventListener('click',e=>{e.preventDefault();sendWithdraw()});
+withdrawBtn.addEventListener('touchstart',e=>{e.preventDefault();sendWithdraw()},{passive:false});
 
 window.addEventListener('keydown',e=>{
   if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump()}
@@ -313,7 +295,7 @@ async function sendDinoEndForm(sock, db, jid, playerNumber, nickname, score, ear
     const adMessage = `_*█ إنــتــهــت█*_
 
 ◇🎮 نـــــــوع الفعالية:
-*{Dino Runner - طائر}*
+*{الطائر - Dino Runner}*
 
 ◇🪎 آلَــــجَــــآئـزَة:
 *{ ${earn}$ }*
@@ -355,7 +337,7 @@ async function handleDinoCommand(sock, jid, msg, db, saveDb, cleanSender, isBotO
         }
         // لعبة نشطة
         if (activeDinoGames[jid]) {
-            await safeSend(sock, jid, { text: "⚠️ هناك لعبة Dino نشطة بالفعل." }, { quoted: msg });
+            await safeSend(sock, jid, { text: "⚠️ هناك لعبة طائر نشطة بالفعل." }, { quoted: msg });
             return false;
         }
         // كولداون
@@ -378,7 +360,6 @@ async function handleDinoCommand(sock, jid, msg, db, saveDb, cleanSender, isBotO
             startedAt: startDate,
             sender: cleanSender,
             senderNickname: nickname,
-            stopped: false,
             finalized: false,
             lastActivity: Date.now()
         };
@@ -386,7 +367,7 @@ async function handleDinoCommand(sock, jid, msg, db, saveDb, cleanSender, isBotO
         const html = buildDinoHTML();
 
         // إرسال الواجهة عبر AIRich
-        if (!global.AIRich) {
+        if (typeof global.AIRich !== "function") {
             await safeSend(sock, jid, {
                 text: "❌ AIRich غير متاح. تأكد من تحميل MessageBuilder.js"
             }, { quoted: msg });
@@ -413,7 +394,7 @@ async function handleDinoCommand(sock, jid, msg, db, saveDb, cleanSender, isBotO
             return false;
         }
 
-        // تنظيف تلقائي بعد 15 دقيقة إذا لم يصل رد
+        // تنظيف تلقائي بعد 15 دقيقة
         setTimeout(() => {
             if (activeDinoGames[jid] && !activeDinoGames[jid].finalized) {
                 console.log(`[DINO] ⏰ انتهت مهلة اللعبة في ${jid}`);

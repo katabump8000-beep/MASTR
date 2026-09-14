@@ -30,27 +30,50 @@ let globalGameBlockUntil = 0;
 const pendingGamesMenu = global.pendingGamesMenu || (global.pendingGamesMenu = Object.create(null));
 
 // ============================================================
-// 🎮 تحويل النصوص الكاملة إلى أوامر فعاليات
+// 🎮 خريطة الفعاليات: النص الكامل → الأمر
 // ============================================================
-function normalizeGameCommand(text) {
+
+const GAME_TEXT_MAP = [
+    { pattern: /تفكـ?🧩ـــ?يك[\s\S]*?لعبة تفكيك الكلمات/, cmd: "تفكيك" },
+    { pattern: /كــ?تــ?✍️ــ?ابـ?ة[\s\S]*?لعبة كتابة الكلمة/, cmd: "كتابة" },
+    { pattern: /صــ?🫣ــ?راحة[\s\S]*?لعبة الصراحة/, cmd: "صراحة" },
+    { pattern: /إيمـــ?😀ــ?وجي[\s\S]*?لعبة الإيموجي/, cmd: "ايموجي" },
+    { pattern: /ايمـــ?😀ــ?وجي[\s\S]*?لعبة الإيموجي/, cmd: "ايموجي" },
+    { pattern: /الـ?حـ?🦊ـ?يوانات[\s\S]*?لعبة الحيوانات/, cmd: "الحيوانات" },
+    { pattern: /أعـــ?🚩ــ?لام[\s\S]*?لعبة الأعلام/, cmd: "اعلام" },
+    { pattern: /اعـــ?🚩ــ?لام[\s\S]*?لعبة الاعلام/, cmd: "اعلام" },
+    { pattern: /ألـــ?🎨ـــ?وان[\s\S]*?لعبة الألوان/, cmd: "الوان" },
+    { pattern: /روليت[\s\S]*?لعبة الروليت/, cmd: "روليت" },
+    { pattern: /كريستال[\s\S]*?لعبة الكريستال/, cmd: "كريستال" }
+];
+
+// كلمات مفتاحية بسيطة (للاحتياط)
+const GAME_KEYWORDS = [
+    { keywords: ["تفكيك"], cmd: "تفكيك" },
+    { keywords: ["كتابة"], cmd: "كتابة" },
+    { keywords: ["صراحة"], cmd: "صراحة" },
+    { keywords: ["إيموجي", "ايموجي"], cmd: "ايموجي" },
+    { keywords: ["الحيوانات", "حيوانات"], cmd: "الحيوانات" },
+    { keywords: ["أعلام", "اعلام"], cmd: "اعلام" },
+    { keywords: ["ألوان", "الوان"], cmd: "الوان" },
+    { keywords: ["روليت"], cmd: "روليت" },
+    { keywords: ["كريستال"], cmd: "كريستال" }
+];
+
+function detectGameFromText(text) {
     if (!text) return null;
+    const str = String(text).trim();
 
-    const cleanText = String(text).trim();
+    // 1. محاولة النص الكامل
+    for (const item of GAME_TEXT_MAP) {
+        if (item.pattern.test(str)) return item.cmd;
+    }
 
-    const gameMap = [
-        { pattern: /روليت/, cmd: "روليت" },
-        { pattern: /إيمـــ?😀ــوجي|ايمـــ?😀ــوجي|إيموجي|ايموجي/, cmd: "ايموجي" },
-        { pattern: /أعـــ?🚩ــلام|اعـــ?🚩ــلام|أعلام|اعلام/, cmd: "اعلام" },
-        { pattern: /صــ?🫣ــراحة|صراحة/, cmd: "صراحة" },
-        { pattern: /تفكـ?🧩ـــ?يك|تفكيك/, cmd: "تفكيك" },
-        { pattern: /الـ?حـ?🦊ـ?يوانات|الحيوانات/, cmd: "الحيوانات" },
-        { pattern: /ألـــ?🎨ـــ?وان|الوان/, cmd: "الوان" },
-        { pattern: /كــ?تــ?✍️ــ?ابـ?ة|كتابة/, cmd: "كتابة" },
-        { pattern: /كريستال/, cmd: "كريستال" }
-    ];
-
-    for (const item of gameMap) {
-        if (item.pattern.test(cleanText)) return item.cmd;
+    // 2. كلمات مفتاحية بسيطة
+    for (const item of GAME_KEYWORDS) {
+        for (const kw of item.keywords) {
+            if (str.includes(kw)) return item.cmd;
+        }
     }
 
     return null;
@@ -719,19 +742,13 @@ async function handleCommand(sock, jid, msg, context = {}) {
     const db = context.db || getDb();
     const text = context.text || getMessageText(msg);
 
-    // ⭐ تحويل النصوص الكاملة إلى أوامر فعاليات
+    // ⭐ إذا كانت الرسالة نصاً كاملاً لفعالية → حوّلها إلى أمر
     let effectiveText = text;
-    const gameCmd = normalizeGameCommand(text);
 
-    if (gameCmd) {
-        if (!text.startsWith(".")) {
-            effectiveText = "." + gameCmd;
-        } else {
-            const withoutDot = text.slice(1).trim();
-            const innerCmd = normalizeGameCommand(withoutDot);
-            if (innerCmd && innerCmd !== withoutDot) {
-                effectiveText = "." + innerCmd;
-            }
+    if (!text.startsWith(".")) {
+        const detectedCmd = detectGameFromText(text);
+        if (detectedCmd) {
+            effectiveText = "." + detectedCmd;
         }
     }
 
@@ -850,5 +867,5 @@ module.exports = {
     findUserByNicknameForFriend,
     isSimilarNickname,
     getNormalizedCommand,
-    normalizeGameCommand
+    detectGameFromText
 };

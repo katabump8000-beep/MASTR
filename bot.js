@@ -11,7 +11,7 @@ const {
     useMultiFileAuthState,
     DisconnectReason,
     fetchLatestBaileysVersion
-} = require("@whiskeysockets/baileys");
+} = require("baileys-pro");
 
 const fs = require("fs");
 const path = require("path");
