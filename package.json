@@ -2,11 +2,8 @@
   "name": "aljesat-bot",
   "version": "1.0.0",
   "main": "index.js",
-  "engines": {
-    "node": "20.x"
-  },
   "dependencies": {
-    "baileys-pro": "github:itsukichan/baileys-pro",
+    "baileys-pro": "^6.8.6",
     "pino": "^8.21.0"
   }
 }
