@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "engines": {
-    "node": ">=18.0.0 <22.0.0"
+    "node": "20.x"
   },
   "dependencies": {
-    "baileys-pro": "^6.8.6",
+    "baileys-pro": "github:itsukichan/baileys-pro",
     "pino": "^8.21.0"
   }
 }
