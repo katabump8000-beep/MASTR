@@ -11,7 +11,7 @@ const {
     useMultiFileAuthState,
     DisconnectReason,
     fetchLatestBaileysVersion
-} = require("@renz/baileys");
+} = require("@yudzxml/baileys");
 
 const fs = require("fs");
 const path = require("path");
@@ -437,7 +437,6 @@ function registerEvents(sock, saveCreds) {
                 clearReconnectTimer();
                 isReconnecting = false;
 
-                // ✅ رسالة نجاح الاتصال بالتنسيق المطلوب
                 console.log("");
                 console.log("◆━─━─━─⊱✅⊰─━─━─━◆");
                 console.log("           نجح الاتصال");
@@ -570,7 +569,7 @@ async function createSocket() {
             const latest = await fetchLatestBaileysVersion();
             version = latest?.version;
         } catch (error) {
-            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير، سيتم استخدام الإعداد الافتراضي.");
+            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير.");
             version = undefined;
         }
 
@@ -592,7 +591,6 @@ async function createSocket() {
         const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
 
         if (!sock.authState.creds.registered && pairingNumber) {
-            // ❆ رسالة البدء
             console.log("");
             console.log("❆━━━━━══━━━━━❆");
             console.log("جار تجهيز كود الاقتران....");
@@ -607,7 +605,6 @@ async function createSocket() {
                     let code = await sock.requestPairingCode(formattedNumber);
                     code = code?.match(/.{1,4}/g)?.join("-") || code;
 
-                    // 🔑 رسالة الكود بالتنسيق المطلوب
                     console.log("");
                     console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
                     console.log(` الكود:     ┊${code}┊`);
