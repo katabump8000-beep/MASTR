@@ -37,6 +37,7 @@ let reconnectAttempts = 0;
 let shuttingDown = false;
 let startPromise = null;
 let isReconnecting = false;
+let pairingCodeRequested = false;
 
 // ============================================================
 // Handlers
@@ -432,10 +433,55 @@ function registerEvents(sock, saveCreds) {
         try {
             const { connection, lastDisconnect } = update || {};
 
+            // ================================================
+            // 🔑 طلب كود الاقتران عند connecting
+            // ================================================
+            if (connection === "connecting" && !pairingCodeRequested) {
+                if (!sock.authState?.creds?.registered) {
+                    const owners = getOwnerNumbers();
+                    const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
+
+                    if (pairingNumber) {
+                        pairingCodeRequested = true;
+
+                        console.log("");
+                        console.log("❆━━━━━══━━━━━❆");
+                        console.log("جار تجهيز كود الاقتران....");
+                        console.log("❆━━━━━══━━━━━❆");
+                        console.log("");
+
+                        // مهلة صغيرة لضمان استقرار الاتصال
+                        setTimeout(async () => {
+                            try {
+                                if (!currentSocket || currentSocket !== sock) return;
+
+                                const formattedNumber = String(pairingNumber).replace(/[^0-9]/g, "");
+                                let code = await sock.requestPairingCode(formattedNumber);
+                                code = code?.match(/.{1,4}/g)?.join("-") || code;
+
+                                console.log("");
+                                console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
+                                console.log(` الكود:     ┊${code}┊`);
+                                console.log("◆━─━─━─⊱🔑⊰─━━─━◆");
+                                console.log("");
+
+                            } catch (error) {
+                                console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
+                                pairingCodeRequested = false;
+                            }
+                        }, 3000);
+                    }
+                }
+            }
+
+            // ================================================
+            // ✅ نجح الاتصال
+            // ================================================
             if (connection === "open") {
                 reconnectAttempts = 0;
                 clearReconnectTimer();
                 isReconnecting = false;
+                pairingCodeRequested = false;
 
                 console.log("");
                 console.log("◆━─━─━─⊱✅⊰─━─━─━◆");
@@ -476,6 +522,7 @@ function registerEvents(sock, saveCreds) {
                 console.warn(`⚠️ انقطع الاتصال. إعادة المحاولة بعد ${Math.ceil(delay / 1000)} ثانية...`);
 
                 clearReconnectTimer();
+                pairingCodeRequested = false;
 
                 reconnectTimer = setTimeout(async () => {
                     reconnectTimer = null;
@@ -586,36 +633,6 @@ async function createSocket() {
         }
 
         const sock = makeWASocket(socketOptions);
-
-        const owners = getOwnerNumbers();
-        const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
-
-        if (!sock.authState.creds.registered && pairingNumber) {
-            console.log("");
-            console.log("❆━━━━━══━━━━━❆");
-            console.log("جار تجهيز كود الاقتران....");
-            console.log("❆━━━━━══━━━━━❆");
-            console.log("");
-
-            setTimeout(async () => {
-                try {
-                    if (!currentSocket || currentSocket !== sock) return;
-
-                    const formattedNumber = String(pairingNumber).replace(/[^0-9]/g, "");
-                    let code = await sock.requestPairingCode(formattedNumber);
-                    code = code?.match(/.{1,4}/g)?.join("-") || code;
-
-                    console.log("");
-                    console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
-                    console.log(` الكود:     ┊${code}┊`);
-                    console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
-                    console.log("");
-
-                } catch (error) {
-                    console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
-                }
-            }, 5000);
-        }
 
         registerEvents(sock, saveCreds);
 
