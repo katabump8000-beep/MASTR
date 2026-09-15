@@ -25,6 +25,9 @@ const {
     activeMazads, checkMazadActive, handleMazadCommand, handleMazadBid,
     handleMazadInventory, handleMazadSend, handleMazadCancelSend
 } = require("./mzad");
+const {
+    activeDino, handleDinoCommand, stopDinoGame, checkDinoActive
+} = require("./dino");
 
 let globalGameBlockUntil = 0;
 const pendingGamesMenu = global.pendingGamesMenu || (global.pendingGamesMenu = Object.create(null));
@@ -44,10 +47,11 @@ const GAME_TEXT_MAP = [
     { pattern: /اعـــ?🚩ــ?لام[\s\S]*?لعبة الاعلام/, cmd: "اعلام" },
     { pattern: /ألـــ?🎨ـــ?وان[\s\S]*?لعبة الألوان/, cmd: "الوان" },
     { pattern: /روليت[\s\S]*?لعبة الروليت/, cmd: "روليت" },
-    { pattern: /كريستال[\s\S]*?لعبة الكريستال/, cmd: "كريستال" }
+    { pattern: /كريستال[\s\S]*?لعبة الكريستال/, cmd: "كريستال" },
+    { pattern: /طائر[\s\S]*?Dino Runner/, cmd: "طائر" },
+    { pattern: /Dino[\s\S]*?Runner/, cmd: "طائر" }
 ];
 
-// كلمات مفتاحية بسيطة (للاحتياط)
 const GAME_KEYWORDS = [
     { keywords: ["تفكيك"], cmd: "تفكيك" },
     { keywords: ["كتابة"], cmd: "كتابة" },
@@ -57,19 +61,18 @@ const GAME_KEYWORDS = [
     { keywords: ["أعلام", "اعلام"], cmd: "اعلام" },
     { keywords: ["ألوان", "الوان"], cmd: "الوان" },
     { keywords: ["روليت"], cmd: "روليت" },
-    { keywords: ["كريستال"], cmd: "كريستال" }
+    { keywords: ["كريستال"], cmd: "كريستال" },
+    { keywords: ["طائر", "dino", "Dino"], cmd: "طائر" }
 ];
 
 function detectGameFromText(text) {
     if (!text) return null;
     const str = String(text).trim();
 
-    // 1. محاولة النص الكامل
     for (const item of GAME_TEXT_MAP) {
         if (item.pattern.test(str)) return item.cmd;
     }
 
-    // 2. كلمات مفتاحية بسيطة
     for (const item of GAME_KEYWORDS) {
         for (const kw of item.keywords) {
             if (str.includes(kw)) return item.cmd;
@@ -175,7 +178,7 @@ function userMention(n) {
 
 const GAME_COMMANDS = new Set([
     "العاب","كازينو","رهان","بدأ","بدأ_الرهان","بدل_الرهان","تفكيك","كتابة",
-    "اعلام","ايموجي","روليت","كريستال","الكرستال","صراحة","الوان","الحيوانات","مزاد","وقف"
+    "اعلام","ايموجي","روليت","كريستال","الكرستال","صراحة","الوان","الحيوانات","مزاد","وقف","طائر"
 ]);
 
 function isGameCommand(c) { return GAME_COMMANDS.has(c); }
@@ -220,12 +223,12 @@ async function handleEmergencyStop(sock, jid, msg, owner) {
     for (const j of Object.keys(activeMazads || {})) {
         try { activeMazads[j]?.stopMazad?.(); } catch (e) {}
     }
+    for (const j of Object.keys(activeDino || {})) {
+        try { stopDinoGame(j); } catch (e) {}
+    }
     return true;
 }
 
-// ============================================================
-// 🎮 .العاب - List Message بالنصوص الكاملة
-// ============================================================
 async function handleGamesList(sock, jid, msg, senderNumber) {
     pendingGamesMenu[jid] = { sender: senderNumber, timestamp: Date.now() };
     setTimeout(() => {
@@ -242,6 +245,7 @@ async function handleGamesList(sock, jid, msg, senderNumber) {
         { id: "⏣⊰ الـحـ🦊ـيوانات ⊱⏣\nلعبة الحيوانات", title: "⏣⊰ الـحـ🦊ـيوانات ⊱⏣", description: "لعبة الحيوانات" },
         { id: "⏣⊰ أعـــ🚩ــلام ⊱⏣\nلعبة الأعلام", title: "⏣⊰ أعـــ🚩ــلام ⊱⏣", description: "لعبة الأعلام" },
         { id: "⏣⊰ إيمـــ😀ــوجي ⊱⏣\nلعبة الإيموجي", title: "⏣⊰ إيمـــ😀ــوجي ⊱⏣", description: "لعبة الإيموجي" },
+        { id: "⏣⊰ طـــ🦖ــائر ⊱⏣\nلعبة Dino Runner", title: "⏣⊰ طـــ🦖ــائر ⊱⏣", description: "لعبة Dino Runner" },
         { id: "❆━═🎲 روليت 🎰═━❆\nلعبة الروليت", title: "❆━═🎲 روليت 🎰═━❆", description: "لعبة الروليت" },
         { id: "❆━═🎲 كريستال 🎰═━❆\nلعبة الكريستال", title: "❆━═🎲 كريستال 🎰═━❆", description: "لعبة الكريستال" }
     ];
@@ -285,7 +289,7 @@ async function handleGamesList(sock, jid, msg, senderNumber) {
         console.error("❌ List Message failed:", e2?.message);
     }
 
-    const fallback = headerText + "\n\n⏣⊰ تفكـ🧩ـــيك ⊱⏣ .تفكيك\n⏣⊰ كــتــ✍️ــابـة ⊱⏣ .كتابة\n⏣⊰ ألــــ🎨ـــوان ⊱⏣ .الوان\n⏣⊰ صــ🫣ــراحة ⊱⏣ .صراحة\n⏣⊰ الـحـ🦊ـيوانات ⊱⏣ .الحيوانات\n⏣⊰ أعـــ🚩ــلام ⊱⏣ .اعلام\n⏣⊰ إيمـــ😀ــوجي ⊱⏣ .ايموجي\n❆━═🎲 روليت 🎰═━❆ .روليت\n❆━═🎲 كريستال 🎰═━❆ .كريستال";
+    const fallback = headerText + "\n\n⏣⊰ تفكـ🧩ـــيك ⊱⏣ .تفكيك\n⏣⊰ كــتــ✍️ــابـة ⊱⏣ .كتابة\n⏣⊰ ألــــ🎨ـــوان ⊱⏣ .الوان\n⏣⊰ صــ🫣ــراحة ⊱⏣ .صراحة\n⏣⊰ الـحـ🦊ـيوانات ⊱⏣ .الحيوانات\n⏣⊰ أعـــ🚩ــلام ⊱⏣ .اعلام\n⏣⊰ إيمـــ😀ــوجي ⊱⏣ .ايموجي\n⏣⊰ طـــ🦖ــائر ⊱⏣ .طائر\n❆━═🎲 روليت 🎰═━❆ .روليت\n❆━═🎲 كريستال 🎰═━❆ .كريستال";
     await sendText(sock, jid, fallback, msg);
 
     return true;
@@ -637,6 +641,7 @@ async function handleStopAllGames(sock, jid, msg, senderNumber, owner, db) {
     for (const j of Object.keys(activeColors || {})) { try { stopColorsGame(j); } catch (e) {} }
     for (const j of Object.keys(activeAnimals || {})) { try { stopAnimalsGame(j); } catch (e) {} }
     for (const j of Object.keys(activeMazads || {})) { try { activeMazads[j]?.stopMazad?.(); } catch (e) {} }
+    for (const j of Object.keys(activeDino || {})) { try { stopDinoGame(j); } catch (e) {} }
     try {
         for (const k of Object.keys(activeGames)) delete activeGames[k];
         for (const k of Object.keys(activeCasinos)) delete activeCasinos[k];
@@ -742,7 +747,6 @@ async function handleCommand(sock, jid, msg, context = {}) {
     const db = context.db || getDb();
     const text = context.text || getMessageText(msg);
 
-    // ⭐ إذا كانت الرسالة نصاً كاملاً لفعالية → حوّلها إلى أمر
     let effectiveText = text;
 
     if (!text.startsWith(".")) {
@@ -806,6 +810,10 @@ async function handleCommand(sock, jid, msg, context = {}) {
     if (command === "العاب") return handleGamesList(sock, jid, msg, senderNumber);
     if (command === "تفكيك" || command === "كتابة" || command === "اعلام" || command === "ايموجي") {
         await handleGameCommand(sock, jid, msg, command, senderNumber, sender, db, saveDb, owner);
+        return true;
+    }
+    if (command === "طائر" || command === "dino") {
+        await handleDinoCommand(sock, jid, msg, db, saveDb, senderNumber, owner, sender);
         return true;
     }
     if (command === "كازينو") return handleCasinoMenu(sock, jid, msg);
