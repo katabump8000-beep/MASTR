@@ -10,8 +10,7 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion,
-    Browsers
+    fetchLatestBaileysVersion
 } = require("@fizzxydev/baileys-pro");
 
 const fs = require("fs");
@@ -66,7 +65,12 @@ function createDefaultDatabase() {
         cooldowns: {},
         users: {},
         admins: {},
-        permissions: { "1": [], "2": [], "3": [], "4": [] },
+        permissions: {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": []
+        },
         gamePermissions: [],
         gameCooldown: {},
         monitoredUsers: {},
@@ -136,14 +140,19 @@ function loadDatabase() {
                 throw new Error("database.json لا يحتوي على بيانات صحيحة.");
             }
 
-            db = { ...createDefaultDatabase(), ...parsed };
+            db = {
+                ...createDefaultDatabase(),
+                ...parsed
+            };
         }
 
         ensureDatabaseShape();
         return db;
 
     } catch (error) {
-        console.error("❌ تعذر تحميل database.json:", error?.message || error);
+        console.error("❌ تعذر تحميل database.json:");
+        console.error(error?.message || error);
+
         db = createDefaultDatabase();
         ensureDatabaseShape();
         return db;
@@ -153,22 +162,32 @@ function loadDatabase() {
 function saveDb() {
     try {
         ensureDatabaseShape();
+
         const tempFile = `${DB_FILE}.tmp`;
         const json = JSON.stringify(db, null, 2);
+
         fs.writeFileSync(tempFile, json, "utf8");
         fs.renameSync(tempFile, DB_FILE);
+
         return true;
+
     } catch (error) {
-        console.error("❌ خطأ أثناء حفظ database.json:", error?.message || error);
+        console.error("❌ خطأ أثناء حفظ database.json:");
+        console.error(error?.message || error);
+
         try {
             const tempFile = `${DB_FILE}.tmp`;
-            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+            if (fs.existsSync(tempFile)) {
+                fs.unlinkSync(tempFile);
+            }
         } catch (_) {}
+
         return false;
     }
 }
 
 loadDatabase();
+
 global.db = db;
 global.saveDb = saveDb;
 
@@ -313,7 +332,11 @@ async function sendText(sock, jid, text, msg = null, extra = {}) {
         const messageText = String(text ?? "").trim();
         if (!messageText) return null;
 
-        const options = { text: messageText, ...extra };
+        const options = {
+            text: messageText,
+            ...extra
+        };
+
         const sendOptions = msg ? { quoted: msg } : undefined;
 
         return await sock.sendMessage(jid, options, sendOptions);
@@ -392,7 +415,10 @@ function getNoNicknameMessage() {
 
 function configureHandlers(newHandlers = {}) {
     if (newHandlers && typeof newHandlers === "object") {
-        handlers = { ...handlers, ...newHandlers };
+        handlers = {
+            ...handlers,
+            ...newHandlers
+        };
     }
     return handlers;
 }
@@ -409,7 +435,9 @@ function getReconnectDelay() {
         1000 * Math.pow(2, Math.max(0, reconnectAttempts - 1)),
         MAX_RECONNECT_DELAY
     );
+
     const jitter = Math.floor(Math.random() * 1000);
+
     return Math.min(exponential + jitter, MAX_RECONNECT_DELAY);
 }
 
@@ -476,7 +504,10 @@ function registerEvents(sock, saveCreds) {
 
                 reconnectTimer = setTimeout(async () => {
                     reconnectTimer = null;
-                    if (!shuttingDown) await reconnect();
+
+                    if (!shuttingDown) {
+                        await reconnect();
+                    }
                 }, delay);
             }
 
@@ -557,10 +588,6 @@ async function reconnect() {
     }
 }
 
-// ============================================================
-// Socket Creation
-// ============================================================
-
 async function createSocket() {
     try {
         const { state, saveCreds } = await useMultiFileAuthState(SESSION_FOLDER);
@@ -569,9 +596,8 @@ async function createSocket() {
         try {
             const latest = await fetchLatestBaileysVersion();
             version = latest?.version;
-            console.log(`📦 إصدار Baileys: ${version?.join(".") || "افتراضي"}`);
         } catch (error) {
-            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير.");
+            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير، سيتم استخدام الإعداد الافتراضي.");
             version = undefined;
         }
 
@@ -580,9 +606,7 @@ async function createSocket() {
             printQRInTerminal: false,
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
-            syncFullHistory: false,
-            // 🔑 هذا هو السطر السحري: استخدام هوية جهاز قياسية
-            browser: Browsers.ubuntu("Chrome")
+            syncFullHistory: false
         };
 
         if (version) {
@@ -594,73 +618,25 @@ async function createSocket() {
         const owners = getOwnerNumbers();
         const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
 
-        const alreadyRegistered = Boolean(state.creds?.registered);
+        if (!state.creds.registered && pairingNumber) {
+            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
 
-        // ============================================
-        // 🔑 طلب الكود عند حدث "connecting"
-        // ============================================
-        if (!alreadyRegistered && pairingNumber) {
-            console.log(`\n🤖 البوت غير مسجل - بانتظار جاهزية الاتصال لطلب الكود للرقم: ${pairingNumber}`);
-
-            let pairingRequested = false;
-
-            const pairingListener = async (update) => {
-                const { connection } = update || {};
-
-                if (connection !== "connecting") return;
-                if (pairingRequested) return;
-
-                pairingRequested = true;
-
-                console.log(`🔗 الاتصال في وضع connecting - جارٍ طلب الكود...`);
-
+            setTimeout(async () => {
                 try {
-                    // مهلة قصيرة قبل الطلب
-                    await new Promise(r => setTimeout(r, 2000));
+                    if (!currentSocket || currentSocket !== sock) return;
 
-                    if (!currentSocket || currentSocket !== sock) {
-                        console.warn("⚠️ تغير الـ socket - إيقاف الطلب");
-                        return;
+                    let code = await sock.requestPairingCode(pairingNumber);
+
+                    if (code) {
+                        code = String(code).match(/.{1,4}/g)?.join("-") || code;
                     }
 
-                    if (sock.authState?.creds?.registered) {
-                        console.log("✅ الرقم سُجّل بالفعل");
-                        return;
-                    }
-
-                    const code = await sock.requestPairingCode(pairingNumber);
-
-                    if (!code || typeof code !== "string") {
-                        console.error("❌ الكود غير صالح:", code);
-                        return;
-                    }
-
-                    const formatted = String(code).match(/.{1,4}/g)?.join("-") || code;
-
-                    console.log("");
-                    console.log("════════════════════════════════════════════════════");
-                    console.log(`🔑 رمز الاقتران: [ ${formatted} ]`);
-                    console.log("");
-                    console.log("📱 افتح واتساب → الأجهزة المرتبطة → ربط جهاز");
-                    console.log("📱 اختر: الربط برقم الهاتف");
-                    console.log(`📱 أدخل الكود: ${formatted}`);
-                    console.log("");
-                    console.log("⏰ الكود صالح لمدة دقيقتين - سارع!");
-                    console.log("════════════════════════════════════════════════════");
-                    console.log("");
+                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
 
                 } catch (error) {
-                    const errMsg = error?.message || String(error);
-                    console.error(`❌ فشل طلب الكود: ${errMsg}`);
+                    console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
                 }
-            };
-
-            sock.ev.on("connection.update", pairingListener);
-
-        } else if (alreadyRegistered) {
-            console.log(`✅ الجلسة مسجلة مسبقاً`);
-        } else {
-            console.warn("⚠️ لا يوجد رقم اقتران في settings.botNumber");
+            }, 6000);
         }
 
         registerEvents(sock, saveCreds);
