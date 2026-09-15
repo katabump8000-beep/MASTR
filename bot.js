@@ -557,108 +557,6 @@ async function reconnect() {
 }
 
 // ============================================================
-// طلب كود الاقتران — الطريقة المُصلحة
-// ============================================================
-
-/**
- * يطلب كود الاقتران بعد محاولات متعددة.
- * الطريقة الرسمية في baileys: نستدعي requestPairingCode
- * بعد أن يصبح الـ socket جاهزاً (بعد connection: "connecting").
- */
-async function requestPairingCodeWithRetry(sock, pairingNumber, maxAttempts = 5) {
-    const cleanPairing = cleanNumber(pairingNumber);
-
-    if (!cleanPairing) {
-        console.error("❌ رقم الاقتران غير صالح");
-        return null;
-    }
-
-    console.log(`\n🔑 جارٍ طلب كود الاقتران للرقم: ${cleanPairing}`);
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-            // انتظر قبل المحاولة الأولى
-            if (attempt === 1) {
-                await new Promise(r => setTimeout(r, 3000));
-            } else {
-                await new Promise(r => setTimeout(r, 5000));
-            }
-
-            // تحقق أن الـ socket لا يزال نفسه
-            if (!currentSocket || currentSocket !== sock) {
-                console.warn("⚠️ تغير الـ socket أثناء الانتظار - إيقاف المحاولات");
-                return null;
-            }
-
-            // تحقق أن الـ socket جاهز
-            if (!sock.authState?.creds) {
-                console.warn(`⚠️ محاولة ${attempt}: الـ authState غير جاهز`);
-                continue;
-            }
-
-            // إذا كان مسجلاً بالفعل، لا نحتاج كود
-            if (sock.authState.creds.registered) {
-                console.log("✅ الرقم مسجل بالفعل - لا حاجة لكود اقتران");
-                return null;
-            }
-
-            // إذا كان هناك كود قديم، اطلب جديد
-            const code = await sock.requestPairingCode(cleanPairing);
-
-            if (!code || typeof code !== "string") {
-                console.warn(`⚠️ محاولة ${attempt}: الكود المُستلم غير صالح:`, code);
-                continue;
-            }
-
-            // إذا الكود هو القيمة الافتراضية الفاشلة، أعد المحاولة
-            if (code === "12345678" || code === "56781234" || code.length < 6) {
-                console.warn(`⚠️ محاولة ${attempt}: كود افتراضي فاشل (${code}) - إعادة المحاولة...`);
-                continue;
-            }
-
-            // تنسيق الكود: XXXX-XXXX
-            const formatted = String(code).match(/.{1,4}/g)?.join("-") || code;
-
-            console.log("");
-            console.log("════════════════════════════════════════════════════");
-            console.log(`🔑 رمز الاقتران (محاولة ${attempt}): [ ${formatted} ]`);
-            console.log("");
-            console.log("📱 افتح واتساب → الأجهزة المرتبطة → ربط جهاز");
-            console.log("📱 اختر: الربط برقم الهاتف");
-            console.log(`📱 أدخل الكود: ${formatted}`);
-            console.log("");
-            console.log("⏰ الكود صالح لمدة دقيقتين فقط - سارع!");
-            console.log("════════════════════════════════════════════════════");
-            console.log("");
-
-            return formatted;
-
-        } catch (error) {
-            const errMsg = error?.message || String(error);
-            console.error(`❌ محاولة ${attempt} فشلت: ${errMsg}`);
-
-            // إذا كان الخطأ "Connection Closed" أو "not connected"، أعد المحاولة
-            if (errMsg.includes("Connection Closed") ||
-                errMsg.includes("not connected") ||
-                errMsg.includes("closed")) {
-                console.log(`🔄 إعادة المحاولة ${attempt + 1}/${maxAttempts}...`);
-                continue;
-            }
-
-            // إذا كان الخطأ "already registered" — توقف
-            if (errMsg.includes("already") || errMsg.includes("registered")) {
-                console.log("✅ الرقم مسجل بالفعل");
-                return null;
-            }
-        }
-    }
-
-    console.error("❌ فشلت جميع محاولات طلب الكود");
-    console.error("💡 الحل: احذف مجلد session/ وأعد النشر");
-    return null;
-}
-
-// ============================================================
 // Socket Creation
 // ============================================================
 
@@ -696,17 +594,93 @@ async function createSocket() {
 
         const alreadyRegistered = Boolean(state.creds?.registered);
 
-        if (alreadyRegistered) {
-            console.log(`✅ الجلسة مسجلة مسبقاً - ${cleanNumber(state.creds?.me?.id || "")}`);
-        } else if (pairingNumber) {
-            console.log(`\n🤖 البوت غير مسجل - جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
+        // ============================================
+        // 🔑 طلب الكود عند حدث "connecting"
+        // ============================================
+        if (!alreadyRegistered && pairingNumber) {
+            console.log(`\n🤖 البوت غير مسجل - بانتظار جاهزية الاتصال لطلب الكود للرقم: ${pairingNumber}`);
 
-            // نطلب الكود بعد تسجيل الأحداث
-            setTimeout(() => {
-                requestPairingCodeWithRetry(sock, pairingNumber, 5).catch(err => {
-                    console.error("❌ خطأ في طلب الكود:", err?.message);
-                });
-            }, 5000);
+            let pairingRequested = false;
+            let pairingAttempts = 0;
+            const MAX_PAIRING_ATTEMPTS = 8;
+
+            const pairingListener = async (update) => {
+                const { connection } = update || {};
+
+                if (connection !== "connecting") return;
+                if (pairingRequested) return;
+
+                pairingRequested = true;
+                pairingAttempts++;
+
+                console.log(`🔗 الاتصال في وضع connecting (محاولة ${pairingAttempts}) - جارٍ طلب الكود...`);
+
+                try {
+                    await new Promise(r => setTimeout(r, 2000));
+
+                    if (!currentSocket || currentSocket !== sock) {
+                        console.warn("⚠️ تغير الـ socket - إيقاف الطلب");
+                        return;
+                    }
+
+                    if (sock.authState?.creds?.registered) {
+                        console.log("✅ الرقم سُجّل بالفعل");
+                        return;
+                    }
+
+                    const code = await sock.requestPairingCode(pairingNumber);
+
+                    if (!code || typeof code !== "string") {
+                        console.error("❌ الكود غير صالح:", code);
+                        pairingRequested = false;
+                        return;
+                    }
+
+                    const cleanCode = String(code).replace(/-/g, "");
+
+                    // فحص الكود الافتراضي الفاشل
+                    if (cleanCode === "12345678" || cleanCode === "56781234" || cleanCode.length < 6) {
+                        console.warn(`⚠️ كود افتراضي فاشل (${code}) - إعادة المحاولة عند connecting التالي`);
+
+                        if (pairingAttempts < MAX_PAIRING_ATTEMPTS) {
+                            pairingRequested = false;
+                            // إعادة الاتصال لإعادة تشغيل "connecting"
+                            try {
+                                if (sock.ws && sock.ws.readyState === 1) {
+                                    sock.ws.close();
+                                }
+                            } catch (_) {}
+                        } else {
+                            console.error("❌ استنفدت كل المحاولات - الكود الافتراضي يفشل");
+                        }
+                        return;
+                    }
+
+                    const formatted = String(code).match(/.{1,4}/g)?.join("-") || code;
+
+                    console.log("");
+                    console.log("════════════════════════════════════════════════════");
+                    console.log(`🔑 رمز الاقتران: [ ${formatted} ]`);
+                    console.log("");
+                    console.log("📱 افتح واتساب → الأجهزة المرتبطة → ربط جهاز");
+                    console.log("📱 اختر: الربط برقم الهاتف");
+                    console.log(`📱 أدخل الكود: ${formatted}`);
+                    console.log("");
+                    console.log("⏰ الكود صالح لمدة دقيقتين - سارع!");
+                    console.log("════════════════════════════════════════════════════");
+                    console.log("");
+
+                } catch (error) {
+                    const errMsg = error?.message || String(error);
+                    console.error(`❌ فشل طلب الكود: ${errMsg}`);
+                    pairingRequested = false;
+                }
+            };
+
+            sock.ev.on("connection.update", pairingListener);
+
+        } else if (alreadyRegistered) {
+            console.log(`✅ الجلسة مسجلة مسبقاً`);
         } else {
             console.warn("⚠️ لا يوجد رقم اقتران في settings.botNumber");
         }
