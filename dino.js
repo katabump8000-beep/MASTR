@@ -197,4 +197,445 @@ function drawCloud(cl){
 x.fillStyle='rgba(100,150,255,.25)';
 x.beginPath();
 x.ellipse(cl.x,cl.y,18*cl.s,9*cl.s,0,0,7);
-x.ellipse(cl.x+14*cl.s,cl.y+3*cl.s,12*cl.s,7*cl
+x.ellipse(cl.x+14*cl.s,cl.y+3*cl.s,12*cl.s,7*cl.s,0,0,7);
+x.fill()
+}
+function drawObstacle(o){
+x.save();
+x.shadowColor='#ff5252';x.shadowBlur=8;
+x.fillStyle='#ff5252';
+if(o.type==='cactus'||o.type==='cactus_big'){
+x.fillRect(o.x+o.w*.3,o.y,o.w*.4,o.h);
+x.fillRect(o.x,o.y+o.h*.3,o.w*.3,o.h*.15);
+x.fillRect(o.x+o.w*.7,o.y+o.h*.4,o.w*.3,o.h*.15);
+}else{
+x.beginPath();
+x.moveTo(o.x,o.y+o.h);
+x.lineTo(o.x+o.w*.3,o.y);
+x.lineTo(o.x+o.w*.7,o.y);
+x.lineTo(o.x+o.w,o.y+o.h);
+x.closePath();x.fill();
+}
+x.restore()
+}
+function drawDino(){
+const dx=dino.x,dy=dino.y;
+x.save();
+x.shadowColor='#00ff64';x.shadowBlur=10;
+x.fillStyle='#00ff64';
+x.fillRect(dx+15,dy,20,15);
+x.fillStyle='#0a0e27';
+x.fillRect(dx+28,dy+4,4,4);
+x.fillStyle='#00ff64';
+x.fillRect(dx+30,dy+12,8,3);
+x.fillStyle='#00c853';
+x.fillRect(dx+5,dy+12,25,18);
+x.fillRect(dx-5,dy+15,15,8);
+x.fillStyle='#00ff64';
+const legOffset=dino.jumping?0:Math.sin(dino.legFrame)*3;
+if(dino.jumping){
+x.fillRect(dx+8,dy+30,8,8);
+x.fillRect(dx+20,dy+30,8,5);
+}else{
+x.fillRect(dx+8,dy+30+legOffset,8,5-legOffset);
+x.fillRect(dx+20,dy+30-legOffset,8,5+legOffset);
+}
+x.fillRect(dx+22,dy+18,8,4);
+x.restore()
+}
+function drawGround(){
+x.strokeStyle='#00ff64';x.lineWidth=2;
+x.beginPath();x.moveTo(0,GROUND);x.lineTo(W,GROUND);x.stroke();
+x.strokeStyle='rgba(0,255,100,.3)';x.lineWidth=1;
+for(let i=0;i<12;i++){
+const gx=(i*50+groundOffset)%(W+50)-25;
+x.beginPath();x.moveTo(gx,GROUND+5);x.lineTo(gx+20,GROUND+5);x.stroke()
+}
+}
+function drawParticles(){particles.forEach(p=>{x.fillStyle='rgba('+p.col+','+Math.max(p.life,0)+')';x.fillRect(p.x,p.y,p.size,p.size)})}
+function draw(){
+const g=x.createLinearGradient(0,0,0,H);
+g.addColorStop(0,'#0a0e27');g.addColorStop(1,'#0d2818');
+x.fillStyle=g;x.fillRect(0,0,W,H);
+clouds.forEach(drawCloud);
+x.save();
+if(shake>0)x.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+obstacles.forEach(drawObstacle);
+drawGround();
+drawDino();
+drawParticles();
+x.restore();
+if(!started&&!gameOver){
+x.fillStyle='rgba(255,255,255,.9)';x.textAlign='center';
+x.font='bold 14px Arial';x.fillText('دوس باش تبدا 🦖',W/2,H/2);
+x.textAlign='left'
+}
+}
+function update(){
+frame++;
+if(shake>0)shake=Math.max(0,shake-.6);
+clouds.forEach(cl=>{cl.x-=cl.sp;if(cl.x<-30)cl.x=W+30});
+if(started&&!gameOver&&!cashedOut){
+dino.legFrame+=.3;
+groundOffset-=speed;
+if(dino.jumping){
+dino.vy+=GRAV;
+dino.y+=dino.vy;
+if(dino.y>=GROUND-dino.h){dino.y=GROUND-dino.h;dino.vy=0;dino.jumping=false}
+}
+if(frame%Math.max(40,70-Math.floor(speed*3))===0)spawnObstacle();
+speed=4+Math.min(8,score*.02);
+for(let i=obstacles.length-1;i>=0;i--){
+const o=obstacles[i];
+o.x-=speed;
+if(!o.passed&&o.x+o.w<dino.x){o.passed=true;score+=10;
+scoreEl.style.transform='scale(1.3)';
+setTimeout(()=>scoreEl.style.transform='scale(1)',120)
+}
+if(dino.x+dino.w>o.x&&dino.x<o.x+o.w&&dino.y+dino.h>o.y&&dino.y<o.y+o.h){
+if(!gameOver){gameOver=true;shake=14;burst(dino.x+dino.w/2,dino.y+dino.h/2,20,'255,82,82',6)}
+}
+if(o.x+o.w<0)obstacles.splice(i,1)
+}
+}
+particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=p.grav;p.life-=.025});
+particles=particles.filter(p=>p.life>0);
+scoreEl.textContent=Math.floor(score);
+if(score>best){best=Math.floor(score);saveBest(best)}
+bestEl.textContent='BEST '+best;
+if(gameOver){
+statusEl.textContent='خسرت!';
+overlayTitle.textContent='💀 GAME OVER';
+overlayTitle.style.color='#ff5252';
+overlayMsg.textContent='النقاط: '+Math.floor(score)+' | اضغط ⬆️ اقفز لإعادة اللعب';
+overlay.classList.add('show');
+}else{
+statusEl.textContent=started?'النقاط '+Math.floor(score):'دوس على الشاشة باش تقفز';
+}
+}
+function loop(){update();draw();requestAnimationFrame(loop)}
+function pointerDown(e){e.preventDefault();jump()}
+c.addEventListener('touchstart',pointerDown,{passive:false});
+c.addEventListener('mousedown',pointerDown);
+jumpBtn.addEventListener('click',e=>{e.preventDefault();jump()});
+jumpBtn.addEventListener('touchstart',e=>{e.preventDefault();jump()},{passive:false});
+document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump()}});
+
+cashBtn.addEventListener('click',async(e)=>{
+e.preventDefault();
+if(cashedOut)return;
+if(gameOver){overlayTitle.textContent='⚠️ خسرت';overlayMsg.textContent='لا يمكن السحب بعد الخسارة. اضغط اقفز لإعادة اللعب';return}
+if(score<POINTS_PER_DOLLAR){overlayTitle.textContent='⚠️ نقاط غير كافية';overlayMsg.textContent='تحتاج على الأقل '+POINTS_PER_DOLLAR+' نقطة للسحب';overlay.classList.add('show');setTimeout(()=>overlay.classList.remove('show'),2500);return}
+cashedOut=true;
+cashBtn.disabled=true;
+jumpBtn.disabled=true;
+
+const rawScore=Math.floor(score);
+const earn=Math.min(Math.floor(rawScore/POINTS_PER_DOLLAR),MAX_EARN);
+
+overlayTitle.textContent='⏳ جار السحب...';
+overlayTitle.style.color='#ffd700';
+overlayMsg.textContent='النقاط: '+rawScore+' | الربح: '+earn+'$';
+overlay.classList.add('show');
+
+try{
+const res=await fetch(SERVER_URL+'/api/dino/cashout',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+playerNumber:PLAYER_NUMBER,
+chatId:CHAT_ID,
+gameId:GAME_ID,
+token:TOKEN,
+score:rawScore
+})
+});
+const data=await res.json();
+if(res.ok&&data.ok){
+overlayTitle.textContent='✅ تم السحب!';
+overlayTitle.style.color='#00ff64';
+overlayMsg.textContent='النقاط: '+data.score+' | الربح: '+data.earn+'$';
+} else {
+overlayTitle.textContent='❌ فشل السحب';
+overlayTitle.style.color='#ff5252';
+overlayMsg.textContent='خطأ: '+(data.error||'unknown');
+cashBtn.disabled=false;
+cashedOut=false;
+}
+}catch(err){
+overlayTitle.textContent='❌ فشل الاتصال';
+overlayTitle.style.color='#ff5252';
+overlayMsg.textContent='تحقق من اتصالك وحاول مرة أخرى';
+cashBtn.disabled=false;
+cashedOut=false;
+}
+});
+
+reset();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>`;
+}
+
+// ============================================================
+// إرسال الإعلان
+// ============================================================
+
+async function sendDinoAd(sock, db, playerNumber, score, earn) {
+    if (!db.adsGroups || typeof db.adsGroups !== "object") return;
+
+    const now = new Date();
+    const winnerNickname = getUserNickname(db, playerNumber);
+
+    const adMessage = `_*█ إنــتــهــت█*_
+
+◇🎮 نـــــــوع الفعالية:
+*{Dino Runner - طائر}*
+
+◇🪎 آلَــــجَــــآئـزَة:
+*{ ${earn}$ }*
+
+◇🎖️ آلَفــــــآئــز:
+*${winnerNickname}*
+
+◇📊 النقاط:
+*{ ${score} }*
+
+◇⏰ بّـــــــدأت:
+*{${formatDate(now)}}*
+
+*صـــآنـــــــٌع الفعالية:*
+\`━✦❘༻𝐵𝑜𝑡 𝑨𝑳𝑱𝑬𝑺𝐴𝑇༺❘✦━\``;
+
+    for (const adJid of Object.keys(db.adsGroups)) {
+        if (!db.adsGroups[adJid]) continue;
+        await safeSend(sock, adJid, { text: adMessage });
+    }
+}
+
+// ============================================================
+// بدء لعبة Dino Runner
+// ============================================================
+
+async function handleDinoCommand(
+    sock,
+    jid,
+    msg,
+    db,
+    saveDb,
+    cleanSender,
+    isBotOwner,
+    sender
+) {
+    try {
+        if (activeDino[jid]) {
+            await safeSend(sock, jid, {
+                text: "⚠️ هناك لعبة طائر قائمة بالفعل في هذه المجموعة!"
+            }, { quoted: msg });
+            return true;
+        }
+
+        db.gamePermissions = Array.isArray(db.gamePermissions) ? db.gamePermissions : [];
+        const hasPermission = Boolean(isBotOwner) || db.gamePermissions.includes(cleanSender);
+
+        if (!hasPermission) {
+            await safeSend(sock, jid, {
+                text: "⚠️ ليس لديك صلاحية لاستخدام هذا الأمر. يرجى التواصل مع المطور لمنحك الصلاحية."
+            }, { quoted: msg });
+            return true;
+        }
+
+        if (!hasNickname(db, cleanSender)) {
+            await safeSend(sock, jid, {
+                text: "❌ يجب أن يكون لديك لقب مسجل عبر .سجل لتتمكن من اللعب."
+            }, { quoted: msg });
+            return true;
+        }
+
+        const now = Date.now();
+        db.gameCooldown = db.gameCooldown || {};
+        const previousTime = Number(db.gameCooldown[jid]) || 0;
+
+        if (previousTime > 0) {
+            const elapsed = now - previousTime;
+            if (elapsed < DINO_CONFIG.cooldownMs) {
+                const remainingMin = Math.ceil((DINO_CONFIG.cooldownMs - elapsed) / 60000);
+                await safeSend(sock, jid, {
+                    text: `⏳ يرجى الانتظار ${remainingMin} دقائق قبل بدء لعبة جديدة.`
+                }, { quoted: msg });
+                return true;
+            }
+        }
+
+        db.gameCooldown[jid] = now;
+        if (typeof saveDb === "function") saveDb();
+
+        const playerNickname = getUserNickname(db, cleanSender);
+
+        const crypto = require("crypto");
+        const gameId = crypto.randomBytes(12).toString("hex");
+
+        let token = "";
+        let serverUrl = "";
+        try {
+            const { getServerSecret } = require("./server");
+            token = getServerSecret();
+        } catch (e) {
+            console.error("❌ فشل الحصول على التوكن:", e?.message);
+            await safeSend(sock, jid, {
+                text: "❌ حدث خطأ في تشغيل اللعبة. حاول لاحقاً."
+            }, { quoted: msg });
+            return true;
+        }
+        serverUrl = getServerUrl();
+
+        const gameState = {
+            playerNumber: cleanSender,
+            playerNickname: playerNickname,
+            gameId: gameId,
+            chatId: jid,
+            startTime: new Date(),
+            isActive: true,
+            score: 0,
+            earn: 0,
+            cashedOut: false,
+            timeoutId: null
+        };
+
+        activeDino[jid] = gameState;
+
+        // ✅ استخدام sendInlineWebUI لعرض HTML
+        try {
+            const html = generateDinoHTML(
+                playerNickname,
+                cleanSender,
+                jid,
+                gameId,
+                token,
+                serverUrl
+            );
+
+            await sendInlineWebUI(sock, jid, html, "🦖 Dino Runner");
+
+        } catch (webuiError) {
+            console.error("❌ خطأ في sendInlineWebUI:", webuiError?.message || webuiError);
+            await safeSend(sock, jid, {
+                text: `╗══════════════════════╔
+  🦖 *لعبة Dino Runner* 🦖
+  
+  مرحباً ${playerNickname}!
+  
+  ⚠️ حدث خطأ في تحميل اللعبة التفاعلية.
+  يرجى المحاولة مرة أخرى لاحقاً.
+╝══════════════════════╚`
+            }, { quoted: msg });
+            delete activeDino[jid];
+            return true;
+        }
+
+        gameState.timeoutId = setTimeout(async () => {
+            if (activeDino[jid] && activeDino[jid].isActive && !activeDino[jid].cashedOut) {
+                delete activeDino[jid];
+                await safeSend(sock, jid, {
+                    text: "⏰ انتهى وقت اللعبة تلقائياً بدون سحب."
+                }).catch(() => {});
+            }
+        }, DINO_CONFIG.gameTimeoutMs);
+
+        return true;
+
+    } catch (error) {
+        console.error("❌ خطأ في handleDinoCommand:", error?.message || error);
+        return false;
+    }
+}
+
+// ============================================================
+// معالجة زر السحب
+// ============================================================
+
+async function handleDinoCashout(sock, jid, db, saveDb, cleanSender, msg) {
+    const gameState = activeDino[jid];
+    if (!gameState || !gameState.isActive) {
+        await safeSend(sock, jid, {
+            text: "⚠️ لا توجد لعبة طائر نشطة حالياً."
+        }, { quoted: msg });
+        return true;
+    }
+
+    if (gameState.playerNumber !== cleanSender) {
+        await safeSend(sock, jid, {
+            text: "⚠️ هذه اللعبة ليست لك."
+        }, { quoted: msg });
+        return true;
+    }
+
+    await safeSend(sock, jid, {
+        text: `💸 *للسحب، اضغط على زر 💸 داخل اللعبة.*`
+    }, { quoted: msg });
+
+    return true;
+}
+
+async function handleDinoCancel(sock, jid, db, saveDb, cleanSender, msg) {
+    const gameState = activeDino[jid];
+    if (!gameState || !gameState.isActive) {
+        await safeSend(sock, jid, {
+            text: "⚠️ لا توجد لعبة طائر نشطة حالياً."
+        }, { quoted: msg });
+        return true;
+    }
+
+    if (gameState.playerNumber !== cleanSender) {
+        await safeSend(sock, jid, {
+            text: "⚠️ هذه اللعبة ليست لك."
+        }, { quoted: msg });
+        return true;
+    }
+
+    if (gameState.timeoutId) clearTimeout(gameState.timeoutId);
+    delete activeDino[jid];
+
+    await safeSend(sock, jid, {
+        text: "🚫 تم إلغاء لعبة الطائر بنجاح."
+    }, { quoted: msg });
+
+    return true;
+}
+
+// ============================================================
+// إيقاف اللعبة
+// ============================================================
+
+function stopDinoGame(jid) {
+    const game = activeDino[jid];
+    if (game) {
+        game.isActive = false;
+        if (game.timeoutId) clearTimeout(game.timeoutId);
+        delete activeDino[jid];
+        return true;
+    }
+    return false;
+}
+
+function checkDinoActive(jid) {
+    return Boolean(activeDino[jid] && activeDino[jid].isActive);
+}
+
+// ============================================================
+// تصدير
+// ============================================================
+
+module.exports = {
+    activeDino,
+    handleDinoCommand,
+    handleDinoCashout,
+    handleDinoCancel,
+    stopDinoGame,
+    checkDinoActive,
+    sendDinoAd,
+    DINO_CONFIG,
+    generateDinoHTML
+};
