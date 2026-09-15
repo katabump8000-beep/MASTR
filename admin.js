@@ -1,11 +1,16 @@
-// admin.js
 // ============================================================
+// admin.js
+// ALJESAT BOT
 // أوامر الإدارة والصلاحيات ومراقبة الإشراف
 // ============================================================
 
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
 const { messages } = require("./data");
+
+const DB_FILE = path.join(__dirname, "database.json");
 
 let adminMonitorInterval = null;
 let isMonitoringActive = false;
@@ -13,6 +18,15 @@ let isMonitoringActive = false;
 function cleanNumber(value) {
     if (!value) return "";
     return String(value).replace(/[^0-9]/g, "");
+}
+
+function cleanJid(value) {
+    if (!value) return "";
+    return String(value).split(":")[0];
+}
+
+function jidToNumber(value) {
+    return cleanNumber(cleanJid(value));
 }
 
 function getMentionedJid(msg) {
@@ -29,6 +43,26 @@ function isAdmin(participant) {
     if (!participant) return false;
     const adminStatus = String(participant.admin || "").toLowerCase();
     return adminStatus === "admin" || adminStatus === "superadmin" || participant.admin === true;
+}
+
+/**
+ * حفظ قاعدة البيانات يدوياً (fallback إذا لم يكن saveDb متاحاً)
+ */
+function saveDatabaseNow(db) {
+    try {
+        const tempFile = `${DB_FILE}.tmp`;
+        const json = JSON.stringify(db, null, 2);
+        fs.writeFileSync(tempFile, json, "utf8");
+        fs.renameSync(tempFile, DB_FILE);
+        return true;
+    } catch (error) {
+        console.error("❌ خطأ في حفظ قاعدة البيانات:", error?.message || error);
+        try {
+            const tempFile = `${DB_FILE}.tmp`;
+            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+        } catch (_) {}
+        return false;
+    }
 }
 
 async function send(sock, jid, text, msg = null, extra = {}) {
@@ -93,6 +127,10 @@ function getActorFromUpdate(update) {
         return null;
     }
 }
+
+// ============================================================
+// مراقبة الإشراف
+// ============================================================
 
 function startAdminMonitoring(sock, db, saveDb) {
     stopAdminMonitoring();
@@ -189,6 +227,8 @@ function startAdminMonitoring(sock, db, saveDb) {
 
                 if (typeof saveDb === "function") {
                     saveDb();
+                } else {
+                    saveDatabaseNow(db);
                 }
 
             } catch (error) {
@@ -220,6 +260,84 @@ function stopAdminMonitoring() {
     console.log("🛑 تم إيقاف مراقبة الإشراف");
 }
 
+// ============================================================
+// معالجة انضمام/مغادرة الأعضاء
+// ============================================================
+
+async function handleGroupJoin(sock, update, db, saveDb) {
+    if (!update || typeof update !== "object") return false;
+
+    const { id, participants, action } = update;
+
+    if (!id || !Array.isArray(participants)) return false;
+
+    const isMainGroup = Boolean(db.mainGroup && db.mainGroup[id] === true);
+
+    // ============================================
+    // 🆕 حذف اللقب عند الخروج من القروب الأساسي
+    // ============================================
+    if (action === "remove" && isMainGroup) {
+        try {
+            const organizedGroups = db.organizedGroups || {};
+            const monitoringEnabled = organizedGroups[id] === true;
+
+            if (monitoringEnabled) {
+                let changed = false;
+
+                for (const participant of participants) {
+                    const cleanNum = cleanNumber(participant);
+                    if (!cleanNum) continue;
+
+                    const user = db.users && db.users[cleanNum];
+                    if (!user) continue;
+
+                    if (user.nickname && String(user.nickname).trim()) {
+                        console.log(`🗑️ حذف لقب ${user.nickname} (خرج من الأساسي) - الاحتفاظ بالرصيد`);
+                        user.nickname = "";
+                        // نحتفظ بالرصيد، الرتبة، أعلى تفاعل، والصديق
+                        changed = true;
+                    }
+                }
+
+                if (changed) {
+                    if (typeof saveDb === "function") {
+                        saveDb();
+                    } else {
+                        saveDatabaseNow(db);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("❌ خطأ في حذف اللقب:", e?.message);
+        }
+    }
+
+    // ============================================
+    // رسائل الاستقبال (كما في السلوك الأصلي)
+    // ============================================
+    if (action !== "add") return false;
+
+    const receiveGroups = db.receiveGroups || {};
+    if (!receiveGroups[id]) return false;
+
+    for (const participant of participants) {
+        const cleanNum = cleanNumber(participant);
+        if (!cleanNum) continue;
+
+        const welcomeMessage = messages.admin.receive.welcome(cleanNum);
+        await sock.sendMessage(id, {
+            text: welcomeMessage,
+            mentions: [participant]
+        }).catch(() => {});
+    }
+
+    return true;
+}
+
+// ============================================================
+// المعالجة الرئيسية للأوامر الإدارية
+// ============================================================
+
 async function handleAdminCommand(
     sock,
     jid,
@@ -248,6 +366,14 @@ async function handleAdminCommand(
         }
 
         return hasPermission(db, userNumber, type);
+    };
+
+    const doSave = () => {
+        if (typeof saveDb === "function") {
+            saveDb();
+        } else {
+            saveDatabaseNow(db);
+        }
     };
 
     // ========================================================
@@ -286,7 +412,7 @@ async function handleAdminCommand(
             if (!db.gamePermissions.includes(target)) {
                 db.gamePermissions.push(target);
             }
-            if (typeof saveDb === "function") saveDb();
+            doSave();
 
             await send(
                 sock,
@@ -304,7 +430,7 @@ async function handleAdminCommand(
 
         if (!permissions[permissionType].includes(target)) {
             permissions[permissionType].push(target);
-            if (typeof saveDb === "function") saveDb();
+            doSave();
         }
 
         const commandNames = {
@@ -351,11 +477,11 @@ async function handleAdminCommand(
 
         if (index === -1) {
             db.gamePermissions.push(target);
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(sock, jid, messages.admin.gamePerms.granted(target), msg, { mentions: [mentioned] });
         } else {
             db.gamePermissions.splice(index, 1);
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(sock, jid, messages.admin.gamePerms.revoked(target), msg, { mentions: [mentioned] });
         }
 
@@ -401,7 +527,7 @@ async function handleAdminCommand(
 
         if (!monitored.includes(target)) {
             monitored.push(target);
-            if (typeof saveDb === "function") saveDb();
+            doSave();
 
             stopAdminMonitoring();
             startAdminMonitoring(sock, db, saveDb);
@@ -415,7 +541,7 @@ async function handleAdminCommand(
             );
         } else {
             db.monitoredUsers[jid] = monitored.filter((number) => number !== target);
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(sock, jid, messages.admin.monitor.deactivated(target), msg, { mentions: [mentioned] });
         }
 
@@ -494,7 +620,7 @@ async function handleAdminCommand(
 
         if (!monitored.includes(target)) {
             monitored.push(target);
-            if (typeof saveDb === "function") saveDb();
+            doSave();
 
             stopAdminMonitoring();
             startAdminMonitoring(sock, db, saveDb);
@@ -508,7 +634,7 @@ async function handleAdminCommand(
             );
         } else {
             db.monitoredUsers[jid] = monitored.filter((n) => n !== target);
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(
                 sock,
                 jid,
@@ -538,11 +664,11 @@ async function handleAdminCommand(
 
         if (action === "on") {
             db.receiveGroups[jid] = true;
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(sock, jid, messages.admin.receive.on, msg);
         } else if (action === "off") {
             delete db.receiveGroups[jid];
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(sock, jid, messages.admin.receive.off, msg);
         } else {
             await send(sock, jid, messages.admin.invalidUsage(".استقبال", "on/off"), msg);
@@ -568,11 +694,11 @@ async function handleAdminCommand(
 
         if (action === "on") {
             db.workGroups[jid] = true;
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(sock, jid, messages.admin.work.on, msg);
         } else if (action === "off") {
             delete db.workGroups[jid];
-            if (typeof saveDb === "function") saveDb();
+            doSave();
             await send(sock, jid, messages.admin.work.off, msg);
         } else {
             await send(sock, jid, messages.admin.invalidUsage(".ورك", "on/off"), msg);
@@ -685,7 +811,7 @@ async function handleAdminCommand(
         }
 
         targetProfile.balance = currentBalance - amount;
-        if (typeof saveDb === "function") saveDb();
+        doSave();
 
         const successMessage = messages.admin.balance.withdrawSuccess(
             targetProfile.nickname,
@@ -711,34 +837,52 @@ async function handleAdminCommand(
         return true;
     }
 
+    // ========================================================
+    // .تنظيم (يعمل فقط في القروب الأساسي)
+    // ========================================================
+
+    if (command === "تنظيم") {
+        if (!canUse("2") && !isBotOwner) {
+            await send(sock, jid, messages.admin.noPermission, msg);
+            return true;
+        }
+
+        // التحقق من أن القروب هو الأساسي
+        const isMain = Boolean(db.mainGroup && db.mainGroup[jid] === true);
+        if (!isMain) {
+            await send(sock, jid, `❆━━━━━═⏣⊰⚠️⊱⏣═━━━━━❆
+  *هذا الأمر يعمل فقط في*
+  *القروب الأساسي*
+❆━━━━━═⏣⊰⚠️⊱⏣═━━━━━❆`, msg);
+            return true;
+        }
+
+        const action = String(parts?.[0] || "").toLowerCase();
+        db.organizedGroups = db.organizedGroups && typeof db.organizedGroups === "object"
+            ? db.organizedGroups
+            : {};
+
+        if (action === "on") {
+            db.organizedGroups[jid] = true;
+            doSave();
+            await send(sock, jid, "✅ تم تفعيل مراقبة المغادرين.\n📌 سيتم حذف لقب أي عضو يغادر القروب الأساسي (مع الاحتفاظ برصيده).", msg);
+        } else if (action === "off") {
+            delete db.organizedGroups[jid];
+            doSave();
+            await send(sock, jid, "❌ تم إيقاف مراقبة المغادرين.", msg);
+        } else {
+            await send(sock, jid, messages.admin.invalidUsage(".تنظيم", "on/off"), msg);
+        }
+
+        return true;
+    }
+
     return false;
 }
 
-async function handleGroupJoin(sock, update, db) {
-    if (!update || typeof update !== "object") return false;
-
-    const { id, participants, action } = update;
-
-    if (action !== "add" || !id || !Array.isArray(participants)) {
-        return false;
-    }
-
-    const receiveGroups = db.receiveGroups || {};
-    if (!receiveGroups[id]) return false;
-
-    for (const participant of participants) {
-        const cleanNum = cleanNumber(participant);
-        if (!cleanNum) continue;
-
-        const welcomeMessage = messages.admin.receive.welcome(cleanNum);
-        await sock.sendMessage(id, {
-            text: welcomeMessage,
-            mentions: [participant]
-        }).catch(() => {});
-    }
-
-    return true;
-}
+// ============================================================
+// تصدير
+// ============================================================
 
 module.exports = {
     startAdminMonitoring,

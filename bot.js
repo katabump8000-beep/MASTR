@@ -10,9 +10,8 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion,
-    Browsers
-} = require("@yudzxml/baileys");
+    fetchLatestBaileysVersion
+} = require("@whiskeysockets/baileys");
 
 const fs = require("fs");
 const path = require("path");
@@ -38,7 +37,6 @@ let reconnectAttempts = 0;
 let shuttingDown = false;
 let startPromise = null;
 let isReconnecting = false;
-let pairingCodeRequested = false;
 
 // ============================================================
 // Handlers
@@ -59,27 +57,80 @@ const MAX_RECONNECT_DELAY = 30000;
 
 function createDefaultDatabase() {
     return {
+        // الإعدادات العامة
         groupSettings: {},
         adsGroups: {},
         bankGroups: {},
         workGroups: {},
         receiveGroups: {},
+
+        // 🆕 القروب الأساسي
+        mainGroup: {},
+
+        // المستخدمون
         cooldowns: {},
         users: {},
         admins: {},
+
+        // الصلاحيات
         permissions: { "1": [], "2": [], "3": [], "4": [] },
         gamePermissions: [],
         gameCooldown: {},
+
+        // المراقبة
         monitoredUsers: {},
+
+        // المكافآت اليومية
         dailyData: {},
         dailyCooldown: {},
         chainPermissions: [],
+
+        // الكازينو
         rouletteCooldown: {},
         crystalCooldown: {},
         crystalPlayerCooldown: {},
+
+        // المزاد
         pendingSend: {},
         mazadCreator: null,
-        inventory: {}
+        inventory: {},
+
+        // 🆕 نظام الصور
+        userPhotos: {},
+
+        // 🆕 الأباطرة
+        emperors: {},
+
+        // 🆕 روابط الترحيب
+        welcomeLinks: {
+            link1: "",
+            link2: ""
+        },
+
+        // 🆕 حماية البطاقات
+        protectCards: {},
+
+        // 🆕 التفاعل التلقائي
+        reactEnabled: {},
+
+        // 🆕 عدّاد الرسائل
+        hisbaEnabled: {},
+
+        // 🆕 تصحيح الأخطاء
+        typoEnabled: {},
+
+        // 🆕 بيانات نتائج الفعاليات
+        resultsData: {},
+
+        // 🆕 تفعيل الردود
+        repliesEnabled: {},
+        ahaEnabled: {},
+        quietEnabled: {},
+        organizedGroups: {},
+
+        // 🆕 توقيت الحفظ
+        autoSaveEnabled: false,
+        autoSaveGroupJid: null
     };
 }
 
@@ -88,11 +139,15 @@ function ensureDatabaseShape() {
         db = createDefaultDatabase();
     }
 
+    // الحقول التي يجب أن تكون objects
     const objectFields = [
         "groupSettings", "adsGroups", "bankGroups", "workGroups", "receiveGroups",
         "cooldowns", "users", "admins", "gameCooldown", "monitoredUsers",
         "dailyData", "dailyCooldown", "chainPermissions", "rouletteCooldown",
-        "crystalCooldown", "crystalPlayerCooldown", "pendingSend", "inventory"
+        "crystalCooldown", "crystalPlayerCooldown", "pendingSend", "inventory",
+        "mainGroup", "userPhotos", "emperors", "protectCards",
+        "reactEnabled", "hisbaEnabled", "typoEnabled", "resultsData",
+        "repliesEnabled", "ahaEnabled", "quietEnabled", "organizedGroups"
     ];
 
     for (const field of objectFields) {
@@ -101,10 +156,18 @@ function ensureDatabaseShape() {
         }
     }
 
+    // welcomeLinks
+    if (!db.welcomeLinks || typeof db.welcomeLinks !== "object" || Array.isArray(db.welcomeLinks)) {
+        db.welcomeLinks = { link1: "", link2: "" };
+    } else {
+        if (typeof db.welcomeLinks.link1 !== "string") db.welcomeLinks.link1 = "";
+        if (typeof db.welcomeLinks.link2 !== "string") db.welcomeLinks.link2 = "";
+    }
+
+    // permissions
     if (!db.permissions || typeof db.permissions !== "object" || Array.isArray(db.permissions)) {
         db.permissions = {};
     }
-
     for (const level of ["1", "2", "3", "4"]) {
         if (!Array.isArray(db.permissions[level])) {
             db.permissions[level] = [];
@@ -137,14 +200,19 @@ function loadDatabase() {
                 throw new Error("database.json لا يحتوي على بيانات صحيحة.");
             }
 
-            db = { ...createDefaultDatabase(), ...parsed };
+            db = {
+                ...createDefaultDatabase(),
+                ...parsed
+            };
         }
 
         ensureDatabaseShape();
         return db;
 
     } catch (error) {
-        console.error("❌ تعذر تحميل database.json:", error?.message || error);
+        console.error("❌ تعذر تحميل database.json:");
+        console.error(error?.message || error);
+
         db = createDefaultDatabase();
         ensureDatabaseShape();
         return db;
@@ -154,22 +222,32 @@ function loadDatabase() {
 function saveDb() {
     try {
         ensureDatabaseShape();
+
         const tempFile = `${DB_FILE}.tmp`;
         const json = JSON.stringify(db, null, 2);
+
         fs.writeFileSync(tempFile, json, "utf8");
         fs.renameSync(tempFile, DB_FILE);
+
         return true;
+
     } catch (error) {
-        console.error("❌ خطأ أثناء حفظ database.json:", error?.message || error);
+        console.error("❌ خطأ أثناء حفظ database.json:");
+        console.error(error?.message || error);
+
         try {
             const tempFile = `${DB_FILE}.tmp`;
-            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+            if (fs.existsSync(tempFile)) {
+                fs.unlinkSync(tempFile);
+            }
         } catch (_) {}
+
         return false;
     }
 }
 
 loadDatabase();
+
 global.db = db;
 global.saveDb = saveDb;
 
@@ -222,6 +300,9 @@ function getBotNumber(sock = currentSocket) {
     return jidToNumber(sock?.user?.id);
 }
 
+/**
+ * 🆕 فحص هل المستخدم مالك أو امبراطور
+ */
 function isOwner(senderNumber, sock = currentSocket, msg = null) {
     const sender = cleanNumber(senderNumber);
     if (!sender) return false;
@@ -233,6 +314,13 @@ function isOwner(senderNumber, sock = currentSocket, msg = null) {
 
     const botNumber = getBotNumber(sock);
     if (botNumber && sender === botNumber) return true;
+
+    // 🆕 فحص الأباطرة
+    try {
+        if (db && db.emperors && db.emperors[sender] === true) {
+            return true;
+        }
+    } catch (_) {}
 
     return false;
 }
@@ -314,7 +402,11 @@ async function sendText(sock, jid, text, msg = null, extra = {}) {
         const messageText = String(text ?? "").trim();
         if (!messageText) return null;
 
-        const options = { text: messageText, ...extra };
+        const options = {
+            text: messageText,
+            ...extra
+        };
+
         const sendOptions = msg ? { quoted: msg } : undefined;
 
         return await sock.sendMessage(jid, options, sendOptions);
@@ -393,7 +485,10 @@ function getNoNicknameMessage() {
 
 function configureHandlers(newHandlers = {}) {
     if (newHandlers && typeof newHandlers === "object") {
-        handlers = { ...handlers, ...newHandlers };
+        handlers = {
+            ...handlers,
+            ...newHandlers
+        };
     }
     return handlers;
 }
@@ -410,7 +505,9 @@ function getReconnectDelay() {
         1000 * Math.pow(2, Math.max(0, reconnectAttempts - 1)),
         MAX_RECONNECT_DELAY
     );
+
     const jitter = Math.floor(Math.random() * 1000);
+
     return Math.min(exponential + jitter, MAX_RECONNECT_DELAY);
 }
 
@@ -434,61 +531,12 @@ function registerEvents(sock, saveCreds) {
         try {
             const { connection, lastDisconnect } = update || {};
 
-            // ================================================
-            // 🔑 طلب كود الاقتران عند connecting
-            // ================================================
-            if (connection === "connecting" && !pairingCodeRequested) {
-                if (!sock.authState?.creds?.registered) {
-                    const owners = getOwnerNumbers();
-                    const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
-
-                    if (pairingNumber) {
-                        pairingCodeRequested = true;
-
-                        console.log("");
-                        console.log("❆━━━━━══━━━━━❆");
-                        console.log("جار تجهيز كود الاقتران....");
-                        console.log("❆━━━━━══━━━━━❆");
-                        console.log("");
-
-                        // ⏱️ مهلة أطول لضمان استقرار الاتصال
-                        setTimeout(async () => {
-                            try {
-                                if (!currentSocket || currentSocket !== sock) return;
-
-                                const formattedNumber = String(pairingNumber).replace(/[^0-9]/g, "");
-                                let code = await sock.requestPairingCode(formattedNumber);
-                                code = code?.match(/.{1,4}/g)?.join("-") || code;
-
-                                console.log("");
-                                console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
-                                console.log(` الكود:     ┊${code}┊`);
-                                console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
-                                console.log("");
-
-                            } catch (error) {
-                                console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
-                                pairingCodeRequested = false;
-                            }
-                        }, 5000);
-                    }
-                }
-            }
-
-            // ================================================
-            // ✅ نجح الاتصال
-            // ================================================
             if (connection === "open") {
                 reconnectAttempts = 0;
                 clearReconnectTimer();
                 isReconnecting = false;
-                pairingCodeRequested = false;
 
-                console.log("");
-                console.log("◆━─━─━─⊱✅⊰─━─━─━◆");
-                console.log("           نجح الاتصال");
-                console.log("◆━─━─━─⊱✅⊰─━─━─━◆");
-                console.log("");
+                console.log("✅ تم اتصال البوت بنجاح!");
 
                 if (typeof handlers.onConnectionOpen === "function") {
                     await handlers.onConnectionOpen(sock, { db, saveDb });
@@ -523,11 +571,13 @@ function registerEvents(sock, saveCreds) {
                 console.warn(`⚠️ انقطع الاتصال. إعادة المحاولة بعد ${Math.ceil(delay / 1000)} ثانية...`);
 
                 clearReconnectTimer();
-                pairingCodeRequested = false;
 
                 reconnectTimer = setTimeout(async () => {
                     reconnectTimer = null;
-                    if (!shuttingDown) await reconnect();
+
+                    if (!shuttingDown) {
+                        await reconnect();
+                    }
                 }, delay);
             }
 
@@ -617,7 +667,7 @@ async function createSocket() {
             const latest = await fetchLatestBaileysVersion();
             version = latest?.version;
         } catch (error) {
-            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير.");
+            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير، سيتم استخدام الإعداد الافتراضي.");
             version = undefined;
         }
 
@@ -626,8 +676,8 @@ async function createSocket() {
             printQRInTerminal: false,
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
-            syncFullHistory: false,
-            browser: Browsers.ubuntu("Chrome")  // ✅ هوية قياسية
+            // 🆕 تفعيل مزامنة التاريخ الكامل لدعم .تنظيف
+            syncFullHistory: true
         };
 
         if (version) {
@@ -635,6 +685,30 @@ async function createSocket() {
         }
 
         const sock = makeWASocket(socketOptions);
+
+        const owners = getOwnerNumbers();
+        const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
+
+        if (!state.creds.registered && pairingNumber) {
+            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
+
+            setTimeout(async () => {
+                try {
+                    if (!currentSocket || currentSocket !== sock) return;
+
+                    let code = await sock.requestPairingCode(pairingNumber);
+
+                    if (code) {
+                        code = String(code).match(/.{1,4}/g)?.join("-") || code;
+                    }
+
+                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
+
+                } catch (error) {
+                    console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
+                }
+            }, 4000);
+        }
 
         registerEvents(sock, saveCreds);
 

@@ -1,10 +1,28 @@
 {
   "name": "aljesat-bot",
   "version": "1.0.0",
+  "description": "ALJESAT BOT - WhatsApp Bot with Games & Protection",
   "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
-    "@yudzxml/baileys": "^7.4.3",
+    "@whiskeysockets/baileys": "^6.7.18",
+    "@hapi/boom": "^10.0.1",
+    "@qadeerxtech/qadeer-btns": "^1.0.2",
     "pino": "^8.21.0",
-    "express": "^4.19.2"
-  }
+    "express": "^4.19.2",
+    "jimp": "^0.22.12"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "aljesat"
+  ],
+  "author": "ALJESAT",
+  "license": "MIT"
 }

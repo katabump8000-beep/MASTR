@@ -1,10 +1,13 @@
 // ============================================================
-// colors.js
+// tahmin.js
 // ALJESAT BOT
-// لعبة الألوان - إرسال لون ويجب كتابة اسمه
+// لعبة التخمين - إرسال صورة شخصية ويجب كتابة اسمه
 // ============================================================
 
 "use strict";
+
+const path = require("path");
+const fs = require("fs");
 
 // ============================================================
 // مراحل التحميل (8 مراحل خلال 8 ثواني)
@@ -22,29 +25,99 @@ const LOADING_STAGES = [
 ];
 
 // ============================================================
-// قائمة الألوان
+// مسار مجلد الصور
 // ============================================================
 
-const COLORS_LIST = [
-    { emoji: "❤️", name: "احمر", aliases: ["أحمر", "حمراء"] },
-    { emoji: "💙", name: "ازرق", aliases: ["أزرق", "زرقاء"] },
-    { emoji: "💚", name: "اخضر", aliases: ["أخضر", "خضراء"] },
-    { emoji: "💛", name: "اصفر", aliases: ["أصفر", "صفراء"] },
-    { emoji: "🧡", name: "برتقالي", aliases: ["برتقال", "برتقالية"] },
-    { emoji: "💜", name: "بنفسجي", aliases: ["بنفسج", "نيلي"] },
-    { emoji: "🩶", name: "رمادي", aliases: ["رمادي", "فضي"] },
-    { emoji: "🩷", name: "زهري", aliases: ["وردي", "زهري", "ورد"] },
-    { emoji: "🩵", name: "ازرق فاتح", aliases: ["أزرق فاتح", "سماءي"] },
-    { emoji: "🤎", name: "بني", aliases: ["بني", "أسمر"] },
-    { emoji: "🤍", name: "ابيض", aliases: ["أبيض", "بيضاء"] },
-    { emoji: "🖤", name: "اسود", aliases: ["أسود", "سوداء"] }
+const TAHMIN_FOLDER = path.join(__dirname, "tahmin_photo");
+
+if (!fs.existsSync(TAHMIN_FOLDER)) {
+    fs.mkdirSync(TAHMIN_FOLDER, { recursive: true });
+}
+
+// ============================================================
+// قائمة الشخصيات مع id و المرادفات
+// ============================================================
+
+const TAHMIN_LIST = [
+    // ============ ناروتو ============
+    { id: "iii", name: "توبيراما", aliases: ["توبيراما", "هاشيراما"] },
+    { id: "tan", name: "تانجيرو", aliases: ["تانجيرو", "كامادو"] },
+    { id: "mee", name: "ميغومي", aliases: ["ميغومي", "فوشيغورو"] },
+    { id: "kay", name: "كايدو", aliases: ["كايدو"] },
+    { id: "hen", name: "هيناتا", aliases: ["هيناتا", "هيوجا"] },
+    { id: "jer", name: "جيرايا", aliases: ["جيرايا"] },
+    { id: "aya", name: "اياناكوجي", aliases: ["اياناكوجي", "ايانوكوجي"] },
+    { id: "alo", name: "الوكا", aliases: ["الوكا", "ألوكا"] },
+    { id: "medo", name: "ميدوريا", aliases: ["ميدوريا", "ايزوكو"] },
+    { id: "bek", name: "بيكولو", aliases: ["بيكولو"] },
+    { id: "ayzn", name: "آيزن", aliases: ["آيزن", "ايزن", "سوسكي"] },
+    { id: "ber", name: "بيروس", aliases: ["بيروس", "فيروس", "بيرُوس"] },
+    { id: "joh", name: "جوهان", aliases: ["جوهان", "يوهان"] },
+    { id: "gon", name: "غون", aliases: ["غون", "جون"] },
+    { id: "eren", name: "إيرين", aliases: ["إيرين", "ايرين", "ييغر"] },
+    { id: "koo", name: "كوموغي", aliases: ["كوموغي", "كوموجي"] },
+    { id: "gam", name: "غابيمارو", aliases: ["غابيمارو", "غابي"] },
+    { id: "mad", name: "مادارا", aliases: ["مادارا", "اوتشيها"] },
+    { id: "ita", name: "إيتاتشي", aliases: ["إيتاتشي", "ايتاتشي", "ايتاشي"] },
+    { id: "han", name: "هانجي", aliases: ["هانجي"] },
+    { id: "shi", name: "شيكامارو", aliases: ["شيكامارو"] },
+    { id: "bof", name: "بوف", aliases: ["بوف", "بوف"] },
+    { id: "tran", name: "ترانكس", aliases: ["ترانكس"] },
+    { id: "car", name: "غارا", aliases: ["غارا", "قارا", "كارا"] },
+    { id: "goj", name: "غوجو", aliases: ["غوجو", "ساتورو"] },
+    { id: "shar", name: "شارلناك", aliases: ["شارلناك", "شارلوت"] },
+    { id: "kop", name: "كوبي", aliases: ["كوبي", "كوبي"] },
+    { id: "roj", name: "روجر", aliases: ["روجر", "غول دي روجر"] },
+    { id: "top", name: "توبيراما", aliases: ["توبيراما", "توبي"] },
+    { id: "nam", name: "نامي", aliases: ["نامي", "نـامي"] },
+    { id: "iny", name: "اينيوشا", aliases: ["اينيوشا", "إنيوشا", "اينيوشا"] },
+    { id: "mer", name: "ميرويم", aliases: ["ميرويم", "ميروم"] },
+    { id: "mor", name: "موراو", aliases: ["موراو", "موراو"] },
+    { id: "day", name: "دايشنكان", aliases: ["دايشنكان", "داي"] },
+    { id: "ker", name: "كيرا", aliases: ["كيرا", "لايت", "ياغامي"] },
+    { id: "zoro", name: "زورو", aliases: ["زورو", "رورونوا"] },
+    { id: "ani", name: "آني", aliases: ["آني", "اني"] },
+    { id: "nop", name: "نوبارا", aliases: ["نوبارا", "كوجيساكي"] },
+    { id: "hes", name: "هيستوريا", aliases: ["هيستوريا", "كريستا"] },
+    { id: "meca", name: "ميكاسا", aliases: ["ميكاسا", "أكرمان", "اكرمان"] },
+    { id: "gojo", name: "غوجو", aliases: ["غوجو", "ساتورو"] },
+    { id: "heso", name: "هيسوكا", aliases: ["هيسوكا", "مورو"] },
+    { id: "tsho", name: "تشوجي", aliases: ["تشوجي", "تشووجي"] },
+    { id: "tso", name: "تسونادي", aliases: ["تسونادي", "تسونادِ"] },
+    { id: "ben", name: "باين", aliases: ["باين", "بين", "بين"] },
+    { id: "kora", name: "كورابيكا", aliases: ["كورابيكا", "كورابكا"] },
+    { id: "min", name: "ميناتو", aliases: ["ميناتو", "ناميكازي"] },
+    { id: "tfo", name: "توبيراما", aliases: ["توبيراما", "توبي"] },
+    { id: "zoroo", name: "زورو", aliases: ["زورو", "رورونوا"] },
+    { id: "beto", name: "نيفير بيتو", aliases: ["بيتو", "نيفير بيتو", "نيفر بيتو"] },
+    { id: "sas", name: "ساسكي", aliases: ["ساسكي", "اوتشيها"] },
+    { id: "gone", name: "دراغون", aliases: ["دراغون", "دراجون"] },
+    { id: "ffff", name: "غون", aliases: ["غون", "جون"] },
+    { id: "aka", name: "اكاينو", aliases: ["اكاينو", "أكاينو"] },
+    { id: "kabo", name: "كابوتو", aliases: ["كابوتو", "كابوتو"] },
+    { id: "balck", name: "غوكو بلاك", aliases: ["غوكو بلاك", "بلاك", "غوكو الاسود"] },
+    { id: "smo", name: "سموكر", aliases: ["سموكر", "سموك"] },
+    { id: "koko", name: "غوكو", aliases: ["غوكو", "كوكو", "غوكو"] },
+    { id: "boma", name: "غينثورو", aliases: ["غينثورو", "المفجر بوما", "بوما"] },
+    { id: "ise", name: "ايس", aliases: ["ايس", "أيس", "ايس"] },
+    { id: "sok", name: "سوكونا", aliases: ["سوكونا", "سكونا", "سوكونا"] },
+    { id: "kro", name: "كروكودايل", aliases: ["كروكودايل", "كروكو"] },
+    { id: "sai", name: "ساي", aliases: ["ساي", "ايتوشي ساي"] },
+    { id: "dra", name: "ايندرا", aliases: ["ايندرا", "آينادرا"] },
+    { id: "kit", name: "كايتو كيد", aliases: ["كايدو", "كايتو كيد", "كيد", "كايدو كيد"] },
+    { id: "song", name: "سونغ جين وو", aliases: ["سونغ جين وو", "سونغ", "سونج", "سونغ جين"] },
+    { id: "nag", name: "ناغي", aliases: ["ناغي", "ناجي"] },
+    { id: "doma", name: "دوما", aliases: ["دوما", "دومه", "دومة"] },
+    { id: "wing", name: "وينغ", aliases: ["وينغ", "وينج"] },
+    { id: "meet", name: "ميتسوكي", aliases: ["ميتسوكي", "ميتسكي"] },
+    { id: "sat", name: "ساتوتز", aliases: ["ساتوتز", "ساتورو"] }
 ];
 
 // ============================================================
 // الحالة النشطة للعبة
 // ============================================================
 
-const activeColors = Object.create(null);
+const activeTahmin = Object.create(null);
 
 // ============================================================
 // أدوات مساعدة
@@ -104,6 +177,25 @@ function getMessageText(message) {
 }
 
 // ============================================================
+// الحصول على مسار صورة التخمين (يدعم jpg + png)
+// ============================================================
+
+function getTahminImagePath(id) {
+    const jpgPath = path.join(TAHMIN_FOLDER, `${id}.jpg`);
+    const jpegPath = path.join(TAHMIN_FOLDER, `${id}.jpeg`);
+    const pngPath = path.join(TAHMIN_FOLDER, `${id}.png`);
+
+    if (fs.existsSync(jpgPath)) return jpgPath;
+    if (fs.existsSync(jpegPath)) return jpegPath;
+    if (fs.existsSync(pngPath)) return pngPath;
+    return null;
+}
+
+function tahminImageExists(id) {
+    return getTahminImagePath(id) !== null;
+}
+
+// ============================================================
 // عرض التحميل
 // ============================================================
 
@@ -126,56 +218,66 @@ async function showLoading(sock, jid, msg) {
 // رسائل اللعبة
 // ============================================================
 
-function getColorsStartMessage() {
-    return `╗──────فعالية الالوان ─────╔ 
-  بكل بساطة البوت يرسل قلب ملون
-  ويجب على المشاركين ارسال اسم
-  اللون الذي يرسله البوت وهذه الالوان: 
-  🤎🤍🩶💜💙🩵💚❤️🩷🧡
-╝──────────────────╚`;
+function getTahminStartMessage() {
+    return `~*‏«───────🎯───────»*~
+  فعالية التخمين سهلة جدا 
+  \`فقط ارسل أسم الشخصية\` التي 
+  تظهر في الصورة 🖼️
+  \`اولا سأبدأ بهذه الشخصية:\`
+~*‏«───────🎯───────»*~`;
 }
 
-function getColorsQuestion(color) {
-    return `╗──────فعالية الالوان ─────╔ 
-  ارسل اسم اللون التالي: ☜  ${color.emoji} ☞
-╝──────────────────╚`;
+function getTahminQuestion() {
+    return `~*‏«───────🎯───────»*~
+  \`ما اسم هذه الشخصية؟\`
+~*‏«───────🎯───────»*~`;
 }
 
-function getColorsCorrect(score) {
+function getTahminCorrect(score) {
     return `✅ إجابة صحيحة ✅
 إجاباتك: { \`${score}\` }
 الهدف حتى الفوز: { _*10*_ }.`;
 }
 
-function getColorsWinner(user) {
+function getTahminWinner(user) {
     return `━━━━━━✦❘༻🎓༺❘✦━━━━━━
 مبروك للفائز 🥳  @${user}
 ━━━━━━✦❘༻👑༺❘✦━━━━━━`;
 }
 
-function getColorsDeposit(user, prize) {
+function getTahminDeposit(user, prize) {
     return `👑◈═══『 إيداع 』═══◈👑
 @${user}
-السبب: فاز بفعالية الالوان
+السبب: فاز بفعالية التخمين
 💰 المبلغ: [${prize}]
 تم إضافة رصيدك للبنك يمكنك الذهاب والتحقق✅
 
 👑◈════════════◈👑`;
 }
 
-function getColorsInactiveStop() {
-    return "⚠️ تم إيقاف فعالية الالوان تلقائياً بسبب الخمول وعدم التفاعل.";
+function getTahminInactiveStop() {
+    return "⚠️ تم إيقاف فعالية التخمين تلقائياً بسبب الخمول وعدم التفاعل.";
 }
 
-function getColorsTimeout() {
+function getTahminTimeout() {
     return "🕰 إنتهى الوقت المحدد 30ث ⌛";
 }
 
 // ============================================================
-// بدء لعبة الألوان
+// تنسيق التاريخ
 // ============================================================
 
-async function handleColorsCommand(
+function formatDate(date) {
+    const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+    const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+    return `${days[date.getDay()]} | ${date.getDate()} | ${months[date.getMonth()]}`;
+}
+
+// ============================================================
+// بدء لعبة التخمين
+// ============================================================
+
+async function handleTahminCommand(
     sock,
     jid,
     msg,
@@ -185,9 +287,9 @@ async function handleColorsCommand(
     isBotOwner
 ) {
     try {
-        if (activeColors[jid]) {
+        if (activeTahmin[jid]) {
             await safeSend(sock, jid, {
-                text: "⚠️ هناك فعالية الوان قائمة بالفعل في هذه المجموعة!"
+                text: "⚠️ هناك فعالية تخمين قائمة بالفعل في هذه المجموعة!"
             }, { quoted: msg });
             return true;
         }
@@ -205,6 +307,16 @@ async function handleColorsCommand(
         if (!hasNickname(db, cleanSender)) {
             await safeSend(sock, jid, {
                 text: "❌ يجب أن يكون لديك لقب مسجل عبر .سجل لتتمكن من بدء الفعالية."
+            }, { quoted: msg });
+            return true;
+        }
+
+        // فلترة الشخصيات التي لها صور موجودة فعلاً
+        const availableCharacters = TAHMIN_LIST.filter(c => tahminImageExists(c.id));
+
+        if (availableCharacters.length === 0) {
+            await safeSend(sock, jid, {
+                text: "❌ لا توجد صور شخصيات متوفرة. يرجى إضافة الصور إلى مجلد tahmin_photo/"
             }, { quoted: msg });
             return true;
         }
@@ -230,18 +342,18 @@ async function handleColorsCommand(
 
         await showLoading(sock, jid, msg);
 
-        const colors = shuffleArray([...COLORS_LIST]);
+        const characters = shuffleArray([...availableCharacters]);
         const gameState = {
-            colors: colors,
+            characters: characters,
             currentIndex: 0,
             scores: {},
             isActive: true,
             isPaused: false,
             isWaitingNext: false,
-            currentColor: null,
+            currentCharacter: null,
             lastActivity: Date.now(),
-            totalQuestions: colors.length,
-            prizeAmount: 30,
+            totalQuestions: characters.length,
+            prizeAmount: 50,  // 🆕 50$
             startTime: new Date(),
             timers: {
                 inactivity: null,
@@ -263,22 +375,22 @@ async function handleColorsCommand(
                     clearTimeout(this.timers.next);
                     this.timers.next = null;
                 }
-                delete activeColors[jid];
+                delete activeTahmin[jid];
             }
         };
 
-        activeColors[jid] = gameState;
+        activeTahmin[jid] = gameState;
 
         await safeSend(sock, jid, {
-            text: getColorsStartMessage()
+            text: getTahminStartMessage()
         }, { quoted: msg });
 
         setTimeout(async () => {
             if (!gameState.isActive) return;
-            await sendNextColorQuestion(sock, jid, db, gameState);
+            await sendNextTahminQuestion(sock, jid, db, gameState);
         }, 2000);
 
-        startColorsInactivityTimer(sock, jid, gameState);
+        startTahminInactivityTimer(sock, jid, gameState);
 
         const listener = async (mObj) => {
             try {
@@ -299,13 +411,13 @@ async function handleColorsCommand(
 
                 gameState.lastActivity = Date.now();
 
-                if (gameState.currentColor) {
+                if (gameState.currentCharacter) {
                     const normalizedAnswer = normalizeText(txt);
-                    const color = gameState.currentColor;
+                    const character = gameState.currentCharacter;
 
                     const isCorrect = 
-                        normalizedAnswer === normalizeText(color.name) ||
-                        color.aliases.some(alias => normalizedAnswer === normalizeText(alias));
+                        normalizedAnswer === normalizeText(character.name) ||
+                        character.aliases.some(alias => normalizedAnswer === normalizeText(alias));
 
                     if (isCorrect) {
                         gameState.isWaitingNext = true;
@@ -315,12 +427,11 @@ async function handleColorsCommand(
 
                         if (currentScore >= 10) {
                             const winnerClean = cleanNumber(userSender);
-                            const winnerTag = `@${winnerClean}`;
 
                             gameState.stopGame();
 
                             await safeSend(sock, jid, {
-                                text: getColorsWinner(winnerClean),
+                                text: getTahminWinner(winnerClean),
                                 mentions: [userSender]
                             });
 
@@ -333,18 +444,18 @@ async function handleColorsCommand(
                             }
 
                             await safeSend(sock, jid, {
-                                text: getColorsDeposit(winnerClean, gameState.prizeAmount),
+                                text: getTahminDeposit(winnerClean, gameState.prizeAmount),
                                 mentions: [userSender]
                             });
 
-                            // ⭐ إعلان باللقب
+                            // إعلان باللقب
                             const winnerUser = db.users?.[winnerClean];
                             const winnerNickname = (winnerUser && String(winnerUser.nickname || "").trim()) || winnerClean;
 
                             const adMessage = `_*█ إنــتــهــت█*_
 
 ◇🎮 نـــــــوع الفعالية:
-*{الالوان}*
+*{التخمين}*
 
 ◇🪎 آلَــــجَــــآئـزَة:
 *{ ${gameState.prizeAmount}$ }*
@@ -361,9 +472,7 @@ async function handleColorsCommand(
                             if (db.adsGroups && typeof db.adsGroups === "object") {
                                 for (const adJid of Object.keys(db.adsGroups)) {
                                     if (!db.adsGroups[adJid]) continue;
-                                    await safeSend(sock, adJid, {
-                                        text: adMessage
-                                    });
+                                    await safeSend(sock, adJid, { text: adMessage });
                                 }
                             }
 
@@ -371,7 +480,7 @@ async function handleColorsCommand(
                         }
 
                         await safeSend(sock, jid, {
-                            text: getColorsCorrect(currentScore)
+                            text: getTahminCorrect(currentScore)
                         }, { quoted: incomingMsg });
 
                         if (gameState.timers.next) {
@@ -382,7 +491,7 @@ async function handleColorsCommand(
                             gameState.timers.next = null;
                             if (!gameState.isActive || gameState.isPaused) return;
                             gameState.isWaitingNext = false;
-                            await sendNextColorQuestion(sock, jid, db, gameState);
+                            await sendNextTahminQuestion(sock, jid, db, gameState);
                         }, 4000);
 
                         return;
@@ -390,7 +499,7 @@ async function handleColorsCommand(
                 }
 
             } catch (error) {
-                console.error("❌ خطأ في مستمع الالوان:", error?.message || error);
+                console.error("❌ خطأ في مستمع التخمين:", error?.message || error);
             }
         };
 
@@ -400,7 +509,7 @@ async function handleColorsCommand(
         return true;
 
     } catch (error) {
-        console.error("❌ خطأ في handleColorsCommand:", error?.message || error);
+        console.error("❌ خطأ في handleTahminCommand:", error?.message || error);
         return false;
     }
 }
@@ -409,21 +518,38 @@ async function handleColorsCommand(
 // إرسال السؤال التالي
 // ============================================================
 
-async function sendNextColorQuestion(sock, jid, db, gameState) {
+async function sendNextTahminQuestion(sock, jid, db, gameState) {
     if (!gameState.isActive || gameState.isPaused) return;
     if (gameState.currentIndex >= gameState.totalQuestions) {
-        gameState.colors = shuffleArray([...COLORS_LIST]);
+        gameState.characters = shuffleArray([...gameState.characters]);
         gameState.currentIndex = 0;
     }
 
-    const color = gameState.colors[gameState.currentIndex];
-    gameState.currentColor = color;
+    const character = gameState.characters[gameState.currentIndex];
+    gameState.currentCharacter = character;
     gameState.currentIndex++;
     gameState.lastActivity = Date.now();
 
-    await safeSend(sock, jid, {
-        text: getColorsQuestion(color)
-    });
+    const imagePath = getTahminImagePath(character.id);
+
+    if (imagePath) {
+        try {
+            const imageBuffer = fs.readFileSync(imagePath);
+            await safeSend(sock, jid, {
+                image: imageBuffer,
+                caption: getTahminQuestion()
+            });
+        } catch (error) {
+            console.error("❌ خطأ في إرسال صورة التخمين:", error?.message);
+            await safeSend(sock, jid, {
+                text: `${getTahminQuestion()}\n\n⚠️ لم يتم تحميل الصورة. اكتب اسم الشخصية: ${character.name}`
+            });
+        }
+    } else {
+        await safeSend(sock, jid, {
+            text: `${getTahminQuestion()}\n\n⚠️ الصورة غير متوفرة. اكتب اسم الشخصية: ${character.name}`
+        });
+    }
 
     if (gameState.timers.question) {
         clearTimeout(gameState.timers.question);
@@ -433,9 +559,9 @@ async function sendNextColorQuestion(sock, jid, db, gameState) {
         if (!gameState.isActive || gameState.isPaused) return;
         gameState.isWaitingNext = false;
         await safeSend(sock, jid, {
-            text: getColorsTimeout()
+            text: getTahminTimeout()
         });
-        await sendNextColorQuestion(sock, jid, db, gameState);
+        await sendNextTahminQuestion(sock, jid, db, gameState);
     }, 30000);
 }
 
@@ -443,7 +569,7 @@ async function sendNextColorQuestion(sock, jid, db, gameState) {
 // مؤقت النشاط
 // ============================================================
 
-function startColorsInactivityTimer(sock, jid, gameState) {
+function startTahminInactivityTimer(sock, jid, gameState) {
     if (gameState.timers.inactivity) {
         clearTimeout(gameState.timers.inactivity);
     }
@@ -456,31 +582,21 @@ function startColorsInactivityTimer(sock, jid, gameState) {
         if (timeSinceLastActivity > 3 * 60 * 1000) {
             gameState.stopGame();
             await safeSend(sock, jid, {
-                text: getColorsInactiveStop()
+                text: getTahminInactiveStop()
             });
             return;
         }
 
-        startColorsInactivityTimer(sock, jid, gameState);
+        startTahminInactivityTimer(sock, jid, gameState);
     }, 60000);
-}
-
-// ============================================================
-// تنسيق التاريخ
-// ============================================================
-
-function formatDate(date) {
-    const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-    const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    return `${days[date.getDay()]} | ${date.getDate()} | ${months[date.getMonth()]}`;
 }
 
 // ============================================================
 // إيقاف اللعبة
 // ============================================================
 
-function stopColorsGame(jid) {
-    const game = activeColors[jid];
+function stopTahminGame(jid) {
+    const game = activeTahmin[jid];
     if (game) {
         game.stopGame();
         return true;
@@ -488,8 +604,8 @@ function stopColorsGame(jid) {
     return false;
 }
 
-function checkColorsActive(jid) {
-    return Boolean(activeColors[jid] && activeColors[jid].isActive);
+function checkTahminActive(jid) {
+    return Boolean(activeTahmin[jid] && activeTahmin[jid].isActive);
 }
 
 // ============================================================
@@ -497,11 +613,13 @@ function checkColorsActive(jid) {
 // ============================================================
 
 module.exports = {
-    activeColors,
-    handleColorsCommand,
-    stopColorsGame,
-    checkColorsActive,
-    COLORS_LIST,
+    activeTahmin,
+    handleTahminCommand,
+    stopTahminGame,
+    checkTahminActive,
+    TAHMIN_LIST,
+    getTahminImagePath,
+    tahminImageExists,
     LOADING_STAGES,
     showLoading
 };
