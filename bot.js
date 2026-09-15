@@ -11,7 +11,7 @@ const {
     useMultiFileAuthState,
     DisconnectReason,
     fetchLatestBaileysVersion
-} = require("@rennzsync/baileys");
+} = require("@renz/baileys");
 
 const fs = require("fs");
 const path = require("path");
