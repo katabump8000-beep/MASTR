@@ -1,30 +1,32 @@
 // ============================================================
 // MessageBuilder.js
 // AIRich, Button, ButtonV2, Carousel
-// نسخة CJS معدّلة تستخدم jimp بدلاً من sharp
+// نسخة CJS معدّلة - تستخدم @fizzxydev/baileys-pro
 // ============================================================
 
 "use strict";
 
 const crypto = require("crypto");
+
 let generateWAMessageFromContent, prepareWAMessageMedia;
 
 try {
-    const baileys = require("baileys");
+    const baileys = require("@fizzxydev/baileys-pro");
     generateWAMessageFromContent = baileys.generateWAMessageFromContent;
     prepareWAMessageMedia = baileys.prepareWAMessageMedia;
 } catch (e) {
-    console.error("❌ فشل تحميل baileys:", e.message);
+    console.error("❌ فشل تحميل baileys-pro:", e.message);
 }
 
-let Jimp = null;
+// Jimp غير متاح - سنستخدم sharp إذا وُجد، وإلا نرجع الـ buffer كما هو
+let sharp = null;
 try {
-    Jimp = require("jimp");
+    sharp = require("sharp");
 } catch (e) {
-    console.warn("⚠️ jimp غير متاح:", e.message);
+    // sharp غير متاح - لا مشكلة
 }
 
-const VERSION = "4.5";
+const VERSION = "4.6";
 
 // ============================================================
 // extractIE - Inline Entities
@@ -112,15 +114,16 @@ class BaseBuilder {
     addPayload(obj) { Object.assign(this._extraPayload, obj); return this; }
 
     static async resize(buffer, x, y, fit = "cover") {
-        if (!Jimp) {
-            console.warn("⚠️ jimp غير متاح - إرجاع الصورة كما هي");
+        if (!sharp) {
+            // sharp غير متاح - نرجع الصورة كما هي
             return buffer;
         }
         try {
-            const image = await Jimp.read(buffer);
-            if (fit === "cover") image.cover(x, y);
-            else image.contain(x, y);
-            return await image.getBufferAsync(Jimp.MIME_PNG);
+            if (fit === "cover") {
+                return await sharp(buffer).resize(x, y, { fit: "cover" }).toBuffer();
+            } else {
+                return await sharp(buffer).resize(x, y, { fit: "contain" }).toBuffer();
+            }
         } catch (e) {
             console.warn("⚠️ resize فشل:", e.message);
             return buffer;
