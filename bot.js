@@ -65,12 +65,7 @@ function createDefaultDatabase() {
         cooldowns: {},
         users: {},
         admins: {},
-        permissions: {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": []
-        },
+        permissions: { "1": [], "2": [], "3": [], "4": [] },
         gamePermissions: [],
         gameCooldown: {},
         monitoredUsers: {},
@@ -140,19 +135,14 @@ function loadDatabase() {
                 throw new Error("database.json لا يحتوي على بيانات صحيحة.");
             }
 
-            db = {
-                ...createDefaultDatabase(),
-                ...parsed
-            };
+            db = { ...createDefaultDatabase(), ...parsed };
         }
 
         ensureDatabaseShape();
         return db;
 
     } catch (error) {
-        console.error("❌ تعذر تحميل database.json:");
-        console.error(error?.message || error);
-
+        console.error("❌ تعذر تحميل database.json:", error?.message || error);
         db = createDefaultDatabase();
         ensureDatabaseShape();
         return db;
@@ -162,32 +152,22 @@ function loadDatabase() {
 function saveDb() {
     try {
         ensureDatabaseShape();
-
         const tempFile = `${DB_FILE}.tmp`;
         const json = JSON.stringify(db, null, 2);
-
         fs.writeFileSync(tempFile, json, "utf8");
         fs.renameSync(tempFile, DB_FILE);
-
         return true;
-
     } catch (error) {
-        console.error("❌ خطأ أثناء حفظ database.json:");
-        console.error(error?.message || error);
-
+        console.error("❌ خطأ أثناء حفظ database.json:", error?.message || error);
         try {
             const tempFile = `${DB_FILE}.tmp`;
-            if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-            }
+            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         } catch (_) {}
-
         return false;
     }
 }
 
 loadDatabase();
-
 global.db = db;
 global.saveDb = saveDb;
 
@@ -332,11 +312,7 @@ async function sendText(sock, jid, text, msg = null, extra = {}) {
         const messageText = String(text ?? "").trim();
         if (!messageText) return null;
 
-        const options = {
-            text: messageText,
-            ...extra
-        };
-
+        const options = { text: messageText, ...extra };
         const sendOptions = msg ? { quoted: msg } : undefined;
 
         return await sock.sendMessage(jid, options, sendOptions);
@@ -415,10 +391,7 @@ function getNoNicknameMessage() {
 
 function configureHandlers(newHandlers = {}) {
     if (newHandlers && typeof newHandlers === "object") {
-        handlers = {
-            ...handlers,
-            ...newHandlers
-        };
+        handlers = { ...handlers, ...newHandlers };
     }
     return handlers;
 }
@@ -435,9 +408,7 @@ function getReconnectDelay() {
         1000 * Math.pow(2, Math.max(0, reconnectAttempts - 1)),
         MAX_RECONNECT_DELAY
     );
-
     const jitter = Math.floor(Math.random() * 1000);
-
     return Math.min(exponential + jitter, MAX_RECONNECT_DELAY);
 }
 
@@ -504,10 +475,7 @@ function registerEvents(sock, saveCreds) {
 
                 reconnectTimer = setTimeout(async () => {
                     reconnectTimer = null;
-
-                    if (!shuttingDown) {
-                        await reconnect();
-                    }
+                    if (!shuttingDown) await reconnect();
                 }, delay);
             }
 
@@ -588,6 +556,112 @@ async function reconnect() {
     }
 }
 
+// ============================================================
+// طلب كود الاقتران — الطريقة المُصلحة
+// ============================================================
+
+/**
+ * يطلب كود الاقتران بعد محاولات متعددة.
+ * الطريقة الرسمية في baileys: نستدعي requestPairingCode
+ * بعد أن يصبح الـ socket جاهزاً (بعد connection: "connecting").
+ */
+async function requestPairingCodeWithRetry(sock, pairingNumber, maxAttempts = 5) {
+    const cleanPairing = cleanNumber(pairingNumber);
+
+    if (!cleanPairing) {
+        console.error("❌ رقم الاقتران غير صالح");
+        return null;
+    }
+
+    console.log(`\n🔑 جارٍ طلب كود الاقتران للرقم: ${cleanPairing}`);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            // انتظر قبل المحاولة الأولى
+            if (attempt === 1) {
+                await new Promise(r => setTimeout(r, 3000));
+            } else {
+                await new Promise(r => setTimeout(r, 5000));
+            }
+
+            // تحقق أن الـ socket لا يزال نفسه
+            if (!currentSocket || currentSocket !== sock) {
+                console.warn("⚠️ تغير الـ socket أثناء الانتظار - إيقاف المحاولات");
+                return null;
+            }
+
+            // تحقق أن الـ socket جاهز
+            if (!sock.authState?.creds) {
+                console.warn(`⚠️ محاولة ${attempt}: الـ authState غير جاهز`);
+                continue;
+            }
+
+            // إذا كان مسجلاً بالفعل، لا نحتاج كود
+            if (sock.authState.creds.registered) {
+                console.log("✅ الرقم مسجل بالفعل - لا حاجة لكود اقتران");
+                return null;
+            }
+
+            // إذا كان هناك كود قديم، اطلب جديد
+            const code = await sock.requestPairingCode(cleanPairing);
+
+            if (!code || typeof code !== "string") {
+                console.warn(`⚠️ محاولة ${attempt}: الكود المُستلم غير صالح:`, code);
+                continue;
+            }
+
+            // إذا الكود هو القيمة الافتراضية الفاشلة، أعد المحاولة
+            if (code === "12345678" || code === "56781234" || code.length < 6) {
+                console.warn(`⚠️ محاولة ${attempt}: كود افتراضي فاشل (${code}) - إعادة المحاولة...`);
+                continue;
+            }
+
+            // تنسيق الكود: XXXX-XXXX
+            const formatted = String(code).match(/.{1,4}/g)?.join("-") || code;
+
+            console.log("");
+            console.log("════════════════════════════════════════════════════");
+            console.log(`🔑 رمز الاقتران (محاولة ${attempt}): [ ${formatted} ]`);
+            console.log("");
+            console.log("📱 افتح واتساب → الأجهزة المرتبطة → ربط جهاز");
+            console.log("📱 اختر: الربط برقم الهاتف");
+            console.log(`📱 أدخل الكود: ${formatted}`);
+            console.log("");
+            console.log("⏰ الكود صالح لمدة دقيقتين فقط - سارع!");
+            console.log("════════════════════════════════════════════════════");
+            console.log("");
+
+            return formatted;
+
+        } catch (error) {
+            const errMsg = error?.message || String(error);
+            console.error(`❌ محاولة ${attempt} فشلت: ${errMsg}`);
+
+            // إذا كان الخطأ "Connection Closed" أو "not connected"، أعد المحاولة
+            if (errMsg.includes("Connection Closed") ||
+                errMsg.includes("not connected") ||
+                errMsg.includes("closed")) {
+                console.log(`🔄 إعادة المحاولة ${attempt + 1}/${maxAttempts}...`);
+                continue;
+            }
+
+            // إذا كان الخطأ "already registered" — توقف
+            if (errMsg.includes("already") || errMsg.includes("registered")) {
+                console.log("✅ الرقم مسجل بالفعل");
+                return null;
+            }
+        }
+    }
+
+    console.error("❌ فشلت جميع محاولات طلب الكود");
+    console.error("💡 الحل: احذف مجلد session/ وأعد النشر");
+    return null;
+}
+
+// ============================================================
+// Socket Creation
+// ============================================================
+
 async function createSocket() {
     try {
         const { state, saveCreds } = await useMultiFileAuthState(SESSION_FOLDER);
@@ -596,8 +670,9 @@ async function createSocket() {
         try {
             const latest = await fetchLatestBaileysVersion();
             version = latest?.version;
+            console.log(`📦 إصدار Baileys: ${version?.join(".") || "افتراضي"}`);
         } catch (error) {
-            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير، سيتم استخدام الإعداد الافتراضي.");
+            console.warn("⚠️ تعذر جلب إصدار Baileys الأخير.");
             version = undefined;
         }
 
@@ -606,7 +681,8 @@ async function createSocket() {
             printQRInTerminal: false,
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
-            syncFullHistory: false
+            syncFullHistory: false,
+            browser: ["Ubuntu", "Chrome", "20.0.04"]
         };
 
         if (version) {
@@ -618,25 +694,21 @@ async function createSocket() {
         const owners = getOwnerNumbers();
         const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
 
-        if (!state.creds.registered && pairingNumber) {
-            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
+        const alreadyRegistered = Boolean(state.creds?.registered);
 
-            setTimeout(async () => {
-                try {
-                    if (!currentSocket || currentSocket !== sock) return;
+        if (alreadyRegistered) {
+            console.log(`✅ الجلسة مسجلة مسبقاً - ${cleanNumber(state.creds?.me?.id || "")}`);
+        } else if (pairingNumber) {
+            console.log(`\n🤖 البوت غير مسجل - جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
 
-                    let code = await sock.requestPairingCode(pairingNumber);
-
-                    if (code) {
-                        code = String(code).match(/.{1,4}/g)?.join("-") || code;
-                    }
-
-                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
-
-                } catch (error) {
-                    console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
-                }
-            }, 4000);
+            // نطلب الكود بعد تسجيل الأحداث
+            setTimeout(() => {
+                requestPairingCodeWithRetry(sock, pairingNumber, 5).catch(err => {
+                    console.error("❌ خطأ في طلب الكود:", err?.message);
+                });
+            }, 5000);
+        } else {
+            console.warn("⚠️ لا يوجد رقم اقتران في settings.botNumber");
         }
 
         registerEvents(sock, saveCreds);
