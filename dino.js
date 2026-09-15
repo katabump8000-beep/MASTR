@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { sendInlineWebUI } = require("@renz/baileys");
+const { sendHtmlApp } = require("@yudzxml/baileys");
 
 // ============================================================
 // الحالة النشطة للعبة
@@ -505,7 +505,7 @@ async function handleDinoCommand(
 
         activeDino[jid] = gameState;
 
-        // ✅ استخدام sendInlineWebUI لعرض HTML
+        // ✅ استخدام sendHtmlApp من @yudzxml/baileys
         try {
             const html = generateDinoHTML(
                 playerNickname,
@@ -516,10 +516,12 @@ async function handleDinoCommand(
                 serverUrl
             );
 
-            await sendInlineWebUI(sock, jid, html, "🦖 Dino Runner");
+            await sendHtmlApp(sock, jid, html, {
+                title: "🦖 Dino Runner"
+            });
 
         } catch (webuiError) {
-            console.error("❌ خطأ في sendInlineWebUI:", webuiError?.message || webuiError);
+            console.error("❌ خطأ في sendHtmlApp:", webuiError?.message || webuiError);
             await safeSend(sock, jid, {
                 text: `╗══════════════════════╔
   🦖 *لعبة Dino Runner* 🦖
