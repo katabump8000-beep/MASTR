@@ -10,7 +10,8 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    Browsers
 } = require("@fizzxydev/baileys-pro");
 
 const fs = require("fs");
@@ -580,7 +581,8 @@ async function createSocket() {
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
             syncFullHistory: false,
-            browser: ["Ubuntu", "Chrome", "20.0.04"]
+            // 🔑 هذا هو السطر السحري: استخدام هوية جهاز قياسية
+            browser: Browsers.ubuntu("Chrome")
         };
 
         if (version) {
@@ -601,8 +603,6 @@ async function createSocket() {
             console.log(`\n🤖 البوت غير مسجل - بانتظار جاهزية الاتصال لطلب الكود للرقم: ${pairingNumber}`);
 
             let pairingRequested = false;
-            let pairingAttempts = 0;
-            const MAX_PAIRING_ATTEMPTS = 8;
 
             const pairingListener = async (update) => {
                 const { connection } = update || {};
@@ -611,11 +611,11 @@ async function createSocket() {
                 if (pairingRequested) return;
 
                 pairingRequested = true;
-                pairingAttempts++;
 
-                console.log(`🔗 الاتصال في وضع connecting (محاولة ${pairingAttempts}) - جارٍ طلب الكود...`);
+                console.log(`🔗 الاتصال في وضع connecting - جارٍ طلب الكود...`);
 
                 try {
+                    // مهلة قصيرة قبل الطلب
                     await new Promise(r => setTimeout(r, 2000));
 
                     if (!currentSocket || currentSocket !== sock) {
@@ -632,27 +632,6 @@ async function createSocket() {
 
                     if (!code || typeof code !== "string") {
                         console.error("❌ الكود غير صالح:", code);
-                        pairingRequested = false;
-                        return;
-                    }
-
-                    const cleanCode = String(code).replace(/-/g, "");
-
-                    // فحص الكود الافتراضي الفاشل
-                    if (cleanCode === "12345678" || cleanCode === "56781234" || cleanCode.length < 6) {
-                        console.warn(`⚠️ كود افتراضي فاشل (${code}) - إعادة المحاولة عند connecting التالي`);
-
-                        if (pairingAttempts < MAX_PAIRING_ATTEMPTS) {
-                            pairingRequested = false;
-                            // إعادة الاتصال لإعادة تشغيل "connecting"
-                            try {
-                                if (sock.ws && sock.ws.readyState === 1) {
-                                    sock.ws.close();
-                                }
-                            } catch (_) {}
-                        } else {
-                            console.error("❌ استنفدت كل المحاولات - الكود الافتراضي يفشل");
-                        }
                         return;
                     }
 
@@ -673,7 +652,6 @@ async function createSocket() {
                 } catch (error) {
                     const errMsg = error?.message || String(error);
                     console.error(`❌ فشل طلب الكود: ${errMsg}`);
-                    pairingRequested = false;
                 }
             };
 
