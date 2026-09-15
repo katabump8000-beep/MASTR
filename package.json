@@ -13,9 +13,7 @@
     "@whiskeysockets/baileys": "^6.7.18",
     "@hapi/boom": "^10.0.1",
     "@qadeerxtech/qadeer-btns": "^1.0.2",
-    "pino": "^8.21.0",
-    "express": "^4.19.2",
-    "jimp": "^0.22.12"
+    "pino": "^8.21.0"
   },
   "keywords": [
     "whatsapp",
