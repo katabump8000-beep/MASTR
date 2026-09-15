@@ -6,8 +6,7 @@
 
 "use strict";
 
-// استيراد دالة sendInlineWebUI من المكتبة الجديدة
-const { sendInlineWebUI } = require("@rennzsync/baileys");
+const { sendInlineWebUI } = require("@renz/baileys");
 
 // ============================================================
 // الحالة النشطة للعبة
