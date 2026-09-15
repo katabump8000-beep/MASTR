@@ -10,7 +10,8 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    Browsers
 } = require("@yudzxml/baileys");
 
 const fs = require("fs");
@@ -450,7 +451,7 @@ function registerEvents(sock, saveCreds) {
                         console.log("❆━━━━━══━━━━━❆");
                         console.log("");
 
-                        // مهلة صغيرة لضمان استقرار الاتصال
+                        // ⏱️ مهلة أطول لضمان استقرار الاتصال
                         setTimeout(async () => {
                             try {
                                 if (!currentSocket || currentSocket !== sock) return;
@@ -462,14 +463,14 @@ function registerEvents(sock, saveCreds) {
                                 console.log("");
                                 console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
                                 console.log(` الكود:     ┊${code}┊`);
-                                console.log("◆━─━─━─⊱🔑⊰─━━─━◆");
+                                console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
                                 console.log("");
 
                             } catch (error) {
                                 console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
                                 pairingCodeRequested = false;
                             }
-                        }, 3000);
+                        }, 5000);
                     }
                 }
             }
@@ -625,7 +626,8 @@ async function createSocket() {
             printQRInTerminal: false,
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
-            syncFullHistory: false
+            syncFullHistory: false,
+            browser: Browsers.ubuntu("Chrome")  // ✅ هوية قياسية
         };
 
         if (version) {
