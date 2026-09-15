@@ -11,7 +11,7 @@ const {
     useMultiFileAuthState,
     DisconnectReason,
     fetchLatestBaileysVersion
-} = require("@fizzxydev/baileys-pro");
+} = require("@rennzsync/baileys");
 
 const fs = require("fs");
 const path = require("path");
@@ -65,12 +65,7 @@ function createDefaultDatabase() {
         cooldowns: {},
         users: {},
         admins: {},
-        permissions: {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": []
-        },
+        permissions: { "1": [], "2": [], "3": [], "4": [] },
         gamePermissions: [],
         gameCooldown: {},
         monitoredUsers: {},
@@ -140,19 +135,14 @@ function loadDatabase() {
                 throw new Error("database.json لا يحتوي على بيانات صحيحة.");
             }
 
-            db = {
-                ...createDefaultDatabase(),
-                ...parsed
-            };
+            db = { ...createDefaultDatabase(), ...parsed };
         }
 
         ensureDatabaseShape();
         return db;
 
     } catch (error) {
-        console.error("❌ تعذر تحميل database.json:");
-        console.error(error?.message || error);
-
+        console.error("❌ تعذر تحميل database.json:", error?.message || error);
         db = createDefaultDatabase();
         ensureDatabaseShape();
         return db;
@@ -162,32 +152,22 @@ function loadDatabase() {
 function saveDb() {
     try {
         ensureDatabaseShape();
-
         const tempFile = `${DB_FILE}.tmp`;
         const json = JSON.stringify(db, null, 2);
-
         fs.writeFileSync(tempFile, json, "utf8");
         fs.renameSync(tempFile, DB_FILE);
-
         return true;
-
     } catch (error) {
-        console.error("❌ خطأ أثناء حفظ database.json:");
-        console.error(error?.message || error);
-
+        console.error("❌ خطأ أثناء حفظ database.json:", error?.message || error);
         try {
             const tempFile = `${DB_FILE}.tmp`;
-            if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-            }
+            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         } catch (_) {}
-
         return false;
     }
 }
 
 loadDatabase();
-
 global.db = db;
 global.saveDb = saveDb;
 
@@ -332,11 +312,7 @@ async function sendText(sock, jid, text, msg = null, extra = {}) {
         const messageText = String(text ?? "").trim();
         if (!messageText) return null;
 
-        const options = {
-            text: messageText,
-            ...extra
-        };
-
+        const options = { text: messageText, ...extra };
         const sendOptions = msg ? { quoted: msg } : undefined;
 
         return await sock.sendMessage(jid, options, sendOptions);
@@ -415,10 +391,7 @@ function getNoNicknameMessage() {
 
 function configureHandlers(newHandlers = {}) {
     if (newHandlers && typeof newHandlers === "object") {
-        handlers = {
-            ...handlers,
-            ...newHandlers
-        };
+        handlers = { ...handlers, ...newHandlers };
     }
     return handlers;
 }
@@ -435,9 +408,7 @@ function getReconnectDelay() {
         1000 * Math.pow(2, Math.max(0, reconnectAttempts - 1)),
         MAX_RECONNECT_DELAY
     );
-
     const jitter = Math.floor(Math.random() * 1000);
-
     return Math.min(exponential + jitter, MAX_RECONNECT_DELAY);
 }
 
@@ -466,7 +437,12 @@ function registerEvents(sock, saveCreds) {
                 clearReconnectTimer();
                 isReconnecting = false;
 
-                console.log("✅ تم اتصال البوت بنجاح!");
+                // ✅ رسالة نجاح الاتصال بالتنسيق المطلوب
+                console.log("");
+                console.log("◆━─━─━─⊱✅⊰─━─━─━◆");
+                console.log("           نجح الاتصال");
+                console.log("◆━─━─━─⊱✅⊰─━─━─━◆");
+                console.log("");
 
                 if (typeof handlers.onConnectionOpen === "function") {
                     await handlers.onConnectionOpen(sock, { db, saveDb });
@@ -504,10 +480,7 @@ function registerEvents(sock, saveCreds) {
 
                 reconnectTimer = setTimeout(async () => {
                     reconnectTimer = null;
-
-                    if (!shuttingDown) {
-                        await reconnect();
-                    }
+                    if (!shuttingDown) await reconnect();
                 }, delay);
             }
 
@@ -618,25 +591,33 @@ async function createSocket() {
         const owners = getOwnerNumbers();
         const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
 
-        if (!state.creds.registered && pairingNumber) {
-            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
+        if (!sock.authState.creds.registered && pairingNumber) {
+            // ❆ رسالة البدء
+            console.log("");
+            console.log("❆━━━━━══━━━━━❆");
+            console.log("جار تجهيز كود الاقتران....");
+            console.log("❆━━━━━══━━━━━❆");
+            console.log("");
 
             setTimeout(async () => {
                 try {
                     if (!currentSocket || currentSocket !== sock) return;
 
-                    let code = await sock.requestPairingCode(pairingNumber);
+                    const formattedNumber = String(pairingNumber).replace(/[^0-9]/g, "");
+                    let code = await sock.requestPairingCode(formattedNumber);
+                    code = code?.match(/.{1,4}/g)?.join("-") || code;
 
-                    if (code) {
-                        code = String(code).match(/.{1,4}/g)?.join("-") || code;
-                    }
-
-                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
+                    // 🔑 رسالة الكود بالتنسيق المطلوب
+                    console.log("");
+                    console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
+                    console.log(` الكود:     ┊${code}┊`);
+                    console.log("◆━─━─━─⊱🔑⊰─━─━─━◆");
+                    console.log("");
 
                 } catch (error) {
                     console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
                 }
-            }, 6000);
+            }, 5000);
         }
 
         registerEvents(sock, saveCreds);
