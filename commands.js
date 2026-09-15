@@ -250,45 +250,27 @@ async function handleGamesList(sock, jid, msg, senderNumber) {
         { id: "❆━═🎲 كريستال 🎰═━❆\nلعبة الكريستال", title: "❆━═🎲 كريستال 🎰═━❆", description: "لعبة الكريستال" }
     ];
 
+    // محاولة استخدام Button من MessageBuilder أولاً
     try {
-        const { sendInteractiveMessage } = require("@qadeerxtech/qadeer-btns");
-        await sendInteractiveMessage(sock, jid, {
-            text: headerText,
-            footer: "Aljesat Bot",
-            interactiveButtons: [
-                {
-                    name: "single_select",
-                    buttonParamsJson: JSON.stringify({
-                        title: "👈 تحديد 👉",
-                        sections: [
-                            { title: "🎮 الفعاليات المتاحة", rows: rows }
-                        ]
-                    })
-                }
-            ]
-        });
+        const { Button } = require("./MessageBuilder");
+
+        const btn = new Button(sock);
+        btn.setBody(headerText);
+        btn.setFooter("Aljesat Bot");
+        btn.addSelection("👈 تحديد 👉");
+        btn.makeSection("🎮 الفعاليات المتاحة");
+
+        for (const r of rows) {
+            btn.makeRow("", r.title, r.description, r.id);
+        }
+
+        await btn.send(jid);
         return true;
     } catch (e1) {
-        console.error("❌ qadeer-btns failed:", e1?.message);
+        console.error("❌ Button (MessageBuilder) failed:", e1?.message);
     }
 
-    try {
-        await sock.sendMessage(jid, {
-            text: headerText,
-            footer: "Aljesat Bot",
-            buttonText: "👈 تحديد 👉",
-            sections: [
-                {
-                    title: "🎮 الفعاليات المتاحة",
-                    rows: rows.map(r => ({ title: r.title, rowId: r.id, description: r.description }))
-                }
-            ]
-        }, { quoted: msg });
-        return true;
-    } catch (e2) {
-        console.error("❌ List Message failed:", e2?.message);
-    }
-
+    // fallback: نص عادي
     const fallback = headerText + "\n\n⏣⊰ تفكـ🧩ـــيك ⊱⏣ .تفكيك\n⏣⊰ كــتــ✍️ــابـة ⊱⏣ .كتابة\n⏣⊰ ألــــ🎨ـــوان ⊱⏣ .الوان\n⏣⊰ صــ🫣ــراحة ⊱⏣ .صراحة\n⏣⊰ الـحـ🦊ـيوانات ⊱⏣ .الحيوانات\n⏣⊰ أعـــ🚩ــلام ⊱⏣ .اعلام\n⏣⊰ إيمـــ😀ــوجي ⊱⏣ .ايموجي\n⏣⊰ طـــ🦖ــائر ⊱⏣ .طائر\n❆━═🎲 روليت 🎰═━❆ .روليت\n❆━═🎲 كريستال 🎰═━❆ .كريستال";
     await sendText(sock, jid, fallback, msg);
 
