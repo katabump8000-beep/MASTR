@@ -1,8 +1,8 @@
 // settings.js - إعدادات البوت الأساسية
 
 const settings = {
-    botNumber: "48459074937", // ضع رقمك هنا
-    owners: ["48459074937"],
+    botNumber: "967734191731", // ضع رقمك هنا
+    owners: ["967734191731"],
     sessionFolder: "session",
     botName: "BOT PATHIRA"
 };
