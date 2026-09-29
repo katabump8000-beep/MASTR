@@ -2,9 +2,12 @@
 // mzad.js
 // ALJESAT BOT
 // نظام المزاد - بيع وشراء القطع الأثرية (معدل)
+// + .سحب مزاد / .مزاد @منشن / .انهاء مزاد / الكسر (الرصيد السالب)
 // ============================================================
 
 "use strict";
+
+const jf = require("./jidfix");
 
 // ============================================================
 // قائمة القطع الأثرية مع الإيموجي والشرح
@@ -104,7 +107,9 @@ function cleanNumber(value) {
 
 function getUser(db, jid) {
     if (!db || !db.users) return null;
-    return db.users[jid] || null;
+    if (db.users[jid]) return db.users[jid];
+    const f = jf.pickByAlias(db.users, jid);
+    return f ? f.value : null;
 }
 
 function hasNickname(db, jid) {
@@ -172,6 +177,21 @@ function getMazadWinner(user, item, amount) {
 \`${item.name}\`
 \`${item.description}\`
 ◆━─━─━─⊱👑⊰─━─━─━◆`;
+}
+
+function getMazadBlocked() {
+    return `◆━─━─━─⊱⚠️⊰─━─━─━◆
+عذرا الإمبراطور قام بمنع هذا!
+◆━─━─━─⊱⛔⊰─━─━─━◆`;
+}
+
+function getMazadForcedWinner(user, item, amount) {
+    return `⌬━─⟐─ 🧾 ─⟐─━⌬
+العضو @${user} له
+كسب: ${item.emoji} ${item.name}
+${item.description}
+السعر:   ${amount}
+⌬━─⟐─ 🔥 ─⟐─━⌬`;
 }
 
 function getMazadCancelled() {
@@ -244,12 +264,24 @@ async function handleMazadCommand(
     isBotOwner
 ) {
     try {
-        const creator = db.mazadCreator;
-        if (!creator || creator !== cleanSender) {
-            await safeSend(sock, jid, {
-                text: "⚠️ ليس لديك صلاحية لبدء المزاد. يجب أن تكون منشئ المزاد."
-            }, { quoted: msg });
-            return true;
+        const allowedMap = db.mazadAllowed || {};
+        const isAllowed = jf.aliasesOf(cleanSender).some(a => allowedMap[a] === true);
+
+        if (db.mazadLocked) {
+            // بعد .سحب مزاد: فقط الإمبراطور ومن سمح له الإمبراطور
+            if (!(isBotOwner || isAllowed)) {
+                await safeSend(sock, jid, { text: getMazadBlocked() }, { quoted: msg });
+                return true;
+            }
+        } else {
+            const creator = db.mazadCreator;
+            const isCreator = Boolean(creator) && jf.sameUser(creator, cleanSender);
+            if (!(isCreator || isAllowed)) {
+                await safeSend(sock, jid, {
+                    text: "⚠️ ليس لديك صلاحية لبدء المزاد. يجب أن تكون منشئ المزاد."
+                }, { quoted: msg });
+                return true;
+            }
         }
 
         if (activeMazads[jid]) {
@@ -406,27 +438,36 @@ async function handleMazadBid(
 // إنهاء المزاد (⭐ معدّل: استخدام اللقب في الإعلان)
 // ============================================================
 
-async function endMazad(sock, jid, db, saveDb, mazadState) {
+async function endMazad(sock, jid, db, saveDb, mazadState, forced = false) {
     if (!mazadState.isActive) return;
 
     mazadState.isActive = false;
+    try { mazadState.stopMazad(); } catch (_) {}
 
     if (mazadState.highestBidder) {
         const winner = mazadState.highestBidder;
         const amount = mazadState.highestBid;
         const item = mazadState.item;
 
-        const user = getUser(db, winner);
-        if (user) {
-            user.balance = Number(user.balance) || 0;
-            user.balance -= amount;
+        // ⭐ الخصم مع دعم الكسر (الرصيد السالب) — بدون إشعار مباشر، نرسله بعد رسالة الفائز
+        let debitResult = null;
+        try {
+            const ban = require("./ban");
+            debitResult = await ban.debit(sock, db, saveDb, jid, winner, amount, { sendNotice: false });
+        } catch (e) {
+            const user = getUser(db, winner);
+            if (user) {
+                user.balance = Number(user.balance) || 0;
+                user.balance -= amount;
+            }
         }
 
+        const invKey = (debitResult && debitResult.key) || winner;
         db.inventory = db.inventory || {};
-        if (!db.inventory[winner]) {
-            db.inventory[winner] = [];
+        if (!db.inventory[invKey]) {
+            db.inventory[invKey] = [];
         }
-        db.inventory[winner].push({
+        db.inventory[invKey].push({
             emoji: item.emoji,
             name: item.name,
             description: item.description,
@@ -436,13 +477,22 @@ async function endMazad(sock, jid, db, saveDb, mazadState) {
         if (typeof saveDb === "function") saveDb();
 
         // رسالة الفائز داخل القروب (تبقى بالمنشن)
+        const winnerJid = await jf.resolveJid(sock, jid, winner);
         await safeSend(sock, jid, {
-            text: getMazadWinner(winner, item, amount),
-            mentions: [`${winner}@s.whatsapp.net`]
+            text: forced ? getMazadForcedWinner(jf.jnum(winnerJid) || winner, item, amount) : getMazadWinner(jf.jnum(winnerJid) || winner, item, amount),
+            mentions: [winnerJid]
         });
 
+        // ⭐ إشعار الكسر (إن حدث)
+        if (debitResult && debitResult.notice) {
+            await safeSend(sock, jid, {
+                text: debitResult.notice,
+                mentions: [winnerJid]
+            });
+        }
+
         // ⭐ إعلان ADS باللقب
-        const winnerUser = db.users?.[winner];
+        const winnerUser = getUser(db, winner);
         const winnerNickname = (winnerUser && String(winnerUser.nickname || "").trim()) || winner;
 
         const adMessage = `_*█ إنــتــهــت█*_
@@ -482,6 +532,72 @@ async function endMazad(sock, jid, db, saveDb, mazadState) {
 }
 
 // ============================================================
+// 🆕 .سحب مزاد  (الإمبراطور)
+// ============================================================
+
+async function handleMazadWithdraw(sock, jid, msg, db, saveDb, isBotOwner) {
+    if (!isBotOwner) {
+        await safeSend(sock, jid, { text: "⛔ هذا الأمر للإمبراطور فقط." }, { quoted: msg });
+        return true;
+    }
+    db.mazadLocked = true;
+    db.mazadAllowed = {};
+    if (typeof saveDb === "function") saveDb();
+    await safeSend(sock, jid, {
+        text: `◆━─━─━─⊱✅⊰─━─━─━◆\nتم سحب صلاحية المزاد من الجميع\nالإمبراطور فقط يمكنه استعماله\n◆━─━─━─⊱🔒⊰─━─━─━◆`
+    }, { quoted: msg });
+    return true;
+}
+
+// ============================================================
+// 🆕 .مزاد @منشن  (الإمبراطور يعطي صلاحية المزاد لشخص)
+// ============================================================
+
+async function handleMazadGrant(sock, jid, msg, db, saveDb, isBotOwner) {
+    if (!isBotOwner) {
+        await safeSend(sock, jid, { text: getMazadBlocked() }, { quoted: msg });
+        return true;
+    }
+    let mentioned = [];
+    try {
+        const m = msg?.message || {};
+        const inner = m.extendedTextMessage || {};
+        mentioned = inner.contextInfo?.mentionedJid || [];
+    } catch (_) {}
+    if (!mentioned.length) {
+        await safeSend(sock, jid, { text: "⚠️ الاستخدام: .مزاد @منشن" }, { quoted: msg });
+        return true;
+    }
+    const target = jf.jnum(mentioned[0]);
+    db.mazadAllowed = db.mazadAllowed || {};
+    for (const a of jf.aliasesOf(target)) db.mazadAllowed[a] = true;
+    if (typeof saveDb === "function") saveDb();
+    await safeSend(sock, jid, {
+        text: `✅ تم منح @${target} صلاحية إنشاء المزادات.`,
+        mentions: [mentioned[0]]
+    }, { quoted: msg });
+    return true;
+}
+
+// ============================================================
+// 🆕 .انهاء مزاد  (الإمبراطور)
+// ============================================================
+
+async function handleMazadForceEnd(sock, jid, msg, db, saveDb, isBotOwner) {
+    if (!isBotOwner) {
+        await safeSend(sock, jid, { text: "⛔ هذا الأمر للإمبراطور فقط." }, { quoted: msg });
+        return true;
+    }
+    const mazad = activeMazads[jid];
+    if (!mazad || !mazad.isActive) {
+        await safeSend(sock, jid, { text: "⚠️ لا يوجد مزاد نشط حالياً." }, { quoted: msg });
+        return true;
+    }
+    await endMazad(sock, jid, db, saveDb, mazad, true);
+    return true;
+}
+
+// ============================================================
 // عرض المخزون
 // ============================================================
 
@@ -493,8 +609,9 @@ async function handleMazadInventory(
     cleanSender
 ) {
     try {
-        const nickname = getUserNickname(db, cleanSender);
-        const inventory = db.inventory && db.inventory[cleanSender] || [];
+ const nickname = getUserNickname(db, cleanSender);
+        const invKey = jf.aliasesOf(cleanSender).find(a => db.inventory && Array.isArray(db.inventory[a]) && db.inventory[a].length) || cleanSender;
+        const inventory = db.inventory && db.inventory[invKey] || [];
         
         await safeSend(sock, jid, {
             text: getInventoryMessage(inventory, nickname)
@@ -661,6 +778,9 @@ module.exports = {
     handleMazadInventory,
     handleMazadSend,
     handleMazadCancelSend,
+    handleMazadWithdraw,
+    handleMazadGrant,
+    handleMazadForceEnd,
     checkMazadActive,
     MAZAD_ITEMS
 };

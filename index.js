@@ -3,6 +3,7 @@
 // ALJESAT BOT
 // Main Entry Point + Watchdog + Rest System + LogGuard
 // + Photos + Welcome + Tahmin + Results + CommandsList + Typo
+// + JidFix + Ban + Shop + Guilds + Hads (اتبع حدسك)
 // ============================================================
 
 "use strict";
@@ -62,7 +63,11 @@ const {
     cleanNumber
 } = require("./bot");
 
-const { handleCommand } = require("./commands");
+const { handleCommand, buildMyDetailsText } = require("./commands");
+const jf = require("./jidfix");
+const banModule = require("./ban");
+const guildsModule = require("./guilds");
+const hadsModule = require("./hads");
 
 const {
     handleGroupJoin,
@@ -695,15 +700,81 @@ function stopWatchdog() {
 // معالجة انضمام العضو للقروب الأساسي
 // ============================================================
 
+function findUserEntry(db, number) {
+    const f = jf.pickByAlias(db.users, number);
+    return f ? { key: f.key, user: f.value } : null;
+}
+
+function scheduleWelcomeExtras(sock, groupJid, pJid, userNumber, db, saveDb) {
+    try {
+        const first = findUserEntry(db, userNumber);
+        if (!first || !String(first.user.nickname || "").trim()) return; // للمسجلين فقط
+
+        // 🎁 بعد دقيقة: 100 رصيد هدية (مرة واحدة لكل عضو)
+        setTimeout(async () => {
+            try {
+                const entry = findUserEntry(db, userNumber);
+                if (!entry || !String(entry.user.nickname || "").trim()) return;
+
+                db.welcomeGift = db.welcomeGift || {};
+                const already = jf.aliasesOf(userNumber).some(a => db.welcomeGift[a]);
+                if (already) return;
+
+                for (const a of jf.aliasesOf(userNumber)) db.welcomeGift[a] = Date.now();
+                entry.user.balance = (Number(entry.user.balance) || 0) + 100;
+                saveDb();
+
+                const mentionJid = await jf.resolveJid(sock, groupJid, userNumber);
+                await sock.sendMessage(groupJid, {
+                    text: `♢┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈♢
+👤 العضو: @${jf.jnum(mentionJid) || userNumber}
+لقد حصلت على 100 رصيد كهدية
+ترحيب خاصة بك يمكنك ان تكتب:
+.تفاصيلي
+لرؤية ملفك التعريفي ورصيدك...
+♢┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈♢`,
+                    mentions: [mentionJid]
+                });
+            } catch (e) {
+                _originalError("welcome gift error:", e?.message);
+            }
+        }, 60 * 1000);
+
+        // 📋 بعد 5 دقائق من الدخول: إرسال تفاصيله تلقائياً
+        setTimeout(async () => {
+            try {
+                const entry = findUserEntry(db, userNumber);
+                if (!entry) return;
+                const mentionJid = await jf.resolveJid(sock, groupJid, userNumber);
+                await sock.sendMessage(groupJid, {
+                    text: `👤 العضو: @${jf.jnum(mentionJid) || userNumber}\n` + buildMyDetailsText(entry.user),
+                    mentions: [mentionJid]
+                });
+            } catch (e) {
+                _originalError("welcome details error:", e?.message);
+            }
+        }, 5 * 60 * 1000);
+    } catch (e) {
+        _originalError("scheduleWelcomeExtras error:", e?.message);
+    }
+}
+
 async function handleMainGroupJoin(sock, groupJid, participant, db, saveDb) {
     try {
         if (!isMainGroup(db, groupJid)) return;
 
-        const userNumber = cleanNumber(participant);
+        // 🆕 participant قد يكون نصاً أو كائناً {id, lid, phoneNumber}
+        const pJid = jf.jidOf(participant);
+        const userNumber = jf.jnum(pJid);
         if (!userNumber) return;
+        jf.rememberJid(userNumber, pJid);
+        jf.invalidateGroup(groupJid);
+
+        // 🎁 هدية 100 + تفاصيل بعد 5 دقائق
+        scheduleWelcomeExtras(sock, groupJid, pJid, userNumber, db, saveDb);
 
         if (!db.userPhotos) return;
-        const photoEntry = db.userPhotos[userNumber];
+        const photoEntry = jf.pickByAlias(db.userPhotos, userNumber)?.value;
         if (!photoEntry) return;
 
         if (welcomeModule && typeof welcomeModule.sendWelcome === "function") {
@@ -718,23 +789,25 @@ async function handleMainGroupJoin(sock, groupJid, participant, db, saveDb) {
             for (const recJid of Object.keys(db.receiveGroups)) {
                 if (!db.receiveGroups[recJid]) continue;
                 try {
-                    const recMeta = await sock.groupMetadata(recJid).catch(() => null);
-                    if (!recMeta) continue;
+                    jf.invalidateGroup(recJid);
+                    const parts = await jf.getGroupParticipants(sock, recJid);
+                    if (!parts) continue;
 
-                    const found = recMeta.participants.find(p => cleanNumber(p.id) === userNumber);
+                    const found = jf.findInParticipants(parts, userNumber);
                     if (found) {
+                        const memberJid = jf.jidOf(found);
                         await sock.sendMessage(recJid, {
                             text: `❆━━━━━═⏣⊰👤⊱⏣═━━━━━❆
-عزيزي/تي @${userNumber}
+عزيزي/تي @${jf.jnum(memberJid)}
 شكرا لك لقد إنتهى عملك هنا وقد تم
 دخولك القروب الاساسي..  بينما هذا 
 القروب انتهى عملك فيه هنا..  وداعا❤
 ❆━━━━━═⏣⊰🪪⊱⏣═━━━━━❆`,
-                            mentions: [`${userNumber}@s.whatsapp.net`]
+                            mentions: [memberJid]
                         }).catch(() => {});
 
                         try {
-                            await sock.groupParticipantsUpdate(recJid, [`${userNumber}@s.whatsapp.net`], "remove");
+                            await sock.groupParticipantsUpdate(recJid, [memberJid], "remove");
                         } catch (_) {}
                     }
                 } catch (_) {}
@@ -787,10 +860,47 @@ function createHandlers() {
                         if (!jid) continue;
 
                         const sender = getSender(msg, sock);
-                        const cleanSender = jidToNumber(sender);
                         const isGroup = isGroupJid(jid);
+
+                        // 🆕 تعلّم أعضاء القروب (LID ↔ رقم) لإصلاح المنشن والألقاب
+                        if (isGroup) {
+                            try { await jf.getGroupParticipants(sock, jid); } catch (_) {}
+                        }
+
+                        // 🆕 الرقم المعتمد (نفس المفتاح المخزّن في db.users)
+                        const cleanSender = jf.canonical(db, jidToNumber(sender));
                         const botNumber = getBotNumber(sock);
                         const owner = isOwner(cleanSender, sock, msg);
+
+                        // ============================================
+                        // 🆕 مراقبة صامتة: نتائج ADS + المخالفات + استمارات الورك
+                        // ============================================
+                        const rawText = getMessageTextFromMsg(msg);
+                        if (isGroup && rawText) {
+                            try {
+                                if (db.adsGroups && db.adsGroups[jid] && resultsModule && typeof resultsModule.processAdsText === "function") {
+                                    resultsModule.processAdsText(db, saveDb, jid, rawText, msg.key?.id);
+                                }
+                                if (!rawText.startsWith(".")) {
+                                    if (await banModule.processViolation(sock, msg, db, saveDb)) continue;
+                                    if (await guildsModule.processWorkForm(sock, jid, msg, rawText, db, saveDb)) continue;
+                                }
+                            } catch (e) {
+                                _originalError("silent monitors error:", e?.message);
+                            }
+                        }
+
+                        // ============================================
+                        // 🆕 حظر: لا يستجيب البوت للمحظور
+                        // ============================================
+                        if (!owner && banModule.isBanned(db, cleanSender)) {
+                            let looksLikeCommand = rawText.startsWith(".") || Boolean(msg.message?.listResponseMessage);
+                            if (!looksLikeCommand && typoModule && typeof typoModule.getCorrectedCommand === "function") {
+                                looksLikeCommand = Boolean(typoModule.getCorrectedCommand(rawText));
+                            }
+                            if (looksLikeCommand) await banModule.sendBannedNotice(sock, jid, msg, db, cleanSender);
+                            continue;
+                        }
 
                         // ============================================
                         // معالجة اختيار الفعالية من List Message
@@ -800,6 +910,9 @@ function createHandlers() {
                             const selectedRowId = String(listResponse.singleSelectReply?.selectedRowId || "");
 
                             let matchedCmd = null;
+                            if (selectedRowId.startsWith("game_")) {
+                                matchedCmd = selectedRowId.replace("game_", "");
+                            }
                             const gameKeywords = [
                                 { keyword: "تفكيك", cmd: "تفكيك" },
                                 { keyword: "كتابة", cmd: "كتابة" },
@@ -818,6 +931,7 @@ function createHandlers() {
                             ];
 
                             for (const item of gameKeywords) {
+                                if (matchedCmd) break;
                                 if (selectedRowId.includes(item.keyword)) {
                                     matchedCmd = item.cmd;
                                     break;
@@ -888,7 +1002,7 @@ function createHandlers() {
                         if (!text.startsWith(".")) {
                             // محاولة تصحيح الأخطاء
                             if (typoModule && typeof typoModule.handleTypo === "function") {
-                                if (db.typoEnabled && db.typoEnabled[jid]) {
+                                if (isGroup && !(db.typoEnabled && db.typoEnabled[jid] === false)) {
                                     try {
                                         const handled = await typoModule.handleTypo(sock, jid, msg, text, db, cleanSender, owner);
                                         if (handled) continue;
@@ -923,37 +1037,46 @@ function createHandlers() {
                                 continue;
                             }
                             db.mainGroup = db.mainGroup || {};
+                            db.organizedGroups = db.organizedGroups || {};
                             if (text === ".اساسي on") {
                                 db.mainGroup[jid] = true;
+                                db.organizedGroups[jid] = true; // 🆕 ميزة التنظيم تتفعل مع الأساسي
                                 saveDb();
-                                await sock.sendMessage(jid, { text: "✅ تم تعيين هذا القروب كقروب أساسي." }, { quoted: msg });
+                                await sock.sendMessage(jid, {
+                                    text: "✅ تم تعيين هذا القروب كقروب أساسي.\n📌 تم تفعيل التنظيم تلقائياً: سيتم حذف لقب أي عضو يغادر هذا القروب (مع الاحتفاظ برصيده)."
+                                }, { quoted: msg });
                             } else {
                                 delete db.mainGroup[jid];
+                                delete db.organizedGroups[jid];
                                 saveDb();
-                                await sock.sendMessage(jid, { text: "❌ تم إلغاء تعيين هذا القروب كقروب أساسي." }, { quoted: msg });
+                                await sock.sendMessage(jid, { text: "❌ تم إلغاء تعيين هذا القروب كقروب أساسي (وإيقاف التنظيم)." }, { quoted: msg });
                             }
                             continue;
                         }
 
-                        // .رابط 1 / .رابط 2
-                        if (text.startsWith(".رابط 1 ") || text.startsWith(".رابط 2 ")) {
-                            if (!owner) {
-                                await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
-                                continue;
-                            }
+                        // .رابط الاعلانات [رابط]  /  .رابط المتجر [رابط]
+                        if (text.startsWith(".رابط ")) {
                             const parts = text.split(/\s+/);
-                            const linkNumber = parts[1];
-                            const url = parts.slice(2).join(" ").trim();
-                            if (!url) {
-                                await sock.sendMessage(jid, { text: "⚠️ يرجى كتابة الرابط بعد الرقم." }, { quoted: msg });
+                            const kind = parts[1] || "";
+                            const isAdsLink = kind === "الاعلانات" || kind === "الإعلانات";
+                            const isShopLink = kind === "المتجر";
+                            if (isAdsLink || isShopLink) {
+                                if (!owner) {
+                                    await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
+                                    continue;
+                                }
+                                const url = parts.slice(2).join(" ").trim();
+                                if (!url) {
+                                    await sock.sendMessage(jid, { text: `⚠️ يرجى كتابة الرابط بعد الأمر.\nمثال: .رابط ${kind} https://chat.whatsapp.com/xxxx` }, { quoted: msg });
+                                    continue;
+                                }
+                                db.welcomeLinks = db.welcomeLinks || { link1: "", link2: "" };
+                                if (isAdsLink) db.welcomeLinks.link1 = url;
+                                else db.welcomeLinks.link2 = url;
+                                saveDb();
+                                await sock.sendMessage(jid, { text: `✅ تم حفظ رابط ${isAdsLink ? "الإعلانات" : "المتجر"}.` }, { quoted: msg });
                                 continue;
                             }
-                            db.welcomeLinks = db.welcomeLinks || { link1: "", link2: "" };
-                            if (linkNumber === "1") db.welcomeLinks.link1 = url;
-                            else if (linkNumber === "2") db.welcomeLinks.link2 = url;
-                            saveDb();
-                            await sock.sendMessage(jid, { text: `✅ تم حفظ الرابط ${linkNumber}.` }, { quoted: msg });
-                            continue;
                         }
 
                         // .حماية on/off
@@ -1038,7 +1161,7 @@ function createHandlers() {
 
                         // .حسبة (بدون on/off)
                         if (text === ".حسبة") {
-                            const isPermission1 = owner || (db.permissions && db.permissions["1"] && db.permissions["1"].includes(cleanSender));
+                            const isPermission1 = owner || jf.aliasesOf(cleanSender).some(a => db.permissions && db.permissions["1"] && db.permissions["1"].includes(a));
                             if (!isPermission1) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر يحتاج صلاحية .سماح 1." }, { quoted: msg });
                                 continue;
@@ -1126,7 +1249,7 @@ function createHandlers() {
                                 saveDb();
                                 await sock.sendMessage(jid, { text: "✅ تم تفعيل تصحيح الأخطاء." }, { quoted: msg });
                             } else {
-                                delete db.typoEnabled[jid];
+                                db.typoEnabled[jid] = false;
                                 saveDb();
                                 await sock.sendMessage(jid, { text: "❌ تم إيقاف تصحيح الأخطاء." }, { quoted: msg });
                             }

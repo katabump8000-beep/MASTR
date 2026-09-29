@@ -30,6 +30,12 @@ const {
 // استيراد الملفات الجديدة
 // ============================================================
 
+const jf = require("./jidfix");
+const banModule = require("./ban");
+const shopModule = require("./shop");
+const guildsModule = require("./guilds");
+const hadsModule = require("./hads");
+
 let tahminModule = null;
 let resultsModule = null;
 let commandsListModule = null;
@@ -121,7 +127,7 @@ function getNormalizedCommand(text) {
     if (text.startsWith(".")) return text;
     const map = {
         "القاب": ".القاب", "تفاصيل": ".تفاصيلي", "تفاصيلي": ".تفاصيلي",
-        "تسجيل": ".سجل", "تحويل الي": ".تحويل", "تحويل": ".تحويل", "تنظيم": ".تنظيم"
+        "تسجيل": ".سجل", "تحويل الي": ".تحويل", "تحويل": ".تحويل"
     };
     for (const [k, v] of Object.entries(map)) {
         if (lower === k || lower.startsWith(k + " ")) return v + lower.slice(k.length);
@@ -151,7 +157,9 @@ function getSender(msg, sock) {
 
 function getUser(db, n) {
     if (!db.users) db.users = {};
-    return db.users[n] || null;
+    if (db.users[n]) return db.users[n];
+    const f = jf.pickByAlias(db.users, n);
+    return f ? f.value : null;
 }
 
 function ensureUser(db, n) {
@@ -197,7 +205,7 @@ function userMention(n) {
 const GAME_COMMANDS = new Set([
     "العاب","كازينو","رهان","بدأ","بدأ_الرهان","بدل_الرهان","تفكيك","كتابة",
     "اعلام","ايموجي","روليت","كريستال","الكرستال","صراحة","الوان","الحيوانات",
-    "مزاد","وقف","تخمين"
+    "مزاد","وقف","تخمين","اتبع"
 ]);
 
 function isGameCommand(c) { return GAME_COMMANDS.has(c); }
@@ -247,6 +255,7 @@ async function handleEmergencyStop(sock, jid, msg, owner) {
             try { tahminModule.stopTahminGame(j); } catch (e) {}
         }
     }
+    for (const j of Object.keys(hadsModule.activeHads || {})) { try { hadsModule.stopHadsGame(j); } catch (e) {} }
     return true;
 }
 
@@ -263,16 +272,15 @@ async function handleGamesList(sock, jid, msg, senderNumber) {
     const headerText = "_*❆━━═⏣⊰🎮⊱⏣═━━❆*_\n  `رجاءاً قم بتحديد الفعالية:`\n_*❆━━═⏣⊰🎰⊱⏣═━━❆*_";
 
     const rows = [
-        { id: "⏣⊰ تفكـ🧩ـــيك ⊱⏣\nلعبة تفكيك الكلمات", title: "⏣⊰ تفكـ🧩ـــيك ⊱⏣", description: "لعبة تفكيك الكلمات" },
-        { id: "⏣⊰ كــتــ✍️ــابـة ⊱⏣\nلعبة كتابة الكلمة", title: "⏣⊰ كــتــ✍️ــابـة ⊱⏣", description: "لعبة كتابة الكلمة" },
-        { id: "⏣⊰ ألــــ🎨ـــوان ⊱⏣\nلعبة الألوان", title: "⏣⊰ ألــــ🎨ـــوان ⊱⏣", description: "لعبة الألوان" },
-        { id: "⏣⊰ صــ🫣ــراحة ⊱⏣\nلعبة الصراحة", title: "⏣⊰ صــ🫣ــراحة ⊱⏣", description: "لعبة الصراحة" },
-        { id: "⏣⊰ الـحـ🦊ـيوانات ⊱⏣\nلعبة الحيوانات", title: "⏣⊰ الـحـ🦊ـيوانات ⊱⏣", description: "لعبة الحيوانات" },
-        { id: "⏣⊰ أعـــ🚩ــلام ⊱⏣\nلعبة الأعلام", title: "⏣⊰ أعـــ🚩ــلام ⊱⏣", description: "لعبة الأعلام" },
-        { id: "⏣⊰ إيمـــ😀ــوجي ⊱⏣\nلعبة الإيموجي", title: "⏣⊰ إيمـــ😀ــوجي ⊱⏣", description: "لعبة الإيموجي" },
-        { id: "⏣⊰ طـــ🎯ــائر ⊱⏣\nلعبة التخمين", title: "⏣⊰ طـــ🎯ــائر ⊱⏣", description: "لعبة التخمين" },
-        { id: "❆━═🎲 روليت 🎰═━❆\nلعبة الروليت", title: "❆━═🎲 روليت 🎰═━❆", description: "لعبة الروليت" },
-        { id: "❆━═🎲 كريستال 🎰═━❆\nلعبة الكريستال", title: "❆━═🎲 كريستال 🎰═━❆", description: "لعبة الكريستال" }
+        { id: "game_تخمين", title: ".تخمين", description: "لعبة التخمين" },
+        { id: "game_الحيوانات", title: ".الحيوانات", description: "لعبة الحيوانات" },
+        { id: "game_كتابة", title: ".كتابة", description: "لعبة الكتابة" },
+        { id: "game_تفكيك", title: ".تفكيك", description: "لعبة التفكيك" },
+        { id: "game_الوان", title: ".الوان", description: "لعبة الألوان" },
+        { id: "game_ايموجي", title: ".ايموجي", description: "لعبة الإيموجي" },
+        { id: "game_اعلام", title: ".اعلام", description: "لعبة الأعلام" },
+        { id: "game_روليت", title: ".روليت", description: "لعبة الروليت" },
+        { id: "game_اتبع حدسك", title: ".اتبع حدسك", description: "لعبة الكرات الملونة" }
     ];
 
     try {
@@ -310,7 +318,7 @@ async function handleGamesList(sock, jid, msg, senderNumber) {
         console.error("❌ List Message failed:", e2?.message);
     }
 
-    const fallback = headerText + "\n\n⏣⊰ تفكـ🧩ـــيك ⊱⏣\nلعبة تفكيك الكلمات\n⏣⊰ كــتــ✍️ــابـة ⊱⏣\nلعبة كتابة الكلمة\n⏣⊰ ألــــ🎨ـــوان ⊱⏣\nلعبة الألوان\n⏣⊰ صــ🫣ــراحة ⊱⏣\nلعبة الصراحة\n⏣⊰ الـحـ🦊ـيوانات ⊱⏣\nلعبة الحيوانات\n⏣⊰ أعـــ🚩ــلام ⊱⏣\nلعبة الأعلام\n⏣⊰ إيمـــ😀ــوجي ⊱⏣\nلعبة الإيموجي\n⏣⊰ طـــ🎯ــائر ⊱⏣\nلعبة التخمين\n❆━═🎲 روليت 🎰═━❆\nلعبة الروليت\n❆━═🎲 كريستال 🎰═━❆\nلعبة الكريستال";
+    const fallback = headerText + "\n\n" + rows.map(r => r.title).join("\n");
     await sendText(sock, jid, fallback, msg);
 
     return true;
@@ -366,7 +374,7 @@ async function handleRegister(sock, jid, msg, parts, senderNumber, owner, db) {
         await sendText(sock, jid, "⚠️ يرجى منشن الشخص وكتابة اللقب.", msg);
         return true;
     }
-    const target = cleanNumber(mentioned);
+    const target = jf.canonical(db, cleanNumber(mentioned));
     const nickname = parts.slice(1).join(" ").trim();
     if (!nickname) {
         await sendText(sock, jid, "⚠️ يرجى كتابة اللقب بعد المنشن.", msg);
@@ -449,6 +457,108 @@ async function handleDeleteTitle(sock, jid, msg, parts, senderNumber, owner, db)
 }
 
 // ============================================================
+// 🆕 .من لقب  → من هو صاحب اللقب
+// ============================================================
+
+function normNick(str) {
+    return String(str || "")
+        .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+        .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+        .replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
+        .replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+async function handleWhoIs(sock, jid, msg, parts, db) {
+    const wanted = normNick(parts.join(" "));
+    if (!wanted) {
+        await sendText(sock, jid, "⚠️ الاستخدام: .من اللقب\nمثال: .من ناروتو", msg);
+        return true;
+    }
+
+    let foundKey = null;
+    for (const n of Object.keys(db.users || {})) {
+        const u = db.users[n];
+        if (u && String(u.nickname || "").trim() && normNick(u.nickname) === wanted) { foundKey = n; break; }
+    }
+
+    if (!foundKey) {
+        await sendText(sock, jid, "⌬━─⟐─❗─⟐─━⌬\nالعضو ليس موجود هنا\n⌬━─⟐─📛─⟐─━⌬", msg);
+        return true;
+    }
+
+    const mentionJid = await jf.resolveJid(sock, jid, foundKey);
+    await sendText(sock, jid,
+        "⌬━─⟐─👤─⟐─━⌬\nهذا هو صاحب اللقب:\n@" + (jf.jnum(mentionJid) || foundKey) + "\n⌬━─⟐─👤─⟐─━⌬",
+        msg, { mentions: [mentionJid] });
+    return true;
+}
+
+// ============================================================
+// 🆕 .حذف شامل  (الإمبراطور)
+// ============================================================
+
+async function handleDeleteAll(sock, jid, msg, db, saveDb, owner) {
+    if (!owner) { await sendText(sock, jid, "⛔ هذا الأمر للإمبراطور فقط.", msg); return true; }
+
+    const mainJids = Object.keys(db.mainGroup || {}).filter(j => db.mainGroup[j] === true);
+    if (!mainJids.length) {
+        await sendText(sock, jid, "⚠️ لا يوجد قروب أساسي. استعمل .اساسي on في القروب الأساسي أولاً.", msg);
+        return true;
+    }
+    const mainJid = mainJids.includes(jid) ? jid : mainJids[0];
+
+    jf.invalidateGroup(mainJid);
+    const participants = await jf.getGroupParticipants(sock, mainJid);
+    if (!Array.isArray(participants) || participants.length === 0) {
+        await sendText(sock, jid, "⚠️ تعذر جلب أعضاء القروب الأساسي، لم يتم حذف أي لقب.", msg);
+        return true;
+    }
+
+    // 1) حذف كل لقب ليس صاحبه في الأساسي (نحتفظ بالرصيد)
+    let deleted = 0;
+    for (const key of Object.keys(db.users || {})) {
+        const u = db.users[key];
+        if (!u || !String(u.nickname || "").trim()) continue;
+        if (!jf.findInParticipants(participants, key)) {
+            u.nickname = "";
+            deleted++;
+        }
+    }
+    saveDb();
+
+    await sendText(sock, jid,
+        "⌬━─⟐─ 🟢 ─⟐─━⌬\nتم حذف الالقاب التي ليس \nلديها عضو يملكها هنا  !\n⌬━─⟐─ ✅ ─⟐─━⌬", msg);
+
+    // 2) الأعضاء غير المسجلين
+    const botNums = Object.keys(db.guildBots || {});
+    const unregistered = [];
+    for (const p of participants) {
+        const nums = [...jf.participantNumbers(p)];
+        if (nums.some(n => jf.isMe(sock, n) || botNums.some(b => jf.sameUser(b, n)))) continue;
+        const hasNick = nums.some(n => {
+            const f = jf.pickByAlias(db.users, n);
+            return f && String(f.value.nickname || "").trim();
+        });
+        if (!hasNick) unregistered.push(jf.jidOf(p));
+    }
+
+    if (!unregistered.length) {
+        await sendText(sock, jid, "🟢 كل أعضاء القروب الأساسي مسجلون.");
+        return true;
+    }
+
+    const CHUNK = 40;
+    for (let i = 0; i < unregistered.length; i += CHUNK) {
+        const chunk = unregistered.slice(i, i + CHUNK);
+        const list = chunk.map(j => "@" + jf.jnum(j)).join("   ");
+        await sendText(sock, jid,
+            "⌬━─⟐─ 📜 ─⟐─━⌬\nالاعضاء الغير مسجلة:\n" + list + "\n⌬━─⟐─ 🪪 ─⟐─━⌬",
+            null, { mentions: chunk });
+    }
+    return true;
+}
+
+// ============================================================
 // العلاقات
 // ============================================================
 
@@ -479,19 +589,22 @@ async function handleFriendRelation(sock, jid, msg, parts, senderNumber, owner, 
 // تفاصيلي / تفاصيله
 // ============================================================
 
-async function handleMyDetails(sock, jid, msg, senderNumber, db) {
-    const user = getUser(db, senderNumber);
+function buildMyDetailsText(user) {
     const dn = (user && String(user.nickname || "").trim()) || "غير مسجل";
     const fn = (user && String(user.friend || "").trim()) || "لا يوجد";
-    const text = "╗═════『   بياناتك  』═════╔\n\n💰 رصـــيـــــــدك:     `{" + (user?.balance || 0) + "}`\n\n🏷️ لقبك:    `{" + dn + "}`\n\n🎖️ رتبتك:   `{" + (user?.rank || "عضو") + "}`\n\n📈 أعلى تفاعل لك: `{" + (user?.maxInteraction || 0) + "}`\n\n🫂 صـــديق:  `{" + fn + "}`\n╝════════════════════╚";
-    await sendText(sock, jid, text, msg);
+    return "╗═════『   بياناتك  』═════╔\n\n💰 رصـــيـــــــدك:     `{" + (user?.balance || 0) + "}`\n\n🏷️ لقبك:    `{" + dn + "}`\n\n🎖️ رتبتك:   `{" + (user?.rank || "عضو") + "}`\n\n📈 أعلى تفاعل لك: `{" + (user?.maxInteraction || 0) + "}`\n\n🫂 صـــديق:  `{" + fn + "}`\n╝════════════════════╚";
+}
+
+async function handleMyDetails(sock, jid, msg, senderNumber, db) {
+    const user = getUser(db, senderNumber);
+    await sendText(sock, jid, buildMyDetailsText(user), msg);
     return true;
 }
 
 async function handleUserDetails(sock, jid, msg, db) {
     const mentioned = getMentionedJid(msg);
     if (!mentioned) { await sendText(sock, jid, "⚠️ يرجى منشن الشخص.", msg); return true; }
-    const target = cleanNumber(mentioned);
+    const target = jf.canonical(db, cleanNumber(mentioned));
     const user = getUser(db, target);
     if (!user) { await sendText(sock, jid, "❌ العضو ليس لديه ملف.", msg); return true; }
     const dn = String(user.nickname || "").trim() || "غير مسجل";
@@ -509,7 +622,7 @@ async function handleRank(sock, jid, msg, parts, senderNumber, owner, db) {
     if (!hasPermission(senderNumber, "3", owner)) { await sendText(sock, jid, "❌ ليس لديك صلاحية.", msg); return true; }
     const mentioned = getMentionedJid(msg);
     if (!mentioned) { await sendText(sock, jid, "⚠️ يرجى منشن الشخص وكتابة الرتبة.", msg); return true; }
-    const target = cleanNumber(mentioned);
+    const target = jf.canonical(db, cleanNumber(mentioned));
     const rank = parts.slice(1).join(" ").trim();
     if (!rank) { await sendText(sock, jid, "⚠️ اكتب الرتبة.", msg); return true; }
     const user = ensureUser(db, target);
@@ -527,7 +640,7 @@ async function handleInteraction(sock, jid, msg, parts, senderNumber, owner, db)
     if (!hasPermission(senderNumber, "4", owner)) { await sendText(sock, jid, "❌ ليس لديك صلاحية.", msg); return true; }
     const mentioned = getMentionedJid(msg);
     if (!mentioned) { await sendText(sock, jid, "⚠️ يرجى منشن الشخص وكتابة الرقم.", msg); return true; }
-    const target = cleanNumber(mentioned);
+    const target = jf.canonical(db, cleanNumber(mentioned));
     const amount = parsePositiveInteger(parts[parts.length - 1]);
     if (!amount) { await sendText(sock, jid, "⚠️ رقم تفاعل غير صحيح.", msg); return true; }
     const user = ensureUser(db, target);
@@ -545,7 +658,7 @@ async function handleDeposit(sock, jid, msg, parts, senderNumber, owner, db) {
     if (!hasPermission(senderNumber, "1", owner)) { await sendText(sock, jid, "❌ ليس لديك صلاحية.", msg); return true; }
     const mentioned = getMentionedJid(msg);
     if (!mentioned) { await sendText(sock, jid, "⚠️ يرجى منشن الشخص والمبلغ.", msg); return true; }
-    const target = cleanNumber(mentioned);
+    const target = jf.canonical(db, cleanNumber(mentioned));
     const amount = parsePositiveInteger(parts[parts.length - 1]);
     if (!amount) { await sendText(sock, jid, "⚠️ مبلغ غير صحيح.", msg); return true; }
     const user = getUser(db, target);
@@ -636,7 +749,7 @@ async function handleGrantPermission(sock, jid, msg, parts, senderNumber, owner,
     if (!owner) { await sendText(sock, jid, "⚠️ هذا الأمر للمطور فقط.", msg); return true; }
     const mentioned = getMentionedJid(msg);
     if (!mentioned) { await sendText(sock, jid, "⚠️ يرجى منشن الشخص.", msg); return true; }
-    const target = cleanNumber(mentioned);
+    const target = jf.canonical(db, cleanNumber(mentioned));
     db.chainPermissions = db.chainPermissions || [];
     if (!db.chainPermissions.includes(target)) {
         db.chainPermissions.push(target);
@@ -660,7 +773,7 @@ async function handleChainEdit(sock, jid, msg, parts, senderNumber, owner, db, s
     }
     const mentioned = getMentionedJid(msg);
     if (!mentioned) { await sendText(sock, jid, "⚠️ يرجى منشن الشخص وكتابة الأيام.", msg); return true; }
-    const target = cleanNumber(mentioned);
+    const target = jf.canonical(db, cleanNumber(mentioned));
     const dc = parsePositiveInteger(parts[parts.length - 1]);
     if (!dc || dc < 1 || dc > 30) { await sendText(sock, jid, "⚠️ عدد أيام غير صحيح (1-30).", msg); return true; }
     db.dailyData = db.dailyData || {};
@@ -767,6 +880,7 @@ async function handleStopAllGames(sock, jid, msg, senderNumber, owner, db) {
             try { tahminModule.stopTahminGame(j); } catch (e) {}
         }
     }
+    for (const j of Object.keys(hadsModule.activeHads || {})) { try { hadsModule.stopHadsGame(j); } catch (e) {} }
     try {
         for (const k of Object.keys(activeGames)) delete activeGames[k];
         for (const k of Object.keys(activeCasinos)) delete activeCasinos[k];
@@ -908,6 +1022,58 @@ async function handleCommand(sock, jid, msg, context = {}) {
     // أوامر خاصة بالمالك فقط
     if (finalText.trim().toLowerCase() === ".stop everything") return handleEmergencyStop(sock, jid, msg, owner);
 
+    // ============================================
+    // 🆕 الأوامر الجديدة (تسبق التوجيه القديم)
+    // ============================================
+    const arg0 = String(parts[0] || "");
+    const hasMention = (() => {
+        try { return banModule.getMentionedList(msg).length > 0; } catch (_) { return false; }
+    })();
+
+    if (command === "من") return handleWhoIs(sock, jid, msg, parts, db);
+
+    if (command === "نتائج" && resultsModule) {
+        return resultsModule.handleResults(sock, jid, msg, finalText, db, saveDb, senderNumber, owner);
+    }
+    if (command === "اوامر" && commandsListModule) {
+        return commandsListModule.handleCommandsList(sock, jid, msg, db, senderNumber, owner);
+    }
+
+    if (command === "متجر") return shopModule.handleShop(sock, jid, msg, db, senderNumber);
+    if (command === "بيع") return shopModule.handleSell(sock, jid, msg, parts, db, saveDb, senderNumber);
+    if (command === "شراء") return shopModule.handleBuyRequest(sock, jid, msg, finalText, db, senderNumber);
+    if (command === "تعديل" && arg0 === "متجر") return shopModule.handleEditShop(sock, jid, msg, finalText, db, saveDb, senderNumber, owner);
+    if (command === "طلبات") return shopModule.handleOrdersToggle(sock, jid, msg, parts, db, saveDb, senderNumber, owner);
+
+    if (command === "حظر") return banModule.handleBanCommand(sock, jid, msg, parts, db, saveDb, senderNumber, owner);
+    if ((command === "فك" || command === "رفع") && arg0 === "حظر") return banModule.handleUnbanCommand(sock, jid, msg, db, saveDb, senderNumber, owner);
+    if (command === "مراقب") return banModule.handleMonitorCommand(sock, jid, msg, db, saveDb, owner);
+
+    if (command === "انا" && arg0 === "بوت") {
+        const handledBot = await guildsModule.handleIAmBot(sock, jid, msg, finalText, db, saveDb, senderNumber, owner);
+        return handledBot !== false;
+    }
+    if (command === "حذف" && arg0 === "نقابتك") return guildsModule.handleDeleteGuild(sock, jid, msg, db, saveDb, owner);
+    if (command === "حذف" && arg0 === "شامل") return handleDeleteAll(sock, jid, msg, db, saveDb, owner);
+    if (command === "نقابة") return guildsModule.handleAddGuildName(sock, jid, msg, parts, db, saveDb, owner);
+    if (command === "تعدد") return guildsModule.handleMultiToggle(sock, jid, msg, parts, db, saveDb, senderNumber, owner);
+    if (command === "مؤبد") return guildsModule.handleLifeBan(sock, jid, msg, db, saveDb, senderNumber, owner, "ban");
+    if (command === "اعفاء" || command === "إعفاء") return guildsModule.handleLifeBan(sock, jid, msg, db, saveDb, senderNumber, owner, "free");
+
+    // المزاد: سحب / منح / إنهاء
+    if (command === "سحب" && arg0 === "مزاد") {
+        const mz = require("./mzad");
+        return mz.handleMazadWithdraw(sock, jid, msg, db, saveDb, owner);
+    }
+    if (command === "انهاء" && arg0 === "مزاد") {
+        const mz = require("./mzad");
+        return mz.handleMazadForceEnd(sock, jid, msg, db, saveDb, owner);
+    }
+    if (command === "مزاد" && hasMention) {
+        const mz = require("./mzad");
+        return mz.handleMazadGrant(sock, jid, msg, db, saveDb, owner);
+    }
+
     // التحقق من السياق
     if (isGameCommand(command) || command === "بوت" || command === "اشرافه" || command === "اشراف" ||
         command === "استقبال" || command === "ورك" || command === "work" ||
@@ -919,8 +1085,14 @@ async function handleCommand(sock, jid, msg, context = {}) {
         if (isGameCommand(command) && !await checkGameContext(sock, jid, msg, group)) return true;
     }
 
+    // 🆕 فعالية اتبع حدسك + أوامرها (مشاركة / بدأ / وقف)
+    if (["اتبع", "مشاركة", "اشارك", "شارك", "بدا", "ابدا", "ابدأ", "بدأ", "وقف"].includes(command) && group) {
+        const handledHads = await hadsModule.handleHadsCommand(sock, jid, msg, command, parts, db, saveDb, senderNumber, sender, owner);
+        if (handledHads) return true;
+    }
+
     // أوامر الإدارة (تُمرَّر إلى admin.js)
-    const adminCommands = new Set(["سماح", "صلاحيات", "بوت", "اشرافه", "اشراف", "استقبال", "ورك", "work", "طرف", "سحب", "تنظيم"]);
+    const adminCommands = new Set(["سماح", "صلاحيات", "بوت", "اشرافه", "اشراف", "استقبال", "ورك", "work", "طرف", "سحب"]);
     if (adminCommands.has(command)) {
         const handled = await handleAdminCommand(sock, jid, msg, command, parts, senderNumber, sender, db, saveDb, owner, group, (u, l) => hasPermission(u, l, owner));
         return handled !== false;
@@ -1039,5 +1211,6 @@ module.exports = {
     findUserByNicknameForFriend,
     isSimilarNickname,
     getNormalizedCommand,
-    detectGameFromText
+    detectGameFromText,
+    buildMyDetailsText
 };

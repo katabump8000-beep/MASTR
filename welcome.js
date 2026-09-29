@@ -8,6 +8,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const jf = require("./jidfix");
 
 // ============================================================
 // أدوات مساعدة
@@ -83,7 +84,8 @@ async function sendWelcome(sock, jid, userNumber, photoEntry, db) {
         }
 
         const cleanNum = cleanNumber(userNumber);
-        const mentionJid = `${cleanNum}@s.whatsapp.net`;
+        // 🆕 المنشن الصحيح (LID أو رقم) بدل @s.whatsapp.net الثابت
+        const mentionJid = await jf.resolveJid(sock, jid, userNumber);
 
         // جلب اللقب من الصورة أو من db.users
         let nickname = photoEntry.nickname;
@@ -92,7 +94,7 @@ async function sendWelcome(sock, jid, userNumber, photoEntry, db) {
             nickname = user?.nickname || "";
         }
 
-        const welcomeText = getWelcomeMessage(nickname, cleanNum, db);
+        const welcomeText = getWelcomeMessage(nickname, jf.jnum(mentionJid) || cleanNum, db);
 
         // التحقق من وجود ملف الصورة
         const filePath = photoEntry.filePath;
@@ -140,8 +142,8 @@ async function sendWelcome(sock, jid, userNumber, photoEntry, db) {
 async function sendWelcomeTextOnly(sock, jid, userNumber, nickname, db) {
     try {
         const cleanNum = cleanNumber(userNumber);
-        const mentionJid = `${cleanNum}@s.whatsapp.net`;
-        const welcomeText = getWelcomeMessage(nickname, cleanNum, db);
+        const mentionJid = await jf.resolveJid(sock, jid, userNumber);
+        const welcomeText = getWelcomeMessage(nickname, jf.jnum(mentionJid) || cleanNum, db);
 
         await sock.sendMessage(jid, {
             text: welcomeText,

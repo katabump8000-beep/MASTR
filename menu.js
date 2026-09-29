@@ -252,7 +252,7 @@ async function startColorsGame(sock, jid, msg, cleanSender, sender, db, saveDb, 
                 const currentScore = userScores[userSender];
 
                 if (currentScore >= 10) {
-                    const winnerCleanNum = String(userSender).replace(/[^0-9]/g, "");
+                    const winnerCleanNum = require("./jidfix").canonical(db, String(userSender).replace(/[^0-9]/g, ""));
                     const winnerTag = `@${winnerCleanNum}`;
                     stopGame();
 
@@ -668,7 +668,7 @@ _*الشرح:*_
                 // ---------------------------------------------
 
                 if (currentScore >= 10) {
-                    const winnerCleanNum = String(userSender).replace(/[^0-9]/g, "");
+                    const winnerCleanNum = require("./jidfix").canonical(db, String(userSender).replace(/[^0-9]/g, ""));
                     const winnerTag = `@${winnerCleanNum}`;
 
                     stopGame();

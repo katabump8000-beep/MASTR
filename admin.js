@@ -9,6 +9,7 @@
 const fs = require("fs");
 const path = require("path");
 const { messages } = require("./data");
+const jf = require("./jidfix");
 
 const DB_FILE = path.join(__dirname, "database.json");
 
@@ -88,7 +89,7 @@ function ensurePermissions(db) {
         db.permissions = {};
     }
 
-    for (const type of ["1", "2", "3", "4"]) {
+    for (const type of ["1", "2", "3", "4", "5"]) {
         if (!Array.isArray(db.permissions[type])) {
             db.permissions[type] = [];
         }
@@ -99,7 +100,7 @@ function ensurePermissions(db) {
 
 function hasPermission(db, user, type) {
     const permissions = ensurePermissions(db);
-    return permissions[type]?.includes(cleanNumber(user)) || false;
+    return jf.aliasesOf(cleanNumber(user)).some(n => permissions[type]?.includes(n)) || false;
 }
 
 function getCurrentAdmins(participants) {
@@ -285,10 +286,11 @@ async function handleGroupJoin(sock, update, db, saveDb) {
                 let changed = false;
 
                 for (const participant of participants) {
-                    const cleanNum = cleanNumber(participant);
+                    const cleanNum = jf.jnum(jf.jidOf(participant));
                     if (!cleanNum) continue;
 
-                    const user = db.users && db.users[cleanNum];
+                    const found = jf.pickByAlias(db.users, cleanNum);
+                    const user = found ? found.value : null;
                     if (!user) continue;
 
                     if (user.nickname && String(user.nickname).trim()) {
@@ -321,13 +323,24 @@ async function handleGroupJoin(sock, update, db, saveDb) {
     if (!receiveGroups[id]) return false;
 
     for (const participant of participants) {
-        const cleanNum = cleanNumber(participant);
+        // 🆕 participant قد يكون نصاً أو كائناً {id, lid, phoneNumber}
+        const pJid = jf.jidOf(participant);
+        const cleanNum = jf.jnum(pJid);
         if (!cleanNum) continue;
+
+        // 🆕 مؤبد → رسالة + طرد | تعدد → تنبيه للرتب
+        let handledLife = false;
+        try {
+            handledLife = await require("./guilds").handleReceiveJoin(sock, id, participant, db, saveDb);
+        } catch (e) {
+            console.error("❌ guilds.handleReceiveJoin:", e?.message || e);
+        }
+        if (handledLife) continue;
 
         const welcomeMessage = messages.admin.receive.welcome(cleanNum);
         await sock.sendMessage(id, {
             text: welcomeMessage,
-            mentions: [participant]
+            mentions: [pJid]
         }).catch(() => {});
     }
 
@@ -403,7 +416,7 @@ async function handleAdminCommand(
         const permissions = ensurePermissions(db);
 
         if (permissionType === "5") {
-            for (const level of ["1", "2", "3", "4"]) {
+            for (const level of ["1", "2", "3", "4", "5"]) {
                 if (!permissions[level].includes(target)) {
                     permissions[level].push(target);
                 }
@@ -832,46 +845,6 @@ async function handleAdminCommand(
                 text: bankMessage,
                 mentions: [mentioned]
             }).catch(() => {});
-        }
-
-        return true;
-    }
-
-    // ========================================================
-    // .تنظيم (يعمل فقط في القروب الأساسي)
-    // ========================================================
-
-    if (command === "تنظيم") {
-        if (!canUse("2") && !isBotOwner) {
-            await send(sock, jid, messages.admin.noPermission, msg);
-            return true;
-        }
-
-        // التحقق من أن القروب هو الأساسي
-        const isMain = Boolean(db.mainGroup && db.mainGroup[jid] === true);
-        if (!isMain) {
-            await send(sock, jid, `❆━━━━━═⏣⊰⚠️⊱⏣═━━━━━❆
-  *هذا الأمر يعمل فقط في*
-  *القروب الأساسي*
-❆━━━━━═⏣⊰⚠️⊱⏣═━━━━━❆`, msg);
-            return true;
-        }
-
-        const action = String(parts?.[0] || "").toLowerCase();
-        db.organizedGroups = db.organizedGroups && typeof db.organizedGroups === "object"
-            ? db.organizedGroups
-            : {};
-
-        if (action === "on") {
-            db.organizedGroups[jid] = true;
-            doSave();
-            await send(sock, jid, "✅ تم تفعيل مراقبة المغادرين.\n📌 سيتم حذف لقب أي عضو يغادر القروب الأساسي (مع الاحتفاظ برصيده).", msg);
-        } else if (action === "off") {
-            delete db.organizedGroups[jid];
-            doSave();
-            await send(sock, jid, "❌ تم إيقاف مراقبة المغادرين.", msg);
-        } else {
-            await send(sock, jid, messages.admin.invalidUsage(".تنظيم", "on/off"), msg);
         }
 
         return true;

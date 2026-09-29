@@ -2,6 +2,7 @@
 // bot.js
 // ALJESAT BOT
 // Core / Database / WhatsApp Connection
+// (معدّل: jidfix + حقول قاعدة بيانات جديدة + صلاحية 5)
 // ============================================================
 
 "use strict";
@@ -73,7 +74,7 @@ function createDefaultDatabase() {
         admins: {},
 
         // الصلاحيات
-        permissions: { "1": [], "2": [], "3": [], "4": [] },
+        permissions: { "1": [], "2": [], "3": [], "4": [], "5": [] },
         gamePermissions: [],
         gameCooldown: {},
 
@@ -130,7 +131,40 @@ function createDefaultDatabase() {
 
         // 🆕 توقيت الحفظ
         autoSaveEnabled: false,
-        autoSaveGroupJid: null
+        autoSaveGroupJid: null,
+
+        // 🆕 المنشن والمعرّفات (LID)
+        jidMap: {},
+        numAliases: {},
+
+        // 🆕 الحظر
+        bans: {},
+
+        // 🆕 المتجر والطلبات
+        orderGroups: {},
+        shopMessage: "",
+
+        // 🆕 المراقب والمخالفات
+        violationMonitors: {},
+        violationSeen: [],
+
+        // 🆕 نتائج قروب ADS
+        adsResults: {},
+
+        // 🆕 النقابات والتعدد والمؤبد
+        guildNames: { "🩸": "نوفا", "❄": "فورتكس", "☘": "سولار" },
+        guildBots: {},
+        guildSelf: null,
+        multiGuild: {},
+        guildMembers: {},
+        lifeBan: {},
+
+        // 🆕 هدية الترحيب
+        welcomeGift: {},
+
+        // 🆕 قفل المزاد
+        mazadLocked: false,
+        mazadAllowed: {}
     };
 }
 
@@ -147,7 +181,10 @@ function ensureDatabaseShape() {
         "crystalCooldown", "crystalPlayerCooldown", "pendingSend", "inventory",
         "mainGroup", "userPhotos", "emperors", "protectCards",
         "reactEnabled", "hisbaEnabled", "typoEnabled", "resultsData",
-        "repliesEnabled", "ahaEnabled", "quietEnabled", "organizedGroups"
+        "repliesEnabled", "ahaEnabled", "quietEnabled", "organizedGroups",
+        "jidMap", "numAliases", "bans", "orderGroups", "violationMonitors",
+        "adsResults", "guildNames", "guildBots", "multiGuild", "guildMembers",
+        "lifeBan", "welcomeGift", "mazadAllowed"
     ];
 
     for (const field of objectFields) {
@@ -168,10 +205,18 @@ function ensureDatabaseShape() {
     if (!db.permissions || typeof db.permissions !== "object" || Array.isArray(db.permissions)) {
         db.permissions = {};
     }
-    for (const level of ["1", "2", "3", "4"]) {
+    for (const level of ["1", "2", "3", "4", "5"]) {
         if (!Array.isArray(db.permissions[level])) {
             db.permissions[level] = [];
         }
+    }
+
+    if (!Array.isArray(db.violationSeen)) db.violationSeen = [];
+    if (typeof db.shopMessage !== "string") db.shopMessage = "";
+    if (typeof db.mazadLocked !== "boolean") db.mazadLocked = false;
+    if (db.guildSelf !== null && (typeof db.guildSelf !== "object" || Array.isArray(db.guildSelf))) db.guildSelf = null;
+    if (!db.guildNames || Object.keys(db.guildNames).length === 0) {
+        db.guildNames = { "🩸": "نوفا", "❄": "فورتكس", "☘": "سولار" };
     }
 
     if (!Array.isArray(db.gamePermissions)) db.gamePermissions = [];
@@ -315,11 +360,13 @@ function isOwner(senderNumber, sock = currentSocket, msg = null) {
     const botNumber = getBotNumber(sock);
     if (botNumber && sender === botNumber) return true;
 
-    // 🆕 فحص الأباطرة
+    // 🆕 فحص الأباطرة (مع الأرقام المكافئة LID ↔ هاتف)
     try {
-        if (db && db.emperors && db.emperors[sender] === true) {
-            return true;
-        }
+        const jf = require("./jidfix");
+        const aliases = jf.aliasesOf(sender);
+        if (db && db.emperors && aliases.some(a => db.emperors[a] === true)) return true;
+        if (owners.some(o => aliases.includes(o))) return true;
+        if (jf.isMe(sock, sender)) return true;
     } catch (_) {}
 
     return false;
@@ -359,9 +406,12 @@ function hasPermission(userNumber, level, owner = false) {
 
     const number = cleanNumber(userNumber);
     const permissionLevel = String(level);
+    const list = db.permissions[permissionLevel];
+    if (!Array.isArray(list)) return false;
 
-    return Array.isArray(db.permissions[permissionLevel]) &&
-        db.permissions[permissionLevel].includes(number);
+    let candidates = [number];
+    try { candidates = require("./jidfix").aliasesOf(number); } catch (_) {}
+    return candidates.some(n => list.includes(n));
 }
 
 function getMessageText(message) {
@@ -586,15 +636,23 @@ function registerEvents(sock, saveCreds) {
         }
     });
 
-    sock.ev.on("messages.upsert", async event => {
+    const mainUpsertHandler = async event => {
         if (typeof handlers.onMessage !== "function") return;
 
         try {
+            // 🆕 تعلّم المعرّفات الحقيقية للأعضاء (LID / رقم)
+            try {
+                const jf = require("./jidfix");
+                for (const m of event?.messages || []) jf.learnFromMessage(m);
+            } catch (_) {}
+
             await handlers.onMessage(sock, event, { db, saveDb });
         } catch (error) {
             console.error("❌ خطأ في messages.upsert:", error?.message || error);
         }
-    });
+    };
+    mainUpsertHandler.__raw = true; // لا يمرّ عبر فلتر المحظورين (نحتاج الرد عليهم)
+    sock.ev.on("messages.upsert", mainUpsertHandler);
 
     sock.ev.on("group-participants.update", async update => {
         if (typeof handlers.onGroupUpdate !== "function") return;
@@ -685,6 +743,13 @@ async function createSocket() {
         }
 
         const sock = makeWASocket(socketOptions);
+
+        // 🆕 إصلاح المنشن/الـ LID + فلتر المحظورين
+        try {
+            require("./jidfix").install(sock);
+        } catch (error) {
+            console.error("❌ تعذر تركيب jidfix:", error?.message || error);
+        }
 
         const owners = getOwnerNumbers();
         const pairingNumber = owners[0] || cleanNumber(settings.botNumber);

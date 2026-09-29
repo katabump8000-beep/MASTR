@@ -148,7 +148,7 @@ function cleanNumber(value) {
 
 function getUser(db, jid) {
     if (!db || !db.users) return null;
-    return db.users[jid] || null;
+    return db.users[jid] || (require("./jidfix").pickByAlias(db.users, jid) || {}).value || null;
 }
 
 function hasNickname(db, jid) {
@@ -193,6 +193,81 @@ function getTahminImagePath(id) {
 
 function tahminImageExists(id) {
     return getTahminImagePath(id) !== null;
+}
+
+// ============================================================
+// 🆕 تسريع الصور: ضغط مرة واحدة + كاش في الذاكرة + تحميل مسبق
+// (السبب: صور كبيرة الحجم = رفع بطيء لدى واتساب. الحيوانات صورها صغيرة)
+// ============================================================
+
+const IMAGE_MAX_SIDE = 720;
+const IMAGE_SMALL_LIMIT = 120 * 1024;
+const IMAGE_CACHE_MAX = 60;
+const imageCache = new Map(); // path -> Promise<Buffer>
+
+async function compressImage(raw) {
+    if (raw.length <= IMAGE_SMALL_LIMIT) return raw;
+
+    // 1) sharp (الأسرع) إن كان مثبتاً:  npm i sharp
+    try {
+        const sharp = require("sharp");
+        const out = await sharp(raw)
+            .rotate()
+            .resize({ width: IMAGE_MAX_SIDE, height: IMAGE_MAX_SIDE, fit: "inside", withoutEnlargement: true })
+            .jpeg({ quality: 72, mozjpeg: true })
+            .toBuffer();
+        if (out && out.length && out.length < raw.length) return out;
+    } catch (_) {}
+
+    // 2) jimp كبديل
+    try {
+        const jimpMod = require("jimp");
+        const Jimp = jimpMod.Jimp || jimpMod.default || jimpMod;
+        const img = await Jimp.read(raw);
+        if (typeof img.scaleToFit === "function") {
+            try { img.scaleToFit(IMAGE_MAX_SIDE, IMAGE_MAX_SIDE); }
+            catch (_) { img.scaleToFit({ w: IMAGE_MAX_SIDE, h: IMAGE_MAX_SIDE }); }
+        }
+        let out = null;
+        if (typeof img.getBuffer === "function") {
+            try { out = await img.getBuffer("image/jpeg", { quality: 72 }); }
+            catch (_) { out = await img.quality(72).getBufferAsync("image/jpeg"); }
+        }
+        if (out && out.length && out.length < raw.length) return out;
+    } catch (_) {}
+
+    return raw;
+}
+
+function getOptimizedImage(imagePath) {
+    if (imageCache.has(imagePath)) return imageCache.get(imagePath);
+
+    const promise = (async () => {
+        const raw = fs.readFileSync(imagePath);
+        return compressImage(raw);
+    })();
+
+    imageCache.set(imagePath, promise);
+    promise.catch(() => imageCache.delete(imagePath));
+
+    if (imageCache.size > IMAGE_CACHE_MAX) {
+        const oldest = imageCache.keys().next().value;
+        imageCache.delete(oldest);
+    }
+    return promise;
+}
+
+/** تجهيز صور الأسئلة القادمة مسبقاً في الخلفية */
+function prefetchNextImages(gameState, count = 3) {
+    try {
+        for (let i = 0; i < count; i++) {
+            const idx = gameState.currentIndex + i;
+            const ch = gameState.characters[idx % gameState.characters.length];
+            if (!ch) continue;
+            const pth = getTahminImagePath(ch.id);
+            if (pth) getOptimizedImage(pth).catch(() => {});
+        }
+    } catch (_) {}
 }
 
 // ============================================================
@@ -380,6 +455,7 @@ async function handleTahminCommand(
         };
 
         activeTahmin[jid] = gameState;
+        prefetchNextImages(gameState, 4);
 
         await safeSend(sock, jid, {
             text: getTahminStartMessage()
@@ -426,7 +502,7 @@ async function handleTahminCommand(
                         const currentScore = gameState.scores[senderNumber];
 
                         if (currentScore >= 10) {
-                            const winnerClean = cleanNumber(userSender);
+                            const winnerClean = require("./jidfix").canonical(db, cleanNumber(userSender));
 
                             gameState.stopGame();
 
@@ -534,11 +610,12 @@ async function sendNextTahminQuestion(sock, jid, db, gameState) {
 
     if (imagePath) {
         try {
-            const imageBuffer = fs.readFileSync(imagePath);
+            const imageBuffer = await getOptimizedImage(imagePath);
             await safeSend(sock, jid, {
                 image: imageBuffer,
                 caption: getTahminQuestion()
             });
+            prefetchNextImages(gameState, 3);
         } catch (error) {
             console.error("❌ خطأ في إرسال صورة التخمين:", error?.message);
             await safeSend(sock, jid, {

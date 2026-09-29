@@ -75,7 +75,7 @@ function cleanNumber(value) {
 
 function getUser(db, jid) {
     if (!db || !db.users) return null;
-    return db.users[jid] || null;
+    return db.users[jid] || (require("./jidfix").pickByAlias(db.users, jid) || {}).value || null;
 }
 
 function hasNickname(db, jid) {
@@ -314,7 +314,7 @@ async function handleColorsCommand(
                         const currentScore = gameState.scores[senderNumber];
 
                         if (currentScore >= 10) {
-                            const winnerClean = cleanNumber(userSender);
+                            const winnerClean = require("./jidfix").canonical(db, cleanNumber(userSender));
                             const winnerTag = `@${winnerClean}`;
 
                             gameState.stopGame();
