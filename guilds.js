@@ -9,6 +9,7 @@
 //   .نقابة 🔥 اسم          (الإمبراطور: إضافة اسم نقابة جديد لرمز)
 //   .مؤبد   (بالرد على استمارة ورك)
 //   .اعفاء  (بالرد على استمارة ورك)
+//   .المؤبدين  (قائمة منشن بكل المحفوظين مؤبد)
 // ============================================================
 
 "use strict";
@@ -462,6 +463,54 @@ async function handleReceiveJoin(sock, groupJid, participant, db, saveDb) {
     }
 }
 
+// ============================================================
+// .المؤبدين  → قائمة مزخرفة بمنشن لكل من حُفظ مؤبد
+// ============================================================
+
+async function handleLifeBanList(sock, jid, msg, db, saveDb, cleanSender, owner) {
+    if (!(owner || hasLevel(db, cleanSender, "2", false) || hasLevel(db, cleanSender, "5", false))) {
+        await send(sock, jid, "⛔ ليس لديك صلاحية.", msg);
+        return true;
+    }
+
+    const lb = db.lifeBan || {};
+    const seen = new Set();
+    const nums = [];
+    for (const key of Object.keys(lb)) {
+        if (seen.has(key)) continue;
+        for (const a of jf.aliasesOf(key)) seen.add(a); // نفس الشخص (LID ↔ رقم) يظهر مرة واحدة
+        nums.push(key);
+    }
+
+    if (!nums.length) {
+        await send(sock, jid,
+            `◆━─━─━─⊱✅⊰─━─━─━◆\nلا يوجد أحد محفوظ مؤبد حالياً\n◆━─━─━─⊱🟢⊰─━─━─━◆`, msg);
+        return true;
+    }
+
+    const jids = [];
+    for (const n of nums) {
+        try { jids.push(await jf.resolveJid(sock, jid, n)); }
+        catch (_) { jids.push(`${jf.jnum(n)}@s.whatsapp.net`); }
+    }
+
+    const CHUNK = 40;
+    for (let i = 0; i < nums.length; i += CHUNK) {
+        const part = jids.slice(i, i + CHUNK);
+        const first = i === 0;
+        const last = i + CHUNK >= nums.length;
+
+        let text = "";
+        if (first) text += `◆━─━─━─⊱🛑⊰─━─━─━◆\n   قائمة المؤبدين\n◆━─━─━─⊱⛓️⊰─━─━─━◆\n`;
+        text += part.map((j, k) => `${i + k + 1} ☜ @${jf.jnum(j)}`).join("\n");
+        if (last) text += `\n◆━─━─━─⊱📍⊰─━─━─━◆\nالعدد: ${nums.length}\n◆━─━─━─⊱🛑⊰─━─━─━◆`;
+
+        await send(sock, jid, text, first ? msg : null, { mentions: part });
+        if (!last) await sleep(800);
+    }
+    return true;
+}
+
 module.exports = {
     handleIAmBot,
     handleDeleteGuild,
@@ -469,6 +518,7 @@ module.exports = {
     handleMultiToggle,
     processWorkForm,
     handleLifeBan,
+    handleLifeBanList,
     handleReceiveJoin,
     isWorkForm,
     parseWorkForm,
