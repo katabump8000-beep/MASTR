@@ -18,6 +18,9 @@
 
 "use strict";
 
+// يحمّل settings.js حتى تُقرأ مفاتيح الرؤية (GEMINI_API_KEY / ANTHROPIC_API_KEY) منه
+try { require("./settings"); } catch (_) {}
+
 const fs = require("fs");
 const path = require("path");
 
