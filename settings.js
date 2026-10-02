@@ -8,8 +8,8 @@
 const env = (name) => String(process.env[name] || "").trim();
 
 const settings = {
-    botNumber: "48699554086",
-    owners: ["48699554086"],
+    botNumber: "48459074937",
+    owners: ["48459074937"],
     sessionFolder: "session",
     botName: "BOT PATHIRA",
 
@@ -19,7 +19,7 @@ const settings = {
     anthropicApiKey: env("ANTHROPIC_API_KEY") || "",     // الأدق — console.anthropic.com
     geminiApiKey: env("GEMINI_API_KEY") || "",           // مجاني — aistudio.google.com/apikey
     mistralApiKey: env("MISTRAL_API_KEY") || "",         // مجاني — console.mistral.ai/api-keys
-    openrouterApiKey: env("OPENROUTER_API_KEY") || "",   // ضع هنا مفتاحك الجديد (القديم انكشف ويجب إلغاؤه) — openrouter.ai/keys
+    openrouterApiKey: env("OPENROUTER_API_KEY") || "4bcfca043eda751caa2d2ee32131b17550f1d2566c3b37c0c4e1725451457732",   // openrouter.ai/keys
 
     // ===== (اختياري، موصى به) بحث Google الرسمي =====
     // مجاني 100 بحث/يوم: console.cloud.google.com ← Custom Search API ← مفتاح،
