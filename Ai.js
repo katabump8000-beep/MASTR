@@ -750,17 +750,37 @@ const ANTHROPIC_VISION_MODEL = process.env.AI_VISION_MODEL || "claude-haiku-4-5-
 const GEMINI_MODELS = [...new Set([process.env.GEMINI_VISION_MODEL, "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash"].filter(Boolean))];
 let geminiModelIdx = 0;
 
+// مزوّدات متوافقة مع صيغة OpenAI (Mistral / OpenRouter) — تُجرَّب بعد Anthropic و Gemini
+function openaiCompat() {
+    if (process.env.MISTRAL_API_KEY) {
+        return { name: "Mistral", url: "https://api.mistral.ai/v1/chat/completions", key: process.env.MISTRAL_API_KEY,
+                 model: process.env.AI_VISION_MODEL_OPENAI || "mistral-medium-latest" };
+    }
+    if (process.env.OPENROUTER_API_KEY) {
+        return { name: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY,
+                 model: process.env.AI_VISION_MODEL_OPENAI || "openrouter/free" };
+    }
+    return null;
+}
+
+function visionProvider() {
+    if (process.env.ANTHROPIC_API_KEY) return "Claude " + ANTHROPIC_VISION_MODEL;
+    if (process.env.GEMINI_API_KEY) return "Gemini";
+    const oc = openaiCompat();
+    return oc ? `${oc.name} (${oc.model})` : "";
+}
+
 function visionAvailable() {
-    return Boolean(sharp && (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY));
+    return Boolean(sharp && visionProvider());
 }
 
 let warnedNoVision = false;
 
 setTimeout(() => {
     if (visionAvailable()) {
-        console.log(`[Ai] ✅ فحص الصور مفعّل (${process.env.ANTHROPIC_API_KEY ? "Claude " + ANTHROPIC_VISION_MODEL : "Gemini"})`);
+        console.log(`[Ai] ✅ فحص الصور مفعّل (${visionProvider()})`);
     } else {
-        console.error("[Ai] ❌ فحص الصور غير مفعّل: ضع geminiApiKey في settings.js (أو ANTHROPIC_API_KEY). بدونه لن يعمل .احضر.");
+        console.error("[Ai] ❌ فحص الصور غير مفعّل: ضع أحد المفاتيح في settings.js (anthropicApiKey أو geminiApiKey أو mistralApiKey أو openrouterApiKey). بدونه لن يعمل .احضر.");
     }
 }, 1500);
 
@@ -776,6 +796,17 @@ async function askModelOnce(jpgBuf, prompt) {
             headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }
         })).toString("utf8"));
         return (j?.content || []).map(c => c.text || "").join("");
+    }
+    if (!process.env.GEMINI_API_KEY) {
+        const oc = openaiCompat();
+        const content = [{ type: "text", text: prompt }];
+        if (b64) content.push({ type: "image_url", image_url: { url: "data:image/jpeg;base64," + b64 } });
+        const body = JSON.stringify({ model: oc.model, messages: [{ role: "user", content }], temperature: 0, max_tokens: 300 });
+        const j = JSON.parse((await fetchBuf(oc.url, {
+            method: "POST", body, timeout: 30000, maxBytes: 1024 * 1024,
+            headers: { "content-type": "application/json", authorization: "Bearer " + oc.key }
+        })).toString("utf8"));
+        return String(j?.choices?.[0]?.message?.content || "");
     }
     const parts = [{ text: prompt }];
     if (b64) parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
