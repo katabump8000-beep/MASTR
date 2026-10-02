@@ -6,14 +6,19 @@ const settings = {
     sessionFolder: "session",
     botName: "BOT PATHIRA",
 
-    // ===== مفاتيح فحص الصور بالذكاء الاصطناعي (لأمر .احضر) =====
-    // اختر واحداً فقط وضع مفتاحك بين علامتي التنصيص، واترك الآخر فارغاً
-    geminiApiKey: "",     // مجاني من https://aistudio.google.com/apikey
-    anthropicApiKey: ""   // اختياري (مدفوع)
+    // ===== مفتاح فحص الصور بالذكاء الاصطناعي (لأمر .احضر) =====
+    // ضع مفتاحاً واحداً فقط وأبقِ الباقي فارغاً. الترتيب إذا وضعت أكثر من واحد: anthropic ثم gemini ثم mistral ثم openrouter
+    anthropicApiKey: "",   // الأدق (Claude) — مدفوع بسعر رخيص — console.anthropic.com
+    geminiApiKey: "",      // مجاني — aistudio.google.com/apikey
+    mistralApiKey: "",     // مجاني — console.mistral.ai/api-keys
+    openrouterApiKey: ""   // مجاني بدون بطاقة — openrouter.ai/keys
 };
 
-// يُمرَّر لملف Ai.js (لا تغيّر هذين السطرين)
-if (settings.geminiApiKey && !process.env.GEMINI_API_KEY) process.env.GEMINI_API_KEY = settings.geminiApiKey;
-if (settings.anthropicApiKey && !process.env.ANTHROPIC_API_KEY) process.env.ANTHROPIC_API_KEY = settings.anthropicApiKey;
+// يُمرَّر لملف Ai.js (لا تغيّر هذه الأسطر)
+const pass = (envName, val) => { if (val && !process.env[envName]) process.env[envName] = val; };
+pass("ANTHROPIC_API_KEY", settings.anthropicApiKey);
+pass("GEMINI_API_KEY", settings.geminiApiKey);
+pass("MISTRAL_API_KEY", settings.mistralApiKey);
+pass("OPENROUTER_API_KEY", settings.openrouterApiKey);
 
 module.exports = settings;
