@@ -141,7 +141,11 @@ async function fetchBuf(url, { timeout = 10000, headers = {}, maxBytes = 15 * 10
         }
         break;
     }
-    if (!res || !res.ok) throw new Error("HTTP " + (res ? res.status : "ERR"));
+    if (!res || !res.ok) {
+        let detail = "";
+        try { detail = (await res.text()).replace(/\s+/g, " ").slice(0, 220); } catch (_) {}
+        throw new Error("HTTP " + (res ? res.status : "ERR") + (detail ? " " + detail : ""));
+    }
     const len = Number(res.headers.get("content-length") || 0);
     if (len && len > maxBytes) throw new Error("too large");
     const buf = Buffer.from(await res.arrayBuffer());
@@ -912,6 +916,21 @@ setTimeout(() => {
     }
 }, 1500).unref?.();
 
+let lastVisionError = "";
+let visionActive = 0;
+const visionWaiters = [];
+const VISION_MAX_PARALLEL = 3;   // حماية حدود المزود المجاني (20 طلب/دقيقة)
+
+async function visionSlot() {
+    if (visionActive >= VISION_MAX_PARALLEL) await new Promise(r => visionWaiters.push(r));
+    visionActive++;
+}
+function visionRelease() {
+    visionActive = Math.max(0, visionActive - 1);
+    const next = visionWaiters.shift();
+    if (next) next();
+}
+
 const providerBadUntil = new Map(); // اسم المزود → وقت إعادة المحاولة (بعد خطأ مفتاح/حد معدل)
 
 async function askModelOnce(jpgBuf, prompt) {
@@ -933,6 +952,7 @@ async function askModelOnce(jpgBuf, prompt) {
             const msg = String(e?.message || "");
             if (/HTTP (401|402|403)/.test(msg)) providerBadUntil.set(p.name, Date.now() + 10 * 60 * 1000);
             else if (/HTTP 429/.test(msg)) providerBadUntil.set(p.name, Date.now() + 45 * 1000);
+            lastVisionError = `${p.name}: ${msg}`.slice(0, 300);
             console.warn(`⚠️ Ai: المزود ${p.name} فشل (${msg}) — ننتقل للتالي إن وُجد`);
         }
     }
@@ -940,8 +960,13 @@ async function askModelOnce(jpgBuf, prompt) {
 }
 
 async function askModel(jpgBuf, prompt) {
-    try { return await askModelOnce(jpgBuf, prompt); }
-    catch (_) { await sleep(1500); return await askModelOnce(jpgBuf, prompt); }   // محاولة ثانية (ضغط/حد معدل)
+    await visionSlot();
+    try {
+        try { return await askModelOnce(jpgBuf, prompt); }
+        catch (_) { await sleep(1500); return await askModelOnce(jpgBuf, prompt); }   // محاولة ثانية (ضغط/حد معدل)
+    } finally {
+        visionRelease();
+    }
 }
 
 function toJpegForVision(buf) {
@@ -974,6 +999,7 @@ async function identifyImage(buf) {
             `"torso_visible":true if the chest or stomach area is shown in the frame,` +
             `"framing":"head" | "bust" | "waist" | "full" | "other"  (head = face/head only; bust = head and shoulders/chest; waist = down to the waist; full = whole body),` +
             `"head_cropped":true if the head or face is cut off by the frame,` +
+            `"colors_ok":true if the hair colour, eye colour and outfit colours match the OFFICIAL anime colours of the character you identified (fan-art shading or a different art style is fine; false if the picture is greyscale/black-and-white, tinted, filtered or the character is clearly recoloured),` +
             `"quality":0-10 for sharpness, clean lines and pleasing vivid colours}`;
 
         const txt = await askModel(jpg, prompt);
@@ -988,6 +1014,7 @@ async function identifyImage(buf) {
             has_text: j.has_text === true,
             collage: j.collage === true,
             color_mode: String(j.color_mode || "full_color").toLowerCase(),
+            colors_ok: j.colors_ok !== false,
             facing: String(j.facing || "front").toLowerCase(),
             face_visible: j.face_visible !== false,
             neck_visible: j.neck_visible !== false,
@@ -1121,9 +1148,10 @@ async function downloadStage(pins, startRank, deadline) {
 async function evaluateStage(cands, target, state, deadline) {
     const accepted = [];
 
-    for (let i = 0; i < cands.length; i += 5) {
+    for (let i = 0; i < cands.length; i += 3) {
         if (Date.now() > deadline) break;
-        const group = cands.slice(i, i + 5);
+        if (accepted.some(a => a.excellent)) break;   // وجدنا صورة ممتازة، لا داعي لإهدار طلبات أخرى
+        const group = cands.slice(i, i + 3);
         const idents = await Promise.all(group.map(r => identifyImage(r.buf)));
 
         for (let k = 0; k < group.length; k++) {
@@ -1137,6 +1165,7 @@ async function evaluateStage(cands, target, state, deadline) {
             if (id.has_text) { console.log(tag + " ✗ فيها نص"); continue; }
             if (id.collage || id.count !== 1) { console.log(tag + " ✗ ليست شخصية واحدة"); continue; }
             if (id.color_mode !== "full_color") { console.log(tag + " ✗ ليست بألوانها الكاملة"); continue; }
+            if (!id.colors_ok) { console.log(tag + " ✗ ألوان الشخصية غير طبيعية"); continue; }
             if (id.head_cropped) { console.log(tag + " ✗ الرأس مقطوع"); continue; }
             if (id.facing !== "front" && id.facing !== "three_quarter") { console.log(tag + " ✗ الوضعية ليست أمامية"); continue; }
             if (!id.face_visible || !id.neck_visible || !id.torso_visible) { console.log(tag + " ✗ الوجه/العنق/الجسم غير واضح"); continue; }
@@ -1148,7 +1177,8 @@ async function evaluateStage(cands, target, state, deadline) {
             const poseBonus = id.facing === "front" ? 6 : 2;
             const total = id.quality * 10 + r.score * 0.4 + frameBonus + poseBonus;
             console.log(tag + ` ✓ مقبولة (${total.toFixed(0)})`);
-            accepted.push({ buf: r.buf, total, rank: r.rank });
+            const excellent = id.quality >= 8 && id.facing === "front" && (id.framing === "bust" || id.framing === "waist");
+            accepted.push({ buf: r.buf, total, rank: r.rank, excellent });
         }
     }
     return accepted.sort((a, b) => b.total - a.total);
@@ -1206,13 +1236,9 @@ async function fetchCharacterImage(nameRaw, hintRaw = "") {
 
         const accepted = await evaluateStage(cands, target, state, deadline);
 
-        // فحص الألوان للأفضل فالأقل (حتى 4 صور فقط لتوفير الطلبات)
-        for (const c of accepted.slice(0, 4)) {
-            if (await colorsMatch(c.buf, target)) {
-                console.log(`[Ai] ✅ تم اختيار الصورة رقم #${c.rank}`);
-                return c.buf;
-            }
-            console.log(`[Ai] #${c.rank} ✗ ألوان الشخصية غير طبيعية`);
+        if (accepted.length) {
+            console.log(`[Ai] ✅ تم اختيار الصورة رقم #${accepted[0].rank}`);
+            return accepted[0].buf;
         }
     }
 
@@ -1231,7 +1257,7 @@ function parseAiCommand(text) {
     const m = String(text || "").trim().match(/^\.\s*(\S+)(?:\s+([\s\S]*))?$/);
     if (!m) return null;
     const cmd = normArabic(m[1]);
-    if (cmd !== "احضر") return null;
+    if (cmd !== "احضر" && cmd !== "تشخيص") return null;
     return { cmd, arg: String(m[2] || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) };
 }
 
@@ -1306,6 +1332,48 @@ function buildPlainCaption(name, guildRaw) {
 }
 
 // ============================================================
+// .تشخيص (للمالك فقط): يفحص المفاتيح والموديلات والبحث ويعطي السبب بالضبط
+// ============================================================
+
+async function runDiagnostics(sock, jid, msg) {
+    const lines = ["🔧 *تشخيص الذكاء الاصطناعي*", ""];
+    lines.push(`sharp: ${sharp ? "✅" : "❌ غير مثبتة (npm i sharp)"}`);
+
+    const providers = visionProviderList();
+    if (!providers.length) lines.push("❌ لا يوجد أي مفتاح في settings.js");
+
+    let jpg = null;
+    try {
+        jpg = await sharp({ create: { width: 64, height: 64, channels: 3, background: { r: 200, g: 30, b: 30 } } }).jpeg().toBuffer();
+    } catch (_) {}
+
+    for (const p of providers) {
+        const t0 = Date.now();
+        try {
+            const out = await p.run(jpg ? jpg.toString("base64") : null,
+                'This image is one solid colour. Reply ONLY with JSON: {"color":"red|green|blue|other"}');
+            const ok = /\{[\s\S]*\}/.test(String(out));
+            lines.push(`${ok ? "✅" : "⚠️ رد غير JSON"} ${p.name} (${((Date.now() - t0) / 1000).toFixed(1)}ث)`);
+            if (!ok) lines.push(`   ↳ ${String(out).slice(0, 100)}`);
+        } catch (e) {
+            lines.push(`❌ ${p.name}\n   ↳ ${String(e?.message || e).slice(0, 200)}`);
+        }
+    }
+
+    try {
+        const pin = await searchPinterest("شخصية ناروتو");
+        lines.push(`${pin.length ? "✅" : "❌"} Pinterest: ${pin.length} نتيجة`);
+    } catch (e) { lines.push(`❌ Pinterest: ${String(e?.message || e).slice(0, 100)}`); }
+    try {
+        const goo = await searchGoogle("شخصية ناروتو");
+        lines.push(`${goo.length ? "✅" : "❌"} Google/Bing: ${goo.length} نتيجة`);
+    } catch (e) { lines.push(`❌ Google: ${String(e?.message || e).slice(0, 100)}`); }
+
+    lines.push("", "ملاحظة: موديلات OpenRouter المجانية حدها 50 طلباً في اليوم فقط (1000 بعد شراء 10$).");
+    await safeSend(sock, jid, { text: lines.join("\n") }, { quoted: msg });
+}
+
+// ============================================================
 // المعالج الرئيسي: .احضر
 // (يُستدعى بدون await من index.js حتى لا يعطّل بقية البوت)
 // ============================================================
@@ -1313,6 +1381,11 @@ function buildPlainCaption(name, guildRaw) {
 async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner) {
     const parsed = parseAiCommand(text);
     if (!parsed) return false;
+
+    if (parsed.cmd === "تشخيص") {
+        if (owner) await runDiagnostics(sock, jid, msg);
+        return true;
+    }
 
     if (!isGroupJid(jid)) return true;
     if (!canUse(db, cleanSender, owner)) return true; // لا رد لغير أصحاب الصلاحية
@@ -1383,6 +1456,7 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
             reply = "⛔ لا يمكنني تنفيذ هذا الطلب.";
         } else if (e && (e.code === "NO_VISION" || e.code === "VISION_DOWN")) {
             reply = "⚠️ خدمة تحليل الصور غير متاحة حالياً، أبلغ المشرف.";
+            if (owner) reply += `\n\n🔧 للمالك: ${lastVisionError || e.code}\nأرسل .تشخيص لفحص كل مزود.`;
         } else if (e && e.code === "NOT_FOUND") {
             reply = "══════════════════\n*عذرا هذه الشخصية غير موجودة*\n══════════════════";
         } else if (e && e.message === "TIMEOUT") {
