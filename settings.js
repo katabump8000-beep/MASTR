@@ -11,7 +11,7 @@ const settings = {
     anthropicApiKey: "",   // الأدق (Claude) — مدفوع بسعر رخيص — console.anthropic.com
     geminiApiKey: "",      // مجاني — aistudio.google.com/apikey
     mistralApiKey: "",     // مجاني — console.mistral.ai/api-keys
-    openrouterApiKey: ""   // مجاني بدون بطاقة — openrouter.ai/keys
+    openrouterApiKey: "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"   // مجاني بدون بطاقة — openrouter.ai/keys
 };
 
 // يُمرَّر لملف Ai.js (لا تغيّر هذه الأسطر)
