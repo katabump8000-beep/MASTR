@@ -3,8 +3,8 @@
 const env = (name) => String(process.env[name] || "").trim();
 
 const settings = {
-    botNumber: "48699554086",
-    owners: ["48699554086"],
+    botNumber: "48459074937",
+    owners: ["48459074937"],
     sessionFolder: "session",
     botName: "BOT PATHIRA",
 
