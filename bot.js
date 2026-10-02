@@ -35,6 +35,7 @@ let db = null;
 let currentSocket = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
+let lastPairingCodeAt = 0;
 let shuttingDown = false;
 let startPromise = null;
 let isReconnecting = false;
@@ -751,28 +752,50 @@ async function createSocket() {
             console.error("❌ تعذر تركيب jidfix:", error?.message || error);
         }
 
-        const owners = getOwnerNumbers();
-        const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
+        // رقم الاقتران = رقم البوت المكتوب في settings.js (botNumber)،
+        // وإن لم يوجد فأول رقم في owners
+        const pairingNumber = cleanNumber(settings.botNumber) || getOwnerNumbers()[0] || "";
 
-        if (!state.creds.registered && pairingNumber) {
-            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
+        if (!state.creds.registered) {
+            if (!/^\d{8,15}$/.test(pairingNumber)) {
+                console.error(`❌ رقم البوت غير صالح في settings.js (botNumber = "${settings.botNumber}"). اكتبه بصيغة دولية بدون + وبدون مسافات، مثال: 48699554086`);
+            } else {
+                console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: +${pairingNumber} (من settings.js)`);
 
-            setTimeout(async () => {
-                try {
-                    if (!currentSocket || currentSocket !== sock) return;
+                let pairingStarted = false;
 
-                    let code = await sock.requestPairingCode(pairingNumber);
+                const requestPairing = async () => {
+                    if (pairingStarted) return;
+                    pairingStarted = true;
 
-                    if (code) {
-                        code = String(code).match(/.{1,4}/g)?.join("-") || code;
+                    for (let attempt = 1; attempt <= 3; attempt++) {
+                        try {
+                            if (!currentSocket || currentSocket !== sock) return;
+
+                            let code = await sock.requestPairingCode(pairingNumber);
+                            if (code) code = String(code).match(/.{1,4}/g)?.join("-") || code;
+
+                            const recent = Date.now() - lastPairingCodeAt < 5 * 60 * 1000;
+                            lastPairingCodeAt = Date.now();
+
+                            console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]`);
+                            console.log("📱 واتساب ← الأجهزة المرتبطة ← ربط جهاز ← الربط برقم الهاتف، ثم أدخل الرمز فوراً.");
+                            if (recent) console.log("⚠️ هذا رمز جديد، والرمز السابق لم يعد صالحاً. استخدم هذا الأخير فقط.\n");
+                            return;
+                        } catch (error) {
+                            console.error(`❌ خطأ في رمز الاقتران (محاولة ${attempt}/3):`, error?.message || error);
+                            await new Promise(r => setTimeout(r, 2500));
+                        }
                     }
+                };
 
-                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
-
-                } catch (error) {
-                    console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
-                }
-            }, 4000);
+                // الطريقة المعتمدة في Baileys: نطلب الرمز عندما يصبح الاتصال جاهزاً (حدث qr)،
+                // ومؤقت احتياطي إن لم يصل الحدث
+                sock.ev.on("connection.update", (u) => {
+                    if (u && u.qr) requestPairing();
+                });
+                setTimeout(requestPairing, 6000);
+            }
         }
 
         registerEvents(sock, saveCreds);
