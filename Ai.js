@@ -49,9 +49,10 @@ try { fs.mkdirSync(FONT_DIR, { recursive: true }); } catch (_) {}
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
-const JOB_TIMEOUT_MS = 100 * 1000;      // أقصى مدة لكل طلب
-const FETCH_BUDGET_MS = 75 * 1000;     // ميزانية البحث عن صورة الشخصية
+const JOB_TIMEOUT_MS = 130 * 1000;      // أقصى مدة لكل طلب
+const FETCH_BUDGET_MS = 105 * 1000;     // ميزانية البحث عن صورة الشخصية
 const USER_COOLDOWN_MS = 6 * 1000;     // فاصل بين طلبات نفس العضو
+const SLOW_NOTICE_MS = 11 * 1000;      // بعدها نرسل رسالة «الصورة صعبة، انتظر»
 const MAX_PARALLEL = 3;                // أقصى عدد طلبات متزامنة
 const EDIT_WAIT_MS = 3 * 60 * 1000;    // مهلة إرسال اسم النقابة بعد .تعديل
 const OUT_WIDTH = 1080;                // عرض الصورة النهائية لـ .احضر
@@ -509,10 +510,27 @@ const NAME_ALIASES = {
     "غوكو": "Goku", "لوفي": "Monkey D Luffy", "زورو": "Roronoa Zoro",
     "غوجو": "Satoru Gojo", "ساتورو غوجو": "Satoru Gojo", "ايتادوري": "Yuji Itadori",
     "نيزوكو": "Nezuko Kamado", "تانجيرو": "Tanjiro Kamado", "زينيتسو": "Zenitsu Agatsuma",
-    "اينوسكي": "Inosuke Hashibira", "رينغوكو": "Kyojuro Rengoku", "ساكورا": "Sakura Haruno"
+    "اينوسكي": "Inosuke Hashibira",
+    "ساي ايتوشي": "Sae Itoshi", "ساي ايتوشى": "Sae Itoshi", "رين ايتوشي": "Rin Itoshi",
+    "ايساغي": "Yoichi Isagi", "ايساجي": "Yoichi Isagi", "يويتشي ايساغي": "Yoichi Isagi",
+    "باتشيرا": "Meguru Bachira", "ناغي": "Seishiro Nagi", "ريو ميكاغي": "Reo Mikage",
+    "ايتاشي": "Itachi Uchiha", "ايتاتشي": "Itachi Uchiha", "رينغوكو": "Kyojuro Rengoku", "ساكورا": "Sakura Haruno"
 };
 
 // يُستبعد فقط ما لا يمثل الشخصية (مجسمات/منتجات). أعمال المعجبين مقبولة لأن Pinterest أغلبه كذلك
+// أسماء الأنميات الشائعة (الترجمة الآلية تخطئ فيها)
+const SERIES_ALIASES = {
+    "بلو لوك": "Blue Lock", "ناروتو": "Naruto", "ون بيس": "One Piece", "بليتش": "Bleach",
+    "اتاك اون تايتن": "Attack on Titan", "هجوم العمالقة": "Attack on Titan",
+    "ديمون سلاير": "Demon Slayer", "قاتل الشياطين": "Demon Slayer", "كيميتسو نو يايبا": "Demon Slayer",
+    "جوجوتسو كايسن": "Jujutsu Kaisen", "جوجتسو كايسن": "Jujutsu Kaisen",
+    "هنتر x هنتر": "Hunter x Hunter", "هنتر في هنتر": "Hunter x Hunter", "هانتر": "Hunter x Hunter",
+    "دراغون بول": "Dragon Ball", "ديث نوت": "Death Note", "طوكيو غول": "Tokyo Ghoul",
+    "ماي هيرو اكاديميا": "My Hero Academia", "بوكو نو هيرو": "My Hero Academia",
+    "تشينسو مان": "Chainsaw Man", "سباي فاميلي": "Spy x Family", "سولو ليفلينغ": "Solo Leveling",
+    "فيري تيل": "Fairy Tail", "هايكيو": "Haikyuu", "اوفرلورد": "Overlord", "فاير فورس": "Fire Force"
+};
+
 const BAD_TITLE = /(cosplay|figure|funko|lego|keychain|plush|toy|sticker|t-?shirt|merch|poster sale)/i;
 const BAD_HOST = /(shutterstock|alamy|dreamstime|istockphoto|123rf|depositphotos|gettyimages|stock\.adobe|facebook|fbsbx|instagram|tiktok|lookaside)/i;
 
@@ -587,21 +605,38 @@ async function searchPinterest(q) {
     return searchPinterestHtml(q);
 }
 
-/** يحدد الاسم الكامل الصحيح + اسم الأنمي عبر AniList (يجعل بحث Pinterest دقيقاً) */
-async function resolveCharacter(nameEn) {
+/** يحدد الاسم الكامل الصحيح + الأنمي عبر AniList (يفضّل الشخصية من الأنمي المذكور) */
+async function resolveCharacter(nameEn, seriesEn = "") {
     try {
         const body = JSON.stringify({
-            query: "query($s:String){Page(perPage:1){characters(search:$s,sort:SEARCH_MATCH){name{full} media(perPage:1,sort:POPULARITY_DESC){nodes{title{romaji english}}}}}}",
+            query: "query($s:String){Page(perPage:10){characters(search:$s,sort:SEARCH_MATCH){name{full} media(perPage:4,sort:POPULARITY_DESC){nodes{title{romaji english}}}}}}",
             variables: { s: nameEn }
         });
         const j = JSON.parse((await fetchBuf("https://graphql.anilist.co", {
             method: "POST", body, timeout: 6000, maxBytes: 1024 * 1024,
             headers: { "Content-Type": "application/json", Accept: "application/json" }
         })).toString("utf8"));
-        const c = j?.data?.Page?.characters?.[0];
-        if (!c?.name?.full) return null;
-        const t = c.media?.nodes?.[0]?.title;
-        return { name: c.name.full, series: (t && (t.english || t.romaji)) || "" };
+        const list = j?.data?.Page?.characters || [];
+        if (!list.length) return null;
+
+        const toks = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(w => w.length >= 3);
+        let pick = list[0];
+        if (seriesEn) {
+            const want = toks(seriesEn);
+            const hit = list.find(c => (c.media?.nodes || []).some(n => {
+                const have = toks((n.title?.english || "") + " " + (n.title?.romaji || ""));
+                return want.some(w => have.includes(w));
+            }));
+            if (hit) pick = hit;
+        }
+        const nodes = pick.media?.nodes || [];
+        let t = nodes[0]?.title;
+        if (seriesEn) {
+            const want = toks(seriesEn);
+            const n = nodes.find(n => toks((n.title?.english || "") + " " + (n.title?.romaji || "")).some(w => want.includes(w)));
+            if (n) t = n.title;
+        }
+        return { name: pick.name.full, series: (t && (t.english || t.romaji)) || "" };
     } catch (_) {
         return null;
     }
@@ -698,7 +733,7 @@ async function downloadCandidate(c) {
             if (!imageKind(buf)) continue;
             const p = await probeImage(buf);
             if (!p) continue;
-            return { buf, probe: p, source: c.source };
+            return { buf, probe: p, source: c.source, title: c.title || "" };
         } catch (_) {}
     }
     return null;
@@ -710,7 +745,10 @@ async function downloadCandidate(c) {
 // ============================================================
 
 const ANTHROPIC_VISION_MODEL = process.env.AI_VISION_MODEL || "claude-haiku-4-5-20251001";
-const GEMINI_VISION_MODEL = process.env.GEMINI_VISION_MODEL || "gemini-2.0-flash";
+// ملاحظة: gemini-2.0-flash أُوقف نهائياً (يونيو 2026). نستعمل الاسم المستعار الذي يشير دائماً لأحدث Flash،
+// وإن لم يوجد يجرّب البوت البدائل تلقائياً ويتذكر أول واحد يعمل.
+const GEMINI_MODELS = [...new Set([process.env.GEMINI_VISION_MODEL, "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash"].filter(Boolean))];
+let geminiModelIdx = 0;
 
 function visionAvailable() {
     return Boolean(sharp && (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY));
@@ -718,37 +756,61 @@ function visionAvailable() {
 
 let warnedNoVision = false;
 
-async function askVision(jpgBuf, prompt) {
-    const b64 = jpgBuf.toString("base64");
+setTimeout(() => {
+    if (visionAvailable()) {
+        console.log(`[Ai] ✅ فحص الصور مفعّل (${process.env.ANTHROPIC_API_KEY ? "Claude " + ANTHROPIC_VISION_MODEL : "Gemini"})`);
+    } else {
+        console.error("[Ai] ❌ فحص الصور غير مفعّل: ضع geminiApiKey في settings.js (أو ANTHROPIC_API_KEY). بدونه لن يعمل .احضر.");
+    }
+}, 1500);
+
+async function askModelOnce(jpgBuf, prompt) {
+    const b64 = jpgBuf ? jpgBuf.toString("base64") : null;
     if (process.env.ANTHROPIC_API_KEY) {
-        const body = JSON.stringify({
-            model: ANTHROPIC_VISION_MODEL,
-            max_tokens: 250,
-            messages: [{ role: "user", content: [
-                { type: "image", source: { type: "base64", media_type: "image/jpeg", data: b64 } },
-                { type: "text", text: prompt }
-            ] }]
-        });
+        const content = [];
+        if (b64) content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: b64 } });
+        content.push({ type: "text", text: prompt });
+        const body = JSON.stringify({ model: ANTHROPIC_VISION_MODEL, max_tokens: 300, messages: [{ role: "user", content }] });
         const j = JSON.parse((await fetchBuf("https://api.anthropic.com/v1/messages", {
-            method: "POST", body, timeout: 20000, maxBytes: 1024 * 1024,
+            method: "POST", body, timeout: 25000, maxBytes: 1024 * 1024,
             headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }
         })).toString("utf8"));
         return (j?.content || []).map(c => c.text || "").join("");
     }
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_VISION_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-    const body = JSON.stringify({
-        contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: b64 } }] }],
-        generationConfig: { temperature: 0 }
-    });
-    const j = JSON.parse((await fetchBuf(url, {
-        method: "POST", body, timeout: 20000, maxBytes: 1024 * 1024,
-        headers: { "content-type": "application/json" }
-    })).toString("utf8"));
-    return (j?.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+    const parts = [{ text: prompt }];
+    if (b64) parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
+    const body = JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0, responseMimeType: "application/json" } });
+
+    for (;;) {
+        const model = GEMINI_MODELS[geminiModelIdx];
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        try {
+            const j = JSON.parse((await fetchBuf(url, {
+                method: "POST", body, timeout: 25000, maxBytes: 1024 * 1024,
+                headers: { "content-type": "application/json" }
+            })).toString("utf8"));
+            return (j?.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+        } catch (e) {
+            // النموذج غير موجود/متوقف → ننتقل للتالي
+            if (/HTTP (404|400)/.test(String(e?.message)) && geminiModelIdx < GEMINI_MODELS.length - 1) {
+                console.warn(`⚠️ Ai: النموذج ${model} لا يعمل (${e.message})، سنجرب ${GEMINI_MODELS[geminiModelIdx + 1]}`);
+                geminiModelIdx++;
+                continue;
+            }
+            throw e;
+        }
+    }
 }
 
-/** يرجع { match, complete, quality } أو null عند الفشل */
-async function verifyWithVision(buf, target) {
+async function askModel(jpgBuf, prompt) {
+    try { return await askModelOnce(jpgBuf, prompt); }
+    catch (_) { await sleep(1500); return await askModelOnce(jpgBuf, prompt); }   // محاولة ثانية (ضغط/حد معدل)
+}
+
+// ------------------------------------------------------------
+// الخطوة 2: «من في الصورة؟» — تحليل مفتوح بدون إخبار النموذج بالاسم المطلوب (لتجنب التحيّز)
+// ------------------------------------------------------------
+async function identifyImage(buf) {
     try {
         const jpg = await sharp(buf, { failOn: "none" })
             .resize({ width: 768, height: 768, fit: "inside" })
@@ -756,23 +818,69 @@ async function verifyWithVision(buf, target) {
             .jpeg({ quality: 82 }).toBuffer();
 
         const prompt =
-            `You are checking an image for an anime-character picture bot.\n` +
-            `Requested character: "${target.fullName}"` + (target.series ? ` from "${target.series}"` : "") + `.\n` +
-            (target.hint ? `Extra description from the user: "${target.hint}".\n` : "") +
-            `Rules: the image must show EXACTLY this character as the main subject. A sibling, a relative, a different ` +
-            `character from the same series, or a group picture where this character is not the clear main subject is NOT a match.\n` +
-            `Also judge: is the character fully shown with no body parts cut off at the frame edges (complete), ` +
-            `and the overall picture quality/beauty/colors from 0 to 10 (sharp, clean, vivid colors, no watermark/text overlays/collage).\n` +
-            `Reply with ONLY one JSON object: {"seen":"who you see","match":true|false,"complete":true|false,"quality":0-10}`;
+            `Look at this image from an anime-character picture search. Identify who/what is shown.\n` +
+            `Reply with ONLY one JSON object, no other text:\n` +
+            `{"character":"the main character's full name in English, or \\"unknown\\"",` +
+            `"series":"the anime/manga title, or \\"unknown\\"",` +
+            `"count":number of distinct characters clearly visible,` +
+            `"is_anime":true if it is anime/manga art (not a real person, cosplay, figure or toy),` +
+            `"has_text":true if the picture has OVERLAID text or graphics added on top of the art: captions, name labels, titles, logos, watermarks, big numbers (ignore small lettering that is naturally part of the drawn scene, such as writing on clothing),` +
+            `"collage":true if it is a collage, grid, split panels or several pictures in one,` +
+            `"framing":"head" | "bust" | "waist" | "full" | "other"  (head = face/head only; bust = head and shoulders/chest; waist = down to the waist; full = whole body),` +
+            `"head_cropped":true if the head or face is cut off by the frame,` +
+            `"quality":0-10 for sharpness, clean lines and pleasing vivid colours}`;
 
-        const txt = await askVision(jpg, prompt);
+        const txt = await askModel(jpg, prompt);
         const m = String(txt).match(/\{[\s\S]*\}/);
         if (!m) return null;
         const j = JSON.parse(m[0]);
-        return { match: j.match === true, complete: j.complete === true, quality: Number(j.quality) || 0, seen: j.seen || "" };
+        return {
+            character: String(j.character || "unknown"),
+            series: String(j.series || "unknown"),
+            count: Number(j.count) || 1,
+            is_anime: j.is_anime !== false,
+            has_text: j.has_text === true,
+            collage: j.collage === true,
+            framing: String(j.framing || "other").toLowerCase(),
+            head_cropped: j.head_cropped === true,
+            quality: Number(j.quality) || 0
+        };
     } catch (e) {
         console.error("⚠️ Ai vision:", e?.message || e);
         return null;
+    }
+}
+
+// ------------------------------------------------------------
+// الخطوة 3: هل الشخصية التي اكتُشفت هي نفسها المطلوبة؟ (الإخوة/الأقارب = شخصية مختلفة)
+// ------------------------------------------------------------
+function nameTokens(x) {
+    return String(x || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(w => w.length >= 3);
+}
+
+async function sameCharacter(target, ident) {
+    const idToks = nameTokens(ident.character);
+    if (!idToks.length || /unknown/i.test(ident.character)) return false;
+
+    const want = nameTokens(target.fullName);
+    if (!want.length) return false;
+
+    const common = want.filter(w => idToks.includes(w));
+    if (common.length === 0) return false;
+    if (common.length === want.length) return true;            // كل الأجزاء موجودة
+
+    // تطابق جزئي (مثل الإخوة بنفس اللقب) → نسأل النموذج صراحةً
+    try {
+        const prompt =
+            `Request: "${target.fullName}"${target.series ? ` from "${target.series}"` : ""}.\n` +
+            `Image shows: "${ident.character}" from "${ident.series}".\n` +
+            `Are these the SAME character? Siblings, relatives, namesakes or other characters sharing a surname are DIFFERENT.\n` +
+            `Reply ONLY with JSON: {"same":true|false}`;
+        const txt = await askModel(null, prompt);
+        const m = String(txt).match(/\{[\s\S]*\}/);
+        return m ? JSON.parse(m[0]).same === true : false;
+    } catch (_) {
+        return false;
     }
 }
 
@@ -787,7 +895,6 @@ function parseTarget(arg) {
     return { name: s, hint: "" };
 }
 
-/** يجمع مرشحين من عدة استعلامات بالتناوب (للتنويع) */
 function interleave(lists, limit) {
     const out = [];
     const seen = new Set();
@@ -805,8 +912,24 @@ function interleave(lists, limit) {
     return out;
 }
 
-/** تنزيل + قياس + تقييم للمرشحين (6 بالتوازي) */
-async function loadCandidates(list, deadline) {
+const COLLAGE_TITLE = /(collage|all characters|characters|squad|group|duo|trio|team|vs\b|ships?|comparison|tier list|\bx\b)/i;
+
+/** مطابقة عنوان البن لاسم الشخصية (تعمل حتى بدون مفتاح رؤية) */
+function titleBoost(title, target) {
+    const t = String(title || "").toLowerCase();
+    if (!t) return 0;
+    const want = nameTokens(target.fullName);
+    let b = 0;
+    if (want.length) {
+        const hit = want.filter(w => t.includes(w)).length;
+        b += (hit / want.length) * 30;
+    }
+    if (COLLAGE_TITLE.test(t)) b -= 25;
+    return b;
+}
+
+/** تنزيل + قياس + تقييم (6 بالتوازي) */
+async function loadCandidates(list, deadline, target) {
     const loaded = [];
     for (let i = 0; i < list.length; i += 6) {
         if (Date.now() > deadline) break;
@@ -815,84 +938,104 @@ async function loadCandidates(list, deadline) {
             if (!r) continue;
             const ar = r.probe.w / r.probe.h;
             const minSide = Math.min(r.probe.w, r.probe.h);
-            if (minSide < 400 || ar < 0.6 || ar > 1.35) continue;     // لا طويلة جداً ولا عريضة
+            if (minSide < 400 || ar < 0.6 || ar > 1.35) continue;
             r.color = await colorfulness(r.buf);
-            r.score = qualityScore(r.probe, r.color);
+            r.score = qualityScore(r.probe, r.color) + titleBoost(r.title, target);
             loaded.push(r);
         }
     }
     return loaded.sort((a, b) => b.score - a.score);
 }
 
-/** يرجع Buffer لأفضل صورة صحيحة للشخصية */
+// ============================================================
+// الدالة الرئيسية — ثلاث خطوات تتكرر حتى النجاح أو انتهاء الوقت:
+//   1) بحث عميق في Pinterest وجمع صور
+//   2) تحليل كل صورة: من فيها؟ (بدون إخباره بالمطلوب)
+//   3) مقارنة المكتشف بالمطلوب — إن لم يتطابق نعيد البحث بصيغة جديدة
+// ============================================================
 async function fetchCharacterImage(nameRaw, hintRaw = "") {
-    const deadline = Date.now() + FETCH_BUDGET_MS;
+    const fail = (code) => { const e = new Error(code); e.code = code; return e; };
 
-    // الاسم الإنجليزي (قاموس ← ترجمة) ثم تثبيت الاسم الكامل والأنمي عبر AniList
+    // بدون نموذج رؤية لا يمكن التأكد من الشخصية → لا نرسل صورة عشوائية
+    if (!visionAvailable()) {
+        console.error("[Ai] ❌ لا يوجد مفتاح لفحص الصور (GEMINI_API_KEY / ANTHROPIC_API_KEY)");
+        throw fail("NO_VISION");
+    }
+
+    // --- الاسم والأنمي بالإنجليزية (للمقارنة فقط) ---
     const key = normArabic(nameRaw);
     const english = NAME_ALIASES[key] || (await toEnglish(nameRaw)).replace(/\s+/g, " ").trim() || nameRaw;
-    const hintEn = hintRaw ? (await toEnglish(hintRaw)).replace(/\s+/g, " ").trim() : "";
 
-    const info = await resolveCharacter(english);
-    const target = {
-        fullName: info?.name || english,
-        series: hintEn || info?.series || "",
-        hint: hintRaw || ""
-    };
-
-    // نص البحث: "شخصية انمي <الاسم> من <الشرح>"
-    const arQuery = `شخصية انمي ${nameRaw}${hintRaw ? " من " + hintRaw : ""}`;
-    const enQuery = `${target.fullName} ${target.series} anime`.replace(/\s+/g, " ").trim();
-    const enQuery2 = `${target.fullName} anime character`;
-
-    const lists = await Promise.all([arQuery, enQuery, enQuery2].map(q => searchPinterest(q).catch(() => [])));
-    const pool = interleave(lists, 24);
-
-    let loaded = await loadCandidates(pool, deadline - 15000);
-
-    // احتياطي: AniList / Bing لو Pinterest لم يعطِ شيئاً صالحاً
-    if (!loaded.length && Date.now() < deadline - 10000) {
-        const extra = [];
-        try { extra.push(...await searchAniList(target.fullName)); } catch (_) {}
-        try { extra.push(...(await searchBing(`${enQuery} official art`)).slice(0, 8)); } catch (_) {}
-        loaded = await loadCandidates(extra, deadline - 5000);
+    let seriesEn = "";
+    if (hintRaw) {
+        const hk = normArabic(hintRaw);
+        seriesEn = SERIES_ALIASES[hk] || SERIES_ALIASES[hintRaw.trim()] || (await toEnglish(hintRaw)).replace(/\s+/g, " ").trim();
     }
+    const info = await resolveCharacter(english, seriesEn);
+    const target = { fullName: info?.name || english, series: seriesEn || info?.series || "", hint: hintRaw || "" };
 
-    if (!loaded.length) {
-        const err = new Error("NOT_FOUND");
-        err.code = "NOT_FOUND";
-        throw err;
+    // ===== الخطوة 1: بحث واحد، وأول 10 صور فقط =====
+    const query = `شخصية انمي ${nameRaw}${hintRaw ? " " + hintRaw : ""}`.replace(/\s+/g, " ").trim();
+    let pins = [];
+    try { pins = await searchPinterest(query); } catch (_) {}
+    pins = pins.slice(0, 10);
+    console.log(`[Ai] بحث: "${query}" | المطلوب: ${target.fullName}${target.series ? " (" + target.series + ")" : ""} | نفحص ${pins.length} صور`);
+    if (!pins.length) throw fail("NOT_FOUND");
+
+    const downloaded = await Promise.all(pins.map(async (p, i) => {
+        const r = await downloadCandidate(p);
+        if (!r) { console.log(`[Ai] #${i + 1} تعذّر التنزيل`); return null; }
+        r.rank = i + 1;
+        return r;
+    }));
+
+    const cands = [];
+    for (const r of downloaded) {
+        if (!r) continue;
+        const ar = r.probe.w / r.probe.h;
+        if (Math.min(r.probe.w, r.probe.h) < 300 || ar < 0.5 || ar > 1.6) { console.log(`[Ai] #${r.rank} مقاس غير مناسب ${r.probe.w}x${r.probe.h}`); continue; }
+        r.color = await colorfulness(r.buf);
+        r.score = qualityScore(r.probe, r.color);
+        cands.push(r);
     }
+    if (!cands.length) throw fail("NOT_FOUND");
 
-    // ===== بدون مفتاح رؤية: نختار الأفضل حسب الدقة والمقاس والألوان =====
-    if (!visionAvailable()) {
-        if (!warnedNoVision) {
-            warnedNoVision = true;
-            console.warn("⚠️ Ai.js: لا يوجد ANTHROPIC_API_KEY أو GEMINI_API_KEY — لن يتم التحقق من هوية الشخصية داخل الصورة.");
+    // ===== الخطوتان 2 و3: من في الصورة؟ ثم هل هي المطلوبة؟ =====
+    let best = null, failed = 0, analysed = 0;
+
+    for (let i = 0; i < cands.length; i += 5) {
+        const group = cands.slice(i, i + 5);
+        const idents = await Promise.all(group.map(r => identifyImage(r.buf)));
+
+        for (let k = 0; k < group.length; k++) {
+            const r = group[k], id = idents[k];
+            if (!id) { failed++; console.log(`[Ai] #${r.rank} فشل التحليل`); continue; }
+            analysed++;
+
+            const tag = `[Ai] #${r.rank} → ${id.character} / ${id.series} | شخصيات:${id.count} نص:${id.has_text} كولاج:${id.collage} لقطة:${id.framing} جودة:${id.quality}`;
+
+            if (!id.is_anime) { console.log(tag + " ✗ ليست أنمي"); continue; }
+            if (id.has_text) { console.log(tag + " ✗ فيها نص"); continue; }
+            if (id.collage || id.count !== 1) { console.log(tag + " ✗ ليست شخصية واحدة"); continue; }
+            if (id.head_cropped) { console.log(tag + " ✗ الرأس مقطوع"); continue; }
+            if (!["head", "bust", "waist", "full"].includes(id.framing)) { console.log(tag + " ✗ لقطة غير مناسبة"); continue; }
+
+            if (!(await sameCharacter(target, id))) { console.log(tag + " ✗ ليست الشخصية المطلوبة"); continue; }
+
+            const frameBonus = id.framing === "bust" ? 8 : id.framing === "waist" ? 5 : id.framing === "head" ? 4 : -30; // الجسم الكامل آخر خيار
+            const total = id.quality * 10 + r.score * 0.4 + frameBonus;
+            console.log(tag + ` ✓ مقبولة (${total.toFixed(0)})`);
+            if (!best || total > best.total) best = { buf: r.buf, total };
         }
-        return loaded[0].buf;
     }
 
-    // ===== مع الرؤية: نفحص الأفضل فالأفضل حتى نجد صورة صحيحة وكاملة =====
-    let bestPick = null;
-    for (let i = 0; i < loaded.length && i < 12; i += 4) {
-        if (Date.now() > deadline) break;
-        const group = loaded.slice(i, i + 4);
-        const results = await Promise.all(group.map(r => verifyWithVision(r.buf, target)));
-        group.forEach((r, idx) => {
-            const v = results[idx];
-            if (!v || !v.match || !v.complete) return;
-            const total = v.quality * 10 + r.score * 0.5;
-            if (!bestPick || total > bestPick.total) bestPick = { buf: r.buf, total };
-        });
-        if (bestPick && bestPick.total >= 80) break;   // نتيجة ممتازة، لا داعي للمزيد
+    if (best) return best.buf;
+
+    if (analysed === 0 && failed > 0) {
+        console.error("[Ai] ❌ فشلت كل طلبات التحليل (تحقق من المفتاح/الحصة/اسم النموذج)");
+        throw fail("VISION_DOWN");
     }
-
-    if (bestPick) return bestPick.buf;
-
-    const err = new Error("NOT_FOUND");
-    err.code = "NOT_FOUND";
-    throw err;
+    throw fail("NOT_FOUND");
 }
 
 // ============================================================
@@ -1028,6 +1171,11 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
 
     await react(sock, jid, key, "⏳");
 
+    // إن تأخر البحث نخبر العضو مرة واحدة ثم نكمل
+    const slowTimer = setTimeout(() => {
+        safeSend(sock, jid, { text: "⏳ إيجاد صورة صعب لهذه الشخصية، رجاءً انتظر قليلاً…" }, { quoted: msg }).catch(() => {});
+    }, SLOW_NOTICE_MS);
+
     try {
         const result = await withTimeout(
             runFetch(parsed.arg, db),
@@ -1047,8 +1195,10 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
         let reply;
         if (e && e.code === "BLOCKED") {
             reply = "⛔ لا يمكنني تنفيذ هذا الطلب.";
+        } else if (e && (e.code === "NO_VISION" || e.code === "VISION_DOWN")) {
+            reply = "⚠️ خدمة تحليل الصور غير متاحة حالياً، أبلغ المشرف.";
         } else if (e && e.code === "NOT_FOUND") {
-            reply = `⚠️ لم أجد صورة واضحة لـ «${parsed.arg}».\nجرّب كتابة الاسم بشكل مختلف.`;
+            reply = `⚠️ لم يتم الحصول على هذه الشخصية: «${parsed.arg}».\nجرّب كتابة الاسم بوضوح مع اسم الأنمي، مثال: .احضر ساي ايتوشي من بلو لوك`;
         } else if (e && e.message === "TIMEOUT") {
             reply = "⌛ استغرق الطلب وقتاً طويلاً، أعد المحاولة.";
         } else {
@@ -1056,6 +1206,7 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
         }
         await safeSend(sock, jid, { text: reply }, { quoted: msg });
     } finally {
+        clearTimeout(slowTimer);
         activeJobs.delete(who);
         runningJobs = Math.max(0, runningJobs - 1);
     }
