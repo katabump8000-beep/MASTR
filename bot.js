@@ -11,8 +11,7 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion,
-    Browsers
+    fetchLatestBaileysVersion
 } = require("@whiskeysockets/baileys");
 
 const fs = require("fs");
@@ -36,7 +35,6 @@ let db = null;
 let currentSocket = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
-let lastPairingCodeAt = 0;
 let shuttingDown = false;
 let startPromise = null;
 let isReconnecting = false;
@@ -734,8 +732,6 @@ async function createSocket() {
         const socketOptions = {
             auth: state,
             printQRInTerminal: false,
-            // اسم المتصفح بصيغة صحيحة (مهم لقبول رمز الاقتران في بعض إصدارات Baileys)
-            browser: Browsers.macOS("Chrome"),
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
             // 🆕 تفعيل مزامنة التاريخ الكامل لدعم .تنظيف
@@ -755,50 +751,28 @@ async function createSocket() {
             console.error("❌ تعذر تركيب jidfix:", error?.message || error);
         }
 
-        // رقم الاقتران = رقم البوت المكتوب في settings.js (botNumber)،
-        // وإن لم يوجد فأول رقم في owners
-        const pairingNumber = cleanNumber(settings.botNumber) || getOwnerNumbers()[0] || "";
+        const owners = getOwnerNumbers();
+        const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
 
-        if (!state.creds.registered) {
-            if (!/^\d{8,15}$/.test(pairingNumber)) {
-                console.error(`❌ رقم البوت غير صالح في settings.js (botNumber = "${settings.botNumber}"). اكتبه بصيغة دولية بدون + وبدون مسافات، مثال: 48699554086`);
-            } else {
-                console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: +${pairingNumber} (من settings.js)`);
+        if (!state.creds.registered && pairingNumber) {
+            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
 
-                let pairingStarted = false;
+            setTimeout(async () => {
+                try {
+                    if (!currentSocket || currentSocket !== sock) return;
 
-                const requestPairing = async () => {
-                    if (pairingStarted) return;
-                    pairingStarted = true;
+                    let code = await sock.requestPairingCode(pairingNumber);
 
-                    for (let attempt = 1; attempt <= 3; attempt++) {
-                        try {
-                            if (!currentSocket || currentSocket !== sock) return;
-
-                            let code = await sock.requestPairingCode(pairingNumber);
-                            if (code) code = String(code).match(/.{1,4}/g)?.join("-") || code;
-
-                            const recent = Date.now() - lastPairingCodeAt < 5 * 60 * 1000;
-                            lastPairingCodeAt = Date.now();
-
-                            console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]`);
-                            console.log("📱 واتساب ← الأجهزة المرتبطة ← ربط جهاز ← الربط برقم الهاتف، ثم أدخل الرمز فوراً.");
-                            if (recent) console.log("⚠️ هذا رمز جديد، والرمز السابق لم يعد صالحاً. استخدم هذا الأخير فقط.\n");
-                            return;
-                        } catch (error) {
-                            console.error(`❌ خطأ في رمز الاقتران (محاولة ${attempt}/3):`, error?.message || error);
-                            await new Promise(r => setTimeout(r, 2500));
-                        }
+                    if (code) {
+                        code = String(code).match(/.{1,4}/g)?.join("-") || code;
                     }
-                };
 
-                // الطريقة المعتمدة في Baileys: نطلب الرمز عندما يصبح الاتصال جاهزاً (حدث qr)،
-                // ومؤقت احتياطي إن لم يصل الحدث
-                sock.ev.on("connection.update", (u) => {
-                    if (u && u.qr) requestPairing();
-                });
-                setTimeout(requestPairing, 6000);
-            }
+                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
+
+                } catch (error) {
+                    console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
+                }
+            }, 4000);
         }
 
         registerEvents(sock, saveCreds);
