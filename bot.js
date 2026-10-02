@@ -25,6 +25,7 @@ const settings = require("./settings");
 // ============================================================
 
 const DB_FILE = path.join(__dirname, "database.json");
+const DB_BAK = DB_FILE + ".bak";
 const SESSION_FOLDER = path.join(__dirname, settings.sessionFolder || "session");
 
 // ============================================================
@@ -226,6 +227,16 @@ function ensureDatabaseShape() {
     return db;
 }
 
+function readDbFile(file) {
+    const raw = fs.readFileSync(file, "utf8").trim();
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("الملف لا يحتوي على بيانات صحيحة.");
+    }
+    return parsed;
+}
+
 function loadDatabase() {
     if (!fs.existsSync(DB_FILE)) {
         db = createDefaultDatabase();
@@ -233,47 +244,60 @@ function loadDatabase() {
         return db;
     }
 
+    let parsed = null;
     try {
-        const raw = fs.readFileSync(DB_FILE, "utf8").trim();
-
-        if (!raw) {
-            db = createDefaultDatabase();
-        } else {
-            const parsed = JSON.parse(raw);
-
-            if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-                throw new Error("database.json لا يحتوي على بيانات صحيحة.");
-            }
-
-            db = {
-                ...createDefaultDatabase(),
-                ...parsed
-            };
-        }
-
-        ensureDatabaseShape();
-        return db;
-
+        parsed = readDbFile(DB_FILE);
     } catch (error) {
-        console.error("❌ تعذر تحميل database.json:");
-        console.error(error?.message || error);
+        console.error("❌ تعذر تحميل database.json:", error?.message || error);
 
-        db = createDefaultDatabase();
-        ensureDatabaseShape();
-        return db;
+        // 🛡️ لا نمسح البيانات أبداً: نحفظ نسخة من الملف التالف ثم نجرّب النسخة الاحتياطية
+        try {
+            const keep = path.join(__dirname, `database.corrupt-${Date.now()}.json`);
+            fs.copyFileSync(DB_FILE, keep);
+            console.error(`📦 حُفظت نسخة من الملف التالف: ${path.basename(keep)}`);
+        } catch (_) {}
+
+        try {
+            if (fs.existsSync(DB_BAK)) {
+                parsed = readDbFile(DB_BAK);
+                console.warn("♻️ تم استرجاع البيانات من database.json.bak");
+            }
+        } catch (e2) {
+            console.error("❌ النسخة الاحتياطية تالفة أيضاً:", e2?.message || e2);
+        }
     }
+
+    db = { ...createDefaultDatabase(), ...(parsed || {}) };
+    ensureDatabaseShape();
+    return db;
 }
 
-function saveDb() {
+let saveTimer = null;
+let dbDirty = false;
+let lastSaveAt = 0;
+let lastBakAt = 0;
+const SAVE_MIN_GAP_MS = 1500;     // لا نكتب الملف أكثر من مرة كل 1.5 ثانية (الكتابة المتزامنة تجمّد البوت)
+const BAK_EVERY_MS = 10 * 60 * 1000;
+
+function saveDbNow() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     try {
         ensureDatabaseShape();
 
         const tempFile = `${DB_FILE}.tmp`;
         const json = JSON.stringify(db, null, 2);
 
+        // نسخة احتياطية للملف السليم الحالي كل 10 دقائق
+        const now = Date.now();
+        if (now - lastBakAt > BAK_EVERY_MS && fs.existsSync(DB_FILE)) {
+            try { fs.copyFileSync(DB_FILE, DB_BAK); lastBakAt = now; } catch (_) {}
+        }
+
         fs.writeFileSync(tempFile, json, "utf8");
         fs.renameSync(tempFile, DB_FILE);
 
+        dbDirty = false;
+        lastSaveAt = Date.now();
         return true;
 
     } catch (error) {
@@ -282,19 +306,30 @@ function saveDb() {
 
         try {
             const tempFile = `${DB_FILE}.tmp`;
-            if (fs.existsSync(tempFile)) {
-                fs.unlinkSync(tempFile);
-            }
+            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
         } catch (_) {}
 
         return false;
     }
 }
 
+/** نفس الاسم القديم: يطلب الحفظ (مؤجل ثوانٍ قليلة) — لا يحتاج تعديل بقية الملفات */
+function saveDb() {
+    dbDirty = true;
+    if (saveTimer) return true;
+    const wait = Math.max(250, SAVE_MIN_GAP_MS - (Date.now() - lastSaveAt));
+    saveTimer = setTimeout(() => { saveTimer = null; saveDbNow(); }, wait);
+    saveTimer.unref?.();
+    return true;
+}
+
+process.on("exit", () => { if (dbDirty) saveDbNow(); });
+
 loadDatabase();
 
 global.db = db;
 global.saveDb = saveDb;
+global.saveDbNow = saveDbNow;
 
 // ============================================================
 // Utilities
@@ -610,9 +645,21 @@ function registerEvents(sock, saveCreds) {
                 const loggedOut = statusCode === DisconnectReason.loggedOut;
 
                 if (loggedOut) {
-                    console.error("🚫 تم تسجيل خروج الجلسة. لن تتم إعادة الاتصال تلقائياً.");
+                    // ✅ بدل أن يبقى البوت ساكناً للأبد: نحذف الجلسة التالفة ونطلب رمز اقتران جديد
+                    console.error("🚫 تم تسجيل خروج الجلسة. سيتم مسح الجلسة وطلب رمز اقتران جديد خلال 5 ثوانٍ...");
+                    try { if (currentSocket) cleanupSocket(currentSocket); } catch (_) {}
                     currentSocket = null;
+                    try { fs.rmSync(SESSION_FOLDER, { recursive: true, force: true }); } catch (_) {}
+                    clearReconnectTimer();
+                    reconnectAttempts = 0;
+                    reconnectTimer = setTimeout(async () => { reconnectTimer = null; if (!shuttingDown) await reconnect(); }, 5000);
                     return;
+                }
+
+                // 440 = الجلسة مفتوحة في مكان آخر؛ إعادة الاتصال السريع تسبب صراعاً لا ينتهي
+                if (statusCode === DisconnectReason.connectionReplaced) {
+                    console.error("⚠️ الجلسة مفتوحة في جهاز/تشغيل آخر (connectionReplaced). أغلق النسخة الأخرى من البوت.");
+                    reconnectAttempts = Math.max(reconnectAttempts, 6);
                 }
 
                 reconnectAttempts++;
@@ -672,6 +719,7 @@ function cleanupSocket(sock) {
 
     try {
         sock.ev.removeAllListeners();
+        try { sock.ws?.close(); } catch (_) {}   // ✅ كان الاتصال القديم يبقى مفتوحاً → رسائل مكررة/تعارض
         console.log("🧹 تم تنظيف الـListeners من الـSocket القديم");
     } catch (error) {
         console.error("❌ خطأ في تنظيف الـSocket:", error?.message || error);
@@ -734,8 +782,9 @@ async function createSocket() {
             printQRInTerminal: false,
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
-            // 🆕 تفعيل مزامنة التاريخ الكامل لدعم .تنظيف
-            syncFullHistory: true
+            // ⚠️ كانت true: تحمّل كل تاريخ المحادثات وتستهلك ذاكرة كبيرة وتبطّئ/تعلّق البوت.
+            // .تنظيف يستعمل fetchMessageHistory الذي لا يحتاجها.
+            syncFullHistory: false
         };
 
         if (version) {
@@ -830,7 +879,7 @@ async function shutdown() {
         currentSocket = null;
     }
 
-    saveDb();
+    saveDbNow();
 
     console.log("🛑 تم إيقاف البوت.");
 }
