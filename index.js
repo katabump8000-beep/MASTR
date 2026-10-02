@@ -4,7 +4,7 @@
 // Main Entry Point + Watchdog + Rest System + LogGuard
 // + Photos + Welcome + Tahmin + Results + CommandsList + Typo
 // + JidFix + Ban + Shop + Guilds + Hads (اتبع حدسك)
-// + Ai (إنشاء/إحضار الصور) + المؤبدين + أوامر رقم البوت نفسه
+// + Ai (إحضار صور الشخصيات) + المؤبدين + أوامر رقم البوت نفسه
 // ============================================================
 
 "use strict";
@@ -1140,11 +1140,11 @@ function createHandlers() {
                         // معالجة الأوامر الجديدة
                         // ============================================
 
-                        // 🆕 الذكاء الاصطناعي: .انشاء / .احضر / .تعديل
+                        // 🆕 الذكاء الاصطناعي: .احضر / .تعديل
                         if (aiModule) {
                             try {
                                 if (typeof aiModule.isAiCommand === "function" && aiModule.isAiCommand(text)) {
-                                    // بدون await: لا نوقف بقية البوت أثناء إنشاء الصورة
+                                    // بدون await: لا نوقف بقية البوت أثناء البحث عن الصورة
                                     aiModule.handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)
                                         .catch(e => _originalError("Ai command error:", e?.message));
                                     continue;
