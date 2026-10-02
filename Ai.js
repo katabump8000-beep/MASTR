@@ -31,7 +31,7 @@ const path = require("path");
 let sharp = null;
 try {
     sharp = require("sharp");
-    try { sharp.cache(false); } catch (_) {}
+    try { sharp.cache(false); sharp.concurrency(2); } catch (_) {}
 } catch (_) {
     console.warn("⚠️ Ai.js: مكتبة sharp غير مثبتة — لن تُكتب الأسماء على الصورة.");
 }
@@ -103,16 +103,45 @@ async function react(sock, jid, key, emoji) {
     } catch (_) {}
 }
 
-/** تنزيل ملف مع مهلة وحد أقصى للحجم */
+/** يمنع الوصول للعناوين الداخلية (حماية السيرفر) */
+function isPrivateUrl(u) {
+    try {
+        const url = new URL(u);
+        if (!/^https?:$/.test(url.protocol)) return true;
+        const h = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+        if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal")) return true;
+        if (h === "::1" || /^(fc|fd|fe80)/i.test(h)) return true;
+        const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+        if (m) {
+            const a = +m[1], b = +m[2];
+            if (a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return true;
+        }
+        return false;
+    } catch (_) {
+        return true;
+    }
+}
+
+/** تنزيل ملف مع مهلة وحد أقصى للحجم (التحويلات تُفحص يدوياً) */
 async function fetchBuf(url, { timeout = 10000, headers = {}, maxBytes = 15 * 1024 * 1024, method = "GET", body = null } = {}) {
-    const res = await fetch(url, {
-        method,
-        body,
-        headers: { "User-Agent": UA, ...headers },
-        redirect: "follow",
-        signal: AbortSignal.timeout(Math.max(1000, timeout))
-    });
-    if (!res.ok) throw new Error("HTTP " + res.status);
+    let target = url;
+    let res = null;
+    for (let hop = 0; hop < 4; hop++) {
+        if (isPrivateUrl(target)) throw new Error("blocked host");
+        res = await fetch(target, {
+            method,
+            body,
+            headers: { "User-Agent": UA, ...headers },
+            redirect: "manual",
+            signal: AbortSignal.timeout(Math.max(1000, timeout))
+        });
+        if (res.status >= 300 && res.status < 400 && res.headers.get("location")) {
+            target = new URL(res.headers.get("location"), target).toString();
+            continue;
+        }
+        break;
+    }
+    if (!res || !res.ok) throw new Error("HTTP " + (res ? res.status : "ERR"));
     const len = Number(res.headers.get("content-length") || 0);
     if (len && len > maxBytes) throw new Error("too large");
     const buf = Buffer.from(await res.arrayBuffer());
@@ -684,7 +713,7 @@ async function probeImage(buf) {
         return imageKind(buf) ? { w: 1000, h: 1000, format: imageKind(buf) } : null;
     }
     try {
-        const m = await sharp(buf, { failOn: "none" }).metadata();
+        const m = await sharp(buf, { failOn: "none", limitInputPixels: 40e6 }).metadata();
         if (!m.width || !m.height) return null;
         if ((m.pages || 1) > 1) return null; // GIF/WebP متحرك
         const swap = m.orientation && m.orientation >= 5;
@@ -729,7 +758,7 @@ async function downloadCandidate(c) {
         let referer = "";
         try { referer = new URL(u).origin + "/"; } catch (_) {}
         try {
-            const buf = await fetchBuf(u, { timeout: 9000, maxBytes: 12 * 1024 * 1024, headers: referer ? { Referer: referer } : {} });
+            const buf = await fetchBuf(u, { timeout: 9000, maxBytes: 8 * 1024 * 1024, headers: referer ? { Referer: referer } : {} });
             if (!imageKind(buf)) continue;
             const p = await probeImage(buf);
             if (!p) continue;
@@ -740,78 +769,94 @@ async function downloadCandidate(c) {
 }
 
 // ============================================================
+// بحث Google (API رسمي ← صفحة Google ← Bing احتياطي)
+// الخيار الأضمن: ضع googleApiKey + googleCx في settings.js (مجاني 100 بحث/يوم)
+// ============================================================
+
+async function searchGoogleApi(q) {
+    const key = process.env.GOOGLE_API_KEY, cx = process.env.GOOGLE_CX;
+    if (!key || !cx) return [];
+    const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}` +
+        `&q=${encodeURIComponent(q)}&searchType=image&num=10&safe=active`;
+    const j = JSON.parse((await fetchBuf(url, { timeout: 9000, maxBytes: 2 * 1024 * 1024 })).toString("utf8"));
+    return (j.items || []).filter(it => it && it.link).map(it => ({
+        url: it.link,
+        alt: it.image && it.image.thumbnailLink ? [it.image.thumbnailLink] : [],
+        title: [it.title, it.snippet].filter(Boolean).join(" "),
+        source: "google"
+    }));
+}
+
+async function searchGoogleHtml(q) {
+    const html = (await fetchBuf(`https://www.google.com/search?q=${encodeURIComponent(q)}&udm=2&hl=en&safe=active`, {
+        timeout: 9000, maxBytes: 5 * 1024 * 1024,
+        headers: { "Accept-Language": "en-US,en;q=0.9", Cookie: "CONSENT=YES+cb; SOCS=CAI" }
+    })).toString("utf8");
+
+    const out = [];
+    const seen = new Set();
+    for (const m of html.matchAll(/\["(https?:\/\/[^"\\]+(?:\\u[0-9a-f]{4}[^"\\]*)*?\.(?:jpe?g|png|webp)[^"]*)",\d{2,5},\d{2,5}\]/gi)) {
+        const u = m[1].replace(/\\u([0-9a-f]{4})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+        if (/gstatic\.com|google\.com|googleusercontent/i.test(u) || seen.has(u)) continue;
+        seen.add(u);
+        out.push({ url: u, alt: [], title: "", source: "google" });
+        if (out.length >= 20) break;
+    }
+    return out;
+}
+
+async function searchGoogle(q) {
+    try { const r = await searchGoogleApi(q); if (r.length) return r; } catch (_) {}
+    try { const r = await searchGoogleHtml(q); if (r.length) return r; } catch (_) {}
+    try { return await searchBing(q); } catch (_) {}   // Google يحجب السيرفرات أحياناً → Bing بديل
+    return [];
+}
+
+// ============================================================
 // فحص الصورة بالذكاء الاصطناعي (رؤية) — يتأكد أنها الشخصية المطلوبة فعلاً
-// يحتاج مفتاحاً واحداً في متغيرات البيئة: ANTHROPIC_API_KEY أو GEMINI_API_KEY (مجاني)
+// المزودات المتاحة تُجرَّب بالترتيب، وإن فشل أحدها ننتقل للتالي تلقائياً
 // ============================================================
 
 const ANTHROPIC_VISION_MODEL = process.env.AI_VISION_MODEL || "claude-haiku-4-5-20251001";
-// ملاحظة: gemini-2.0-flash أُوقف نهائياً (يونيو 2026). نستعمل الاسم المستعار الذي يشير دائماً لأحدث Flash،
-// وإن لم يوجد يجرّب البوت البدائل تلقائياً ويتذكر أول واحد يعمل.
 const GEMINI_MODELS = [...new Set([process.env.GEMINI_VISION_MODEL, "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash"].filter(Boolean))];
 let geminiModelIdx = 0;
 
-// مزوّدات متوافقة مع صيغة OpenAI (Mistral / OpenRouter) — تُجرَّب بعد Anthropic و Gemini
-function openaiCompat() {
+function openaiProviders() {
+    const list = [];
     if (process.env.MISTRAL_API_KEY) {
-        return { name: "Mistral", url: "https://api.mistral.ai/v1/chat/completions", key: process.env.MISTRAL_API_KEY,
-                 model: process.env.AI_VISION_MODEL_OPENAI || "mistral-medium-latest" };
+        list.push({ name: "Mistral", url: "https://api.mistral.ai/v1/chat/completions", key: process.env.MISTRAL_API_KEY,
+                    model: process.env.AI_VISION_MODEL_MISTRAL || "mistral-medium-latest" });
     }
     if (process.env.OPENROUTER_API_KEY) {
-        return { name: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY,
-                 model: process.env.AI_VISION_MODEL_OPENAI || "openrouter/free" };
+        // كل موديل يُجرَّب لوحده: المختار أولاً، ثم موديل رؤية مجاني ثابت، ثم الراوتر المجاني (يختار موديلاً يدعم الصور تلقائياً)
+        const models = [...new Set([
+            process.env.AI_VISION_MODEL_OPENROUTER,
+            "nvidia/nemotron-nano-12b-v2-vl:free",
+            "openrouter/free"
+        ].filter(Boolean))];
+        for (const model of models) {
+            list.push({ name: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model });
+        }
     }
-    return null;
+    return list;
 }
 
-function visionProvider() {
-    if (process.env.ANTHROPIC_API_KEY) return "Claude " + ANTHROPIC_VISION_MODEL;
-    if (process.env.GEMINI_API_KEY) return "Gemini";
-    const oc = openaiCompat();
-    return oc ? `${oc.name} (${oc.model})` : "";
+async function callAnthropic(b64, prompt) {
+    const content = [];
+    if (b64) content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: b64 } });
+    content.push({ type: "text", text: prompt });
+    const body = JSON.stringify({ model: ANTHROPIC_VISION_MODEL, max_tokens: 400, messages: [{ role: "user", content }] });
+    const j = JSON.parse((await fetchBuf("https://api.anthropic.com/v1/messages", {
+        method: "POST", body, timeout: 25000, maxBytes: 1024 * 1024,
+        headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }
+    })).toString("utf8"));
+    return (j?.content || []).map(c => c.text || "").join("");
 }
 
-function visionAvailable() {
-    return Boolean(sharp && visionProvider());
-}
-
-let warnedNoVision = false;
-
-setTimeout(() => {
-    if (visionAvailable()) {
-        console.log(`[Ai] ✅ فحص الصور مفعّل (${visionProvider()})`);
-    } else {
-        console.error("[Ai] ❌ فحص الصور غير مفعّل: ضع أحد المفاتيح في settings.js (anthropicApiKey أو geminiApiKey أو mistralApiKey أو openrouterApiKey). بدونه لن يعمل .احضر.");
-    }
-}, 1500);
-
-async function askModelOnce(jpgBuf, prompt) {
-    const b64 = jpgBuf ? jpgBuf.toString("base64") : null;
-    if (process.env.ANTHROPIC_API_KEY) {
-        const content = [];
-        if (b64) content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: b64 } });
-        content.push({ type: "text", text: prompt });
-        const body = JSON.stringify({ model: ANTHROPIC_VISION_MODEL, max_tokens: 300, messages: [{ role: "user", content }] });
-        const j = JSON.parse((await fetchBuf("https://api.anthropic.com/v1/messages", {
-            method: "POST", body, timeout: 25000, maxBytes: 1024 * 1024,
-            headers: { "content-type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }
-        })).toString("utf8"));
-        return (j?.content || []).map(c => c.text || "").join("");
-    }
-    if (!process.env.GEMINI_API_KEY) {
-        const oc = openaiCompat();
-        const content = [{ type: "text", text: prompt }];
-        if (b64) content.push({ type: "image_url", image_url: { url: "data:image/jpeg;base64," + b64 } });
-        const body = JSON.stringify({ model: oc.model, messages: [{ role: "user", content }], temperature: 0, max_tokens: 300 });
-        const j = JSON.parse((await fetchBuf(oc.url, {
-            method: "POST", body, timeout: 30000, maxBytes: 1024 * 1024,
-            headers: { "content-type": "application/json", authorization: "Bearer " + oc.key }
-        })).toString("utf8"));
-        return String(j?.choices?.[0]?.message?.content || "");
-    }
+async function callGemini(b64, prompt) {
     const parts = [{ text: prompt }];
     if (b64) parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
     const body = JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0, responseMimeType: "application/json" } });
-
     for (;;) {
         const model = GEMINI_MODELS[geminiModelIdx];
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
@@ -822,7 +867,6 @@ async function askModelOnce(jpgBuf, prompt) {
             })).toString("utf8"));
             return (j?.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
         } catch (e) {
-            // النموذج غير موجود/متوقف → ننتقل للتالي
             if (/HTTP (404|400)/.test(String(e?.message)) && geminiModelIdx < GEMINI_MODELS.length - 1) {
                 console.warn(`⚠️ Ai: النموذج ${model} لا يعمل (${e.message})، سنجرب ${GEMINI_MODELS[geminiModelIdx + 1]}`);
                 geminiModelIdx++;
@@ -833,20 +877,86 @@ async function askModelOnce(jpgBuf, prompt) {
     }
 }
 
+async function callOpenAI(oc, b64, prompt) {
+    const content = [{ type: "text", text: prompt }];
+    if (b64) content.push({ type: "image_url", image_url: { url: "data:image/jpeg;base64," + b64 } });
+    const body = JSON.stringify({ model: oc.model, messages: [{ role: "user", content }], temperature: 0, max_tokens: 400 });
+    const j = JSON.parse((await fetchBuf(oc.url, {
+        method: "POST", body, timeout: 35000, maxBytes: 1024 * 1024,
+        headers: { "content-type": "application/json", authorization: "Bearer " + oc.key }
+    })).toString("utf8"));
+    return String(j?.choices?.[0]?.message?.content || "");
+}
+
+function visionProviderList() {
+    const list = [];
+    if (process.env.ANTHROPIC_API_KEY) list.push({ name: "Claude " + ANTHROPIC_VISION_MODEL, run: callAnthropic });
+    if (process.env.GEMINI_API_KEY) list.push({ name: "Gemini", run: callGemini });
+    for (const oc of openaiProviders()) list.push({ name: `${oc.name} (${oc.model})`, run: (b64, p) => callOpenAI(oc, b64, p) });
+    return list;
+}
+
+function visionProvider() {
+    return visionProviderList().map(p => p.name).join(" ← ");
+}
+
+function visionAvailable() {
+    return Boolean(sharp && visionProviderList().length);
+}
+
+setTimeout(() => {
+    if (visionAvailable()) {
+        console.log(`[Ai] ✅ فحص الصور مفعّل (${visionProvider()})`);
+    } else {
+        console.error("[Ai] ❌ فحص الصور غير مفعّل: ضع أحد المفاتيح في settings.js (anthropicApiKey أو geminiApiKey أو mistralApiKey أو openrouterApiKey). بدونه لن يعمل .احضر.");
+    }
+}, 1500).unref?.();
+
+const providerBadUntil = new Map(); // اسم المزود → وقت إعادة المحاولة (بعد خطأ مفتاح/حد معدل)
+
+async function askModelOnce(jpgBuf, prompt) {
+    const b64 = jpgBuf ? jpgBuf.toString("base64") : null;
+    let providers = visionProviderList();
+    if (!providers.length) throw new Error("NO_PROVIDER");
+
+    const fresh = providers.filter(p => (providerBadUntil.get(p.name) || 0) <= Date.now());
+    if (fresh.length) providers = fresh;
+
+    let lastErr = null;
+    for (const p of providers) {
+        try {
+            const out = await p.run(b64, prompt);
+            if (out && String(out).trim()) { providerBadUntil.delete(p.name); return out; }
+            lastErr = new Error("EMPTY_REPLY");
+        } catch (e) {
+            lastErr = e;
+            const msg = String(e?.message || "");
+            if (/HTTP (401|402|403)/.test(msg)) providerBadUntil.set(p.name, Date.now() + 10 * 60 * 1000);
+            else if (/HTTP 429/.test(msg)) providerBadUntil.set(p.name, Date.now() + 45 * 1000);
+            console.warn(`⚠️ Ai: المزود ${p.name} فشل (${msg}) — ننتقل للتالي إن وُجد`);
+        }
+    }
+    throw lastErr || new Error("NO_PROVIDER");
+}
+
 async function askModel(jpgBuf, prompt) {
     try { return await askModelOnce(jpgBuf, prompt); }
     catch (_) { await sleep(1500); return await askModelOnce(jpgBuf, prompt); }   // محاولة ثانية (ضغط/حد معدل)
 }
 
+function toJpegForVision(buf) {
+    return sharp(buf, { failOn: "none", limitInputPixels: 40e6 })
+        .resize({ width: 768, height: 768, fit: "inside" })
+        .flatten({ background: "#ffffff" })
+        .jpeg({ quality: 82 }).toBuffer();
+}
+
 // ------------------------------------------------------------
-// الخطوة 2: «من في الصورة؟» — تحليل مفتوح بدون إخبار النموذج بالاسم المطلوب (لتجنب التحيّز)
+// الخطوة 2: «من في الصورة؟ وكيف هي؟» — تحليل مفتوح بدون إخبار النموذج بالاسم المطلوب (لتجنب التحيّز)
 // ------------------------------------------------------------
 async function identifyImage(buf) {
     try {
-        const jpg = await sharp(buf, { failOn: "none" })
-            .resize({ width: 768, height: 768, fit: "inside" })
-            .flatten({ background: "#ffffff" })
-            .jpeg({ quality: 82 }).toBuffer();
+        const jpg = await toJpegForVision(buf);
 
         const prompt =
             `Look at this image from an anime-character picture search. Identify who/what is shown.\n` +
@@ -857,6 +967,11 @@ async function identifyImage(buf) {
             `"is_anime":true if it is anime/manga art (not a real person, cosplay, figure or toy),` +
             `"has_text":true if the picture has OVERLAID text or graphics added on top of the art: captions, name labels, titles, logos, watermarks, big numbers (ignore small lettering that is naturally part of the drawn scene, such as writing on clothing),` +
             `"collage":true if it is a collage, grid, split panels or several pictures in one,` +
+            `"color_mode":"full_color" | "black_and_white" | "monochrome_or_sepia" | "limited_palette"  (full_color = a normal fully coloured picture; black_and_white = greyscale/lineart/manga page; monochrome_or_sepia = tinted in a single hue; limited_palette = only a few colours or colour filter),` +
+            `"facing":"front" | "three_quarter" | "side" | "back"  (front = looking toward the viewer with the chest facing us; three_quarter = body slightly turned but face and chest still clearly visible; side = profile; back = seen from behind),` +
+            `"face_visible":true if the face is clearly visible (not hidden/turned away),` +
+            `"neck_visible":true if the neck/throat area is shown in the frame,` +
+            `"torso_visible":true if the chest or stomach area is shown in the frame,` +
             `"framing":"head" | "bust" | "waist" | "full" | "other"  (head = face/head only; bust = head and shoulders/chest; waist = down to the waist; full = whole body),` +
             `"head_cropped":true if the head or face is cut off by the frame,` +
             `"quality":0-10 for sharpness, clean lines and pleasing vivid colours}`;
@@ -872,6 +987,11 @@ async function identifyImage(buf) {
             is_anime: j.is_anime !== false,
             has_text: j.has_text === true,
             collage: j.collage === true,
+            color_mode: String(j.color_mode || "full_color").toLowerCase(),
+            facing: String(j.facing || "front").toLowerCase(),
+            face_visible: j.face_visible !== false,
+            neck_visible: j.neck_visible !== false,
+            torso_visible: j.torso_visible !== false,
             framing: String(j.framing || "other").toLowerCase(),
             head_cropped: j.head_cropped === true,
             quality: Number(j.quality) || 0
@@ -915,6 +1035,28 @@ async function sameCharacter(target, ident) {
     }
 }
 
+// ------------------------------------------------------------
+// فحص الألوان: هل ألوان الشخصية (الشعر/العينين/الملابس) طبيعية كما في الأنمي؟
+// ------------------------------------------------------------
+async function colorsMatch(buf, target) {
+    try {
+        const jpg = await toJpegForVision(buf);
+        const prompt =
+            `This picture shows the anime character "${target.fullName}"${target.series ? ` from "${target.series}"` : ""}.\n` +
+            `Check the colours: are the hair colour, eye colour (if visible) and main outfit colours the same as the character's official anime/manga colours?\n` +
+            `Fan-art shading or a slightly different art style is FINE. It is NOT fine if the picture is black-and-white/greyscale, has a colour filter or tint, ` +
+            `or the hair/eyes/outfit are clearly recoloured (e.g. blue hair when the character has black hair).\n` +
+            `Reply ONLY with JSON: {"colors_ok":true|false}`;
+        const txt = await askModel(jpg, prompt);
+        const m = String(txt).match(/\{[\s\S]*\}/);
+        if (!m) return true;
+        return JSON.parse(m[0]).colors_ok !== false;
+    } catch (e) {
+        console.warn("⚠️ Ai: تعذّر فحص الألوان، سنقبل الصورة:", e?.message || e);
+        return true;
+    }
+}
+
 // ============================================================
 // تفكيك الطلب: "كاكاشي من ناروتو" → الاسم (للكتابة على الصورة) + الشرح (للبحث فقط)
 // ============================================================
@@ -943,53 +1085,88 @@ function interleave(lists, limit) {
     return out;
 }
 
-const COLLAGE_TITLE = /(collage|all characters|characters|squad|group|duo|trio|team|vs\b|ships?|comparison|tier list|\bx\b)/i;
+// المقاس المقبول: ليست طويلة جداً ولا عريضة جداً (صورة المثال 0.68 مقبولة)
+const AR_MIN = 0.6;
+const AR_MAX = 1.45;
+const MIN_SIDE = 300;
 
-/** مطابقة عنوان البن لاسم الشخصية (تعمل حتى بدون مفتاح رؤية) */
-function titleBoost(title, target) {
-    const t = String(title || "").toLowerCase();
-    if (!t) return 0;
-    const want = nameTokens(target.fullName);
-    let b = 0;
-    if (want.length) {
-        const hit = want.filter(w => t.includes(w)).length;
-        b += (hit / want.length) * 30;
-    }
-    if (COLLAGE_TITLE.test(t)) b -= 25;
-    return b;
-}
-
-/** تنزيل + قياس + تقييم (6 بالتوازي) */
-async function loadCandidates(list, deadline, target) {
-    const loaded = [];
-    for (let i = 0; i < list.length; i += 6) {
+/** تنزيل دفعات صغيرة (4 بالتوازي) لحماية الذاكرة، مع حفظ ترتيب الصورة في نتائج البحث */
+async function downloadStage(pins, startRank, deadline) {
+    const out = [];
+    for (let i = 0; i < pins.length; i += 4) {
         if (Date.now() > deadline) break;
-        const batch = await Promise.all(list.slice(i, i + 6).map(downloadCandidate));
+        const batch = await Promise.all(pins.slice(i, i + 4).map(async (p, k) => {
+            const r = await downloadCandidate(p);
+            const rank = startRank + i + k + 1;
+            if (!r) { console.log(`[Ai] #${rank} تعذّر التنزيل`); return null; }
+            r.rank = rank;
+            return r;
+        }));
         for (const r of batch) {
             if (!r) continue;
             const ar = r.probe.w / r.probe.h;
-            const minSide = Math.min(r.probe.w, r.probe.h);
-            if (minSide < 400 || ar < 0.6 || ar > 1.35) continue;
+            if (Math.min(r.probe.w, r.probe.h) < MIN_SIDE || ar < AR_MIN || ar > AR_MAX) {
+                console.log(`[Ai] #${r.rank} مقاس غير مناسب ${r.probe.w}x${r.probe.h}`);
+                continue;
+            }
             r.color = await colorfulness(r.buf);
-            r.score = qualityScore(r.probe, r.color) + titleBoost(r.title, target);
-            loaded.push(r);
+            r.score = qualityScore(r.probe, r.color);
+            out.push(r);
         }
     }
-    return loaded.sort((a, b) => b.score - a.score);
+    return out;
+}
+
+/** يحلل مجموعة صور ويعيد المقبولة فقط (الشخصية + الشروط) مرتبة من الأفضل */
+async function evaluateStage(cands, target, state, deadline) {
+    const accepted = [];
+
+    for (let i = 0; i < cands.length; i += 5) {
+        if (Date.now() > deadline) break;
+        const group = cands.slice(i, i + 5);
+        const idents = await Promise.all(group.map(r => identifyImage(r.buf)));
+
+        for (let k = 0; k < group.length; k++) {
+            const r = group[k], id = idents[k];
+            if (!id) { state.failed++; console.log(`[Ai] #${r.rank} فشل التحليل`); continue; }
+            state.analysed++;
+
+            const tag = `[Ai] #${r.rank} → ${id.character} / ${id.series} | ألوان:${id.color_mode} اتجاه:${id.facing} لقطة:${id.framing} جودة:${id.quality}`;
+
+            if (!id.is_anime) { console.log(tag + " ✗ ليست أنمي"); continue; }
+            if (id.has_text) { console.log(tag + " ✗ فيها نص"); continue; }
+            if (id.collage || id.count !== 1) { console.log(tag + " ✗ ليست شخصية واحدة"); continue; }
+            if (id.color_mode !== "full_color") { console.log(tag + " ✗ ليست بألوانها الكاملة"); continue; }
+            if (id.head_cropped) { console.log(tag + " ✗ الرأس مقطوع"); continue; }
+            if (id.facing !== "front" && id.facing !== "three_quarter") { console.log(tag + " ✗ الوضعية ليست أمامية"); continue; }
+            if (!id.face_visible || !id.neck_visible || !id.torso_visible) { console.log(tag + " ✗ الوجه/العنق/الجسم غير واضح"); continue; }
+            if (!["bust", "waist", "full"].includes(id.framing)) { console.log(tag + " ✗ لقطة غير مناسبة"); continue; }
+
+            if (!(await sameCharacter(target, id))) { console.log(tag + " ✗ ليست الشخصية المطلوبة"); continue; }
+
+            const frameBonus = id.framing === "bust" ? 8 : id.framing === "waist" ? 6 : -20;   // الجسم الكامل آخر خيار
+            const poseBonus = id.facing === "front" ? 6 : 2;
+            const total = id.quality * 10 + r.score * 0.4 + frameBonus + poseBonus;
+            console.log(tag + ` ✓ مقبولة (${total.toFixed(0)})`);
+            accepted.push({ buf: r.buf, total, rank: r.rank });
+        }
+    }
+    return accepted.sort((a, b) => b.total - a.total);
 }
 
 // ============================================================
-// الدالة الرئيسية — ثلاث خطوات تتكرر حتى النجاح أو انتهاء الوقت:
-//   1) بحث عميق في Pinterest وجمع صور
-//   2) تحليل كل صورة: من فيها؟ (بدون إخباره بالمطلوب)
-//   3) مقارنة المكتشف بالمطلوب — إن لم يتطابق نعيد البحث بصيغة جديدة
+// الدالة الرئيسية
+//   1) بحث «شخصية <الاسم> <الشرح>» في Pinterest و Google معاً
+//   2) فحص أول 10 صور بالترتيب: الشخصية، الألوان، المقاس، الوضعية
+//   3) إن لم تنجح أي واحدة: نفحص الـ 5 التالية (11–15)
+//   4) إن لم تنجح: «الشخصية غير موجودة»
 // ============================================================
 async function fetchCharacterImage(nameRaw, hintRaw = "") {
     const fail = (code) => { const e = new Error(code); e.code = code; return e; };
+    const deadline = Date.now() + FETCH_BUDGET_MS;
 
-    // بدون نموذج رؤية لا يمكن التأكد من الشخصية → لا نرسل صورة عشوائية
     if (!visionAvailable()) {
-        console.error("[Ai] ❌ لا يوجد مفتاح لفحص الصور (GEMINI_API_KEY / ANTHROPIC_API_KEY)");
+        console.error("[Ai] ❌ لا يوجد مفتاح لفحص الصور");
         throw fail("NO_VISION");
     }
 
@@ -1005,64 +1182,41 @@ async function fetchCharacterImage(nameRaw, hintRaw = "") {
     const info = await resolveCharacter(english, seriesEn);
     const target = { fullName: info?.name || english, series: seriesEn || info?.series || "", hint: hintRaw || "" };
 
-    // ===== الخطوة 1: بحث واحد، وأول 10 صور فقط =====
-    const query = `شخصية انمي ${nameRaw}${hintRaw ? " " + hintRaw : ""}`.replace(/\s+/g, " ").trim();
-    let pins = [];
-    try { pins = await searchPinterest(query); } catch (_) {}
-    pins = pins.slice(0, 10);
-    console.log(`[Ai] بحث: "${query}" | المطلوب: ${target.fullName}${target.series ? " (" + target.series + ")" : ""} | نفحص ${pins.length} صور`);
+    // ===== الخطوة 1: بحث واحد في Pinterest + Google =====
+    const query = `شخصية ${nameRaw}${hintRaw ? " " + hintRaw : ""}`.replace(/\s+/g, " ").trim();
+    const [pinRes, gooRes] = await Promise.all([
+        searchPinterest(query).catch(() => []),
+        searchGoogle(query).catch(() => [])
+    ]);
+
+    let pins = interleave([pinRes, gooRes], 60)
+        .filter(p => !BAD_HOST.test(p.url) && !BAD_TITLE.test(p.title || ""));
+
+    console.log(`[Ai] بحث: "${query}" | pinterest:${pinRes.length} google:${gooRes.length} | المطلوب: ${target.fullName}${target.series ? " (" + target.series + ")" : ""}`);
     if (!pins.length) throw fail("NOT_FOUND");
 
-    const downloaded = await Promise.all(pins.map(async (p, i) => {
-        const r = await downloadCandidate(p);
-        if (!r) { console.log(`[Ai] #${i + 1} تعذّر التنزيل`); return null; }
-        r.rank = i + 1;
-        return r;
-    }));
+    const state = { analysed: 0, failed: 0 };
+    const stages = [{ list: pins.slice(0, 10), start: 0 }, { list: pins.slice(10, 15), start: 10 }];
 
-    const cands = [];
-    for (const r of downloaded) {
-        if (!r) continue;
-        const ar = r.probe.w / r.probe.h;
-        if (Math.min(r.probe.w, r.probe.h) < 300 || ar < 0.5 || ar > 1.6) { console.log(`[Ai] #${r.rank} مقاس غير مناسب ${r.probe.w}x${r.probe.h}`); continue; }
-        r.color = await colorfulness(r.buf);
-        r.score = qualityScore(r.probe, r.color);
-        cands.push(r);
-    }
-    if (!cands.length) throw fail("NOT_FOUND");
+    for (const st of stages) {
+        if (!st.list.length || Date.now() > deadline) continue;
 
-    // ===== الخطوتان 2 و3: من في الصورة؟ ثم هل هي المطلوبة؟ =====
-    let best = null, failed = 0, analysed = 0;
+        const cands = await downloadStage(st.list, st.start, deadline);
+        if (!cands.length) continue;
 
-    for (let i = 0; i < cands.length; i += 5) {
-        const group = cands.slice(i, i + 5);
-        const idents = await Promise.all(group.map(r => identifyImage(r.buf)));
+        const accepted = await evaluateStage(cands, target, state, deadline);
 
-        for (let k = 0; k < group.length; k++) {
-            const r = group[k], id = idents[k];
-            if (!id) { failed++; console.log(`[Ai] #${r.rank} فشل التحليل`); continue; }
-            analysed++;
-
-            const tag = `[Ai] #${r.rank} → ${id.character} / ${id.series} | شخصيات:${id.count} نص:${id.has_text} كولاج:${id.collage} لقطة:${id.framing} جودة:${id.quality}`;
-
-            if (!id.is_anime) { console.log(tag + " ✗ ليست أنمي"); continue; }
-            if (id.has_text) { console.log(tag + " ✗ فيها نص"); continue; }
-            if (id.collage || id.count !== 1) { console.log(tag + " ✗ ليست شخصية واحدة"); continue; }
-            if (id.head_cropped) { console.log(tag + " ✗ الرأس مقطوع"); continue; }
-            if (!["head", "bust", "waist", "full"].includes(id.framing)) { console.log(tag + " ✗ لقطة غير مناسبة"); continue; }
-
-            if (!(await sameCharacter(target, id))) { console.log(tag + " ✗ ليست الشخصية المطلوبة"); continue; }
-
-            const frameBonus = id.framing === "bust" ? 8 : id.framing === "waist" ? 5 : id.framing === "head" ? 4 : -30; // الجسم الكامل آخر خيار
-            const total = id.quality * 10 + r.score * 0.4 + frameBonus;
-            console.log(tag + ` ✓ مقبولة (${total.toFixed(0)})`);
-            if (!best || total > best.total) best = { buf: r.buf, total };
+        // فحص الألوان للأفضل فالأقل (حتى 4 صور فقط لتوفير الطلبات)
+        for (const c of accepted.slice(0, 4)) {
+            if (await colorsMatch(c.buf, target)) {
+                console.log(`[Ai] ✅ تم اختيار الصورة رقم #${c.rank}`);
+                return c.buf;
+            }
+            console.log(`[Ai] #${c.rank} ✗ ألوان الشخصية غير طبيعية`);
         }
     }
 
-    if (best) return best.buf;
-
-    if (analysed === 0 && failed > 0) {
+    if (state.analysed === 0 && state.failed > 0) {
         console.error("[Ai] ❌ فشلت كل طلبات التحليل (تحقق من المفتاح/الحصة/اسم النموذج)");
         throw fail("VISION_DOWN");
     }
@@ -1078,7 +1232,7 @@ function parseAiCommand(text) {
     if (!m) return null;
     const cmd = normArabic(m[1]);
     if (cmd !== "احضر") return null;
-    return { cmd, arg: String(m[2] || "").trim() };
+    return { cmd, arg: String(m[2] || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80) };
 }
 
 /** فحص سريع (متزامن) هل النص أمر ذكاء اصطناعي؟ */
@@ -1196,6 +1350,7 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
         return true;
     }
 
+    if (lastUse.size > 500) for (const [k, t] of lastUse) if (Date.now() - t > 60 * 60 * 1000) lastUse.delete(k);
     activeJobs.set(who, now);
     lastUse.set(who, Date.now());
     runningJobs++;
@@ -1229,7 +1384,7 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
         } else if (e && (e.code === "NO_VISION" || e.code === "VISION_DOWN")) {
             reply = "⚠️ خدمة تحليل الصور غير متاحة حالياً، أبلغ المشرف.";
         } else if (e && e.code === "NOT_FOUND") {
-            reply = `⚠️ لم يتم الحصول على هذه الشخصية: «${parsed.arg}».\nجرّب كتابة الاسم بوضوح مع اسم الأنمي، مثال: .احضر ساي ايتوشي من بلو لوك`;
+            reply = "══════════════════\n*عذرا هذه الشخصية غير موجودة*\n══════════════════";
         } else if (e && e.message === "TIMEOUT") {
             reply = "⌛ استغرق الطلب وقتاً طويلاً، أعد المحاولة.";
         } else {
@@ -1259,6 +1414,7 @@ async function handleEditCommand(sock, jid, msg, text, db, saveDb, cleanSender, 
     if (String(text || "").trim() !== ".تعديل") return false; // ".تعديل متجر" وغيره يمرّ كما هو
     if (!owner) return false;
 
+    for (const [k, t] of pendingEdit) if (Date.now() > t) pendingEdit.delete(k);
     pendingEdit.set(pendingKey(jid, cleanSender), Date.now() + EDIT_WAIT_MS);
 
     await safeSend(sock, jid, {
