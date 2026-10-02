@@ -4,7 +4,6 @@
 // Main Entry Point + Watchdog + Rest System + LogGuard
 // + Photos + Welcome + Tahmin + Results + CommandsList + Typo
 // + JidFix + Ban + Shop + Guilds + Hads (اتبع حدسك)
-// + Ai (إنشاء/إحضار الصور) + المؤبدين + أوامر رقم البوت نفسه
 // ============================================================
 
 "use strict";
@@ -100,7 +99,6 @@ let tahminModule = null;
 let resultsModule = null;
 let commandsListModule = null;
 let typoModule = null;
-let aiModule = null;
 
 try { photosModule = require("./photos"); } catch (e) { _originalWarn("⚠️ photos.js غير محمّل بعد"); }
 try { welcomeModule = require("./welcome"); } catch (e) { _originalWarn("⚠️ welcome.js غير محمّل بعد"); }
@@ -108,7 +106,6 @@ try { tahminModule = require("./tahmin"); } catch (e) { _originalWarn("⚠️ ta
 try { resultsModule = require("./results"); } catch (e) { _originalWarn("⚠️ results.js غير محمّل بعد"); }
 try { commandsListModule = require("./commands_list"); } catch (e) { _originalWarn("⚠️ commands_list.js غير محمّل بعد"); }
 try { typoModule = require("./typo"); } catch (e) { _originalWarn("⚠️ typo.js غير محمّل بعد"); }
-try { aiModule = require("./Ai"); } catch (e) { _originalWarn("⚠️ Ai.js غير محمّل: " + (e && e.message)); }
 
 // ============================================================
 // Runtime
@@ -226,97 +223,6 @@ function shouldIgnoreMessage(msg) {
     } catch {
         return true;
     }
-}
-
-// ============================================================
-// 🆕 أوامر رقم البوت نفسه + تفريغ أغلفة الرسائل
-// ============================================================
-
-const _sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-// رسائل أرسلها البوت نفسه عبر الكود (حتى لا يعالج صداها كأنها أمر من صاحب الرقم)
-const botSentIds = new Map();
-const ownHandledIds = new Map();
-
-function _pruneMap(map, maxSize, maxAgeMs) {
-    if (map.size <= maxSize) return;
-    const now = Date.now();
-    for (const [k, t] of map) {
-        if (now - t > maxAgeMs) map.delete(k);
-    }
-}
-
-function trackSentMessages(sock) {
-    try {
-        if (!sock || sock.__sentTracker) return;
-        sock.__sentTracker = true;
-        const orig = sock.sendMessage.bind(sock);
-        sock.sendMessage = async (...args) => {
-            const res = await orig(...args);
-            try {
-                if (res?.key?.id) {
-                    botSentIds.set(res.key.id, Date.now());
-                    _pruneMap(botSentIds, 1000, 10 * 60 * 1000);
-                }
-            } catch (_) {}
-            return res;
-        };
-    } catch (_) {}
-}
-
-function msgTimestampSec(msg) {
-    try {
-        const t = msg?.messageTimestamp;
-        if (!t) return 0;
-        if (typeof t === "object" && typeof t.toNumber === "function") return t.toNumber();
-        return Number(t) || 0;
-    } catch {
-        return 0;
-    }
-}
-
-// أمر كتبه صاحب رقم البوت بنفسه (من الهاتف) لكنه وصل بنوع append
-function isOwnPhoneCommand(msg) {
-    try {
-        if (!msg?.key?.fromMe || !msg.key.id) return false;
-        if (botSentIds.has(msg.key.id)) return false;
-        const ts = msgTimestampSec(msg);
-        if (!ts || Math.abs(Date.now() / 1000 - ts) > 30) return false;
-        const text = getMessageTextFromMsg(msg);
-        return Boolean(text && text.startsWith("."));
-    } catch {
-        return false;
-    }
-}
-
-// نعالج كل رسالة من رقم البوت مرة واحدة فقط (حتى لو وصلت notify ثم append)
-function alreadyHandledOwn(msg) {
-    const id = msg?.key?.id;
-    if (!id) return false;
-    if (ownHandledIds.has(id)) return true;
-    ownHandledIds.set(id, Date.now());
-    _pruneMap(ownHandledIds, 1000, 10 * 60 * 1000);
-    return false;
-}
-
-// رسائل القروبات ذات الرسائل المؤقتة / عرض مرة واحدة / من جهاز آخر تأتي داخل غلاف
-function unwrapMsgInPlace(msg) {
-    try {
-        let m = msg?.message;
-        if (!m) return;
-        for (let i = 0; i < 4; i++) {
-            const inner =
-                m.ephemeralMessage?.message ||
-                m.viewOnceMessage?.message ||
-                m.viewOnceMessageV2?.message ||
-                m.viewOnceMessageV2Extension?.message ||
-                m.documentWithCaptionMessage?.message ||
-                m.deviceSentMessage?.message;
-            if (!inner) break;
-            m = inner;
-        }
-        if (m !== msg.message) msg.message = m;
-    } catch (_) {}
 }
 
 // ============================================================
@@ -920,7 +826,6 @@ async function handleMainGroupJoin(sock, groupJid, participant, db, saveDb) {
 function createHandlers() {
     return {
         onConnectionOpen: async (sock) => {
-            trackSentMessages(sock);
             setupAdminMonitoring(sock);
 
             const db = getDb();
@@ -942,35 +847,17 @@ function createHandlers() {
                 lastMessageAt = Date.now();
 
                 const { messages, type } = event || {};
-                if (type !== "notify" && type !== "append") return;
+                if (type !== "notify") return;
                 if (!Array.isArray(messages) || !messages.length) return;
 
                 const db = context.db || getDb();
 
                 for (const msg of messages) {
                     try {
-                        // 🆕 تفريغ الأغلفة (مؤقتة / عرض مرة / جهاز آخر)
-                        unwrapMsgInPlace(msg);
-
-                        // 🆕 رسائل رقم البوت نفسه: تُقبل notify و append (أوامر الهاتف) وتُعالج مرة واحدة
-                        if (msg?.key?.fromMe) {
-                            if (type === "append") {
-                                await _sleep(1200); // ننتظر تسجيل رسائل البوت الخاصة به
-                                if (!isOwnPhoneCommand(msg)) continue;
-                            }
-                            if (alreadyHandledOwn(msg)) continue;
-                        } else if (type !== "notify") {
-                            continue;
-                        }
-
                         if (shouldIgnoreMessage(msg)) continue;
 
                         const jid = msg?.key?.remoteJid;
                         if (!jid) continue;
-
-                        if (msg?.key?.fromMe) {
-                            _originalLog("📲 أمر من رقم البوت:", String(getMessageTextFromMsg(msg)).slice(0, 40));
-                        }
 
                         const sender = getSender(msg, sock);
                         const isGroup = isGroupJid(jid);
@@ -1112,15 +999,6 @@ function createHandlers() {
                         const text = getMessageTextFromMsg(msg);
                         if (!text) continue;
 
-                        // 🆕 التقاط اسم النقابة بعد أمر .تعديل (الإمبراطور)
-                        if (aiModule && typeof aiModule.handleMessageHook === "function") {
-                            try {
-                                if (await aiModule.handleMessageHook(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
-                            } catch (e) {
-                                _originalError("Ai hook error:", e?.message);
-                            }
-                        }
-
                         if (!text.startsWith(".")) {
                             // محاولة تصحيح الأخطاء
                             if (typoModule && typeof typoModule.handleTypo === "function") {
@@ -1139,33 +1017,6 @@ function createHandlers() {
                         // ============================================
                         // معالجة الأوامر الجديدة
                         // ============================================
-
-                        // 🆕 الذكاء الاصطناعي: .انشاء / .احضر / .تعديل
-                        if (aiModule) {
-                            try {
-                                if (typeof aiModule.isAiCommand === "function" && aiModule.isAiCommand(text)) {
-                                    // بدون await: لا نوقف بقية البوت أثناء إنشاء الصورة
-                                    aiModule.handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)
-                                        .catch(e => _originalError("Ai command error:", e?.message));
-                                    continue;
-                                }
-                                if (typeof aiModule.handleEditCommand === "function") {
-                                    if (await aiModule.handleEditCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
-                                }
-                            } catch (e) {
-                                _originalError("Ai dispatch error:", e?.message);
-                            }
-                        }
-
-                        // 🆕 .المؤبدين → قائمة كل المحفوظين مؤبد
-                        if (text === ".المؤبدين" || text.startsWith(".المؤبدين ")) {
-                            try {
-                                await guildsModule.handleLifeBanList(sock, jid, msg, db, saveDb, cleanSender, owner);
-                            } catch (e) {
-                                _originalError("LifeBanList error:", e?.message);
-                            }
-                            continue;
-                        }
 
                         // .صورة
                         if (text === ".صورة" || text.startsWith(".صورة ")) {
