@@ -81,6 +81,19 @@ function getQuotedText(msg) {
     }
 }
 
+function getQuotedMentions(msg) {
+    try {
+        const m = msg?.message || {};
+        const inner = m.extendedTextMessage || m.imageMessage || m.videoMessage || {};
+        const q = inner.contextInfo?.quotedMessage || {};
+        const qi = q.extendedTextMessage || q.imageMessage || q.videoMessage || {};
+        const list = qi.contextInfo?.mentionedJid;
+        return Array.isArray(list) ? list : [];
+    } catch (_) {
+        return [];
+    }
+}
+
 function guildNamesObj(db) {
     if (!db.guildNames || typeof db.guildNames !== "object" || Object.keys(db.guildNames).length === 0) {
         db.guildNames = { "🩸": "نوفا", "❄": "فورتكس", "☘": "سولار" };
@@ -353,9 +366,17 @@ async function handleLifeBan(sock, jid, msg, db, saveDb, cleanSender, owner, mod
     db.lifeBan = db.lifeBan || {};
 
     if (mode === "ban") {
+        const quotedJids = getQuotedMentions(msg);
         for (const num of members) {
             const existingKey = jf.aliasesOf(num).find(a => db.lifeBan[a]);
-            db.lifeBan[existingKey || num] = { at: Date.now(), by: cleanSender, nickname };
+            // 🆕 نحفظ الـ JID الحقيقي (LID أو رقم) ليظهر المنشن صحيحاً في .المؤبدين حتى لو العضو خارج القروب
+            const realJid = quotedJids.find(j => jf.sameUser(j, num)) || "";
+            if (realJid) jf.rememberJid(num, realJid, true);
+            const prev = db.lifeBan[existingKey || num] || {};
+            db.lifeBan[existingKey || num] = {
+                at: Date.now(), by: cleanSender, nickname,
+                jid: jf.normalizeJid(realJid) || prev.jid || ""
+            };
         }
         saveDb();
         await send(sock, jid, `◆━─━─━─⊱⊰─━─━─━◆\n📍تم حفظ العضو مؤبد 🛑\n◆━─━─━─⊱⊰─━─━─━◆`, msg);
@@ -467,6 +488,31 @@ async function handleReceiveJoin(sock, groupJid, participant, db, saveDb) {
 // .المؤبدين  → قائمة مزخرفة بمنشن لكل من حُفظ مؤبد
 // ============================================================
 
+/**
+ * أفضل JID للمنشن: (1) المحفوظ وقت المؤبد  (2) عضو في القروب / jidMap
+ * (3) إن كان الرقم المحفوظ ليس رقم هاتف مسجلاً في واتساب فهو معرّف LID → نستعمل @lid
+ */
+async function resolveForList(sock, groupJid, key, entry) {
+    try {
+        if (entry && entry.jid) return entry.jid;
+
+        const n = jf.jnum(key);
+        const plain = `${n}@s.whatsapp.net`;
+        const j = await jf.resolveJid(sock, groupJid, n);
+        if (j && j !== plain) return j;            // وجدناه فعلاً (عضو أو محفوظ)
+
+        try {
+            const r = await sock.onWhatsApp(plain);
+            if (Array.isArray(r) && r[0] && r[0].exists) return r[0].jid || plain;
+            return `${n}@lid`;
+        } catch (_) {
+            return plain;
+        }
+    } catch (_) {
+        return `${jf.jnum(key)}@s.whatsapp.net`;
+    }
+}
+
 async function handleLifeBanList(sock, jid, msg, db, saveDb, cleanSender, owner) {
     if (!(owner || hasLevel(db, cleanSender, "2", false) || hasLevel(db, cleanSender, "5", false))) {
         await send(sock, jid, "⛔ ليس لديك صلاحية.", msg);
@@ -489,10 +535,7 @@ async function handleLifeBanList(sock, jid, msg, db, saveDb, cleanSender, owner)
     }
 
     const jids = [];
-    for (const n of nums) {
-        try { jids.push(await jf.resolveJid(sock, jid, n)); }
-        catch (_) { jids.push(`${jf.jnum(n)}@s.whatsapp.net`); }
-    }
+    for (const n of nums) jids.push(await resolveForList(sock, jid, n, lb[n]));
 
     const CHUNK = 40;
     for (let i = 0; i < nums.length; i += CHUNK) {
@@ -502,7 +545,10 @@ async function handleLifeBanList(sock, jid, msg, db, saveDb, cleanSender, owner)
 
         let text = "";
         if (first) text += `◆━─━─━─⊱🛑⊰─━─━─━◆\n   قائمة المؤبدين\n◆━─━─━─⊱⛓️⊰─━─━─━◆\n`;
-        text += part.map((j, k) => `${i + k + 1} ☜ @${jf.jnum(j)}`).join("\n");
+        text += part.map((j, k) => {
+            const nick = String(lb[nums[i + k]]?.nickname || "").replace(/\s+/g, " ").trim().slice(0, 30);
+            return `${i + k + 1} ☜ @${jf.jnum(j)}${nick ? " — " + nick : ""}`;
+        }).join("\n");
         if (last) text += `\n◆━─━─━─⊱📍⊰─━─━─━◆\nالعدد: ${nums.length}\n◆━─━─━─⊱🛑⊰─━─━─━◆`;
 
         await send(sock, jid, text, first ? msg : null, { mentions: part });
