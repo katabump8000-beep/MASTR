@@ -11,7 +11,8 @@ const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    Browsers
 } = require("@whiskeysockets/baileys");
 
 const fs = require("fs");
@@ -733,6 +734,8 @@ async function createSocket() {
         const socketOptions = {
             auth: state,
             printQRInTerminal: false,
+            // اسم المتصفح بصيغة صحيحة (مهم لقبول رمز الاقتران في بعض إصدارات Baileys)
+            browser: Browsers.macOS("Chrome"),
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
             // 🆕 تفعيل مزامنة التاريخ الكامل لدعم .تنظيف
