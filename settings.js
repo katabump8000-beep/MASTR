@@ -3,15 +3,17 @@
 const env = (name) => String(process.env[name] || "").trim();
 
 const settings = {
-    // ┌──────────────────────────────────────────────────────────┐
-    // │  لتغيير رقم البوت: غيّر هذا السطر فقط ثم أعد تشغيل البوت.   │
-    // │  بصيغة دولية بدون + وبدون صفر (مثال: 48699554086)           │
-    // │  سيمسح البوت الجلسة القديمة تلقائياً ويعطيك رمز اقتران جديد │
-    // └──────────────────────────────────────────────────────────┘
-    botNumber: "48459074937",
+    // ┌────────────────────────────────────────────────────────────┐
+    // │ رقم البوت: يُقرأ من Variables باسم BOT_NUMBER (الأفضل على Railway) │
+    // │ أو غيّر الرقم الاحتياطي بين علامتي الاقتباس هنا.                   │
+    // │ بصيغة دولية بدون + وبدون صفر. مثال: 48459074937                    │
+    // │ عند تغيير الرقم يمسح البوت الجلسة القديمة ويعطيك رمز اقتران جديد   │
+    // └────────────────────────────────────────────────────────────┘
+    botNumber: env("BOT_NUMBER") || "48459074937",
 
-    // مالكون إضافيون (اختياري). رقم البوت نفسه مالك دائماً ولا تحتاج كتابته هنا.
-    owners: [],
+    // مالكون إضافيون (اختياري): من Variables باسم OWNERS مفصولة بفاصلة، مثال: 212600000001,962790000000
+    // رقم البوت نفسه مالك دائماً.
+    owners: env("OWNERS").split(",").map(x => x.trim()).filter(Boolean),
 
     sessionFolder: "session",
     botName: "BOT PATHIRA",
@@ -21,7 +23,7 @@ const settings = {
     anthropicApiKey: env("ANTHROPIC_API_KEY") || "",
     geminiApiKey: env("GEMINI_API_KEY") || "",
     mistralApiKey: env("MISTRAL_API_KEY") || "",
-    openrouterApiKey: env("OPENROUTER_API_KEY") || "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",
+    openrouterApiKey: env("OPENROUTER_API_KEY") || "",   // ضعه في Variables، لا تكتبه هنا (ملفاتك على GitHub)
 
     // ===== موديلات الرؤية (اتركها فارغة = الافتراضي الجاهز) =====
     visionModels: {
@@ -38,7 +40,8 @@ const settings = {
 
 (function validate() {
     const digits = (v) => String(v || "").replace(/\D/g, "");
-    if (!digits(settings.botNumber)) console.error("❌ settings.botNumber فارغ أو غير صالح.");
+    if (!digits(settings.botNumber)) console.error("❌ رقم البوت فارغ: أضف BOT_NUMBER في Variables.");
+    else console.log(`⚙️ رقم البوت المقروء من الإعدادات: +${digits(settings.botNumber)}`);
 })();
 
 // يُمرَّر لملف Ai.js (لا تغيّر هذه الأسطر)
