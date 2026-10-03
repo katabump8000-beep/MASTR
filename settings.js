@@ -23,7 +23,7 @@ const settings = {
     // │ بصيغة دولية بدون + وبدون صفر. مثال: 48459074937                    │
     // │ عند تغيير الرقم يمسح البوت الجلسة القديمة ويعطيك رمز اقتران جديد   │
     // └────────────────────────────────────────────────────────────┘
-    botNumber: env("BOT_NUMBER") || "48699554086",
+    botNumber: env("BOT_NUMBER") || "48459074937",
 
     // مالكون إضافيون (اختياري): من Variables باسم OWNERS مفصولة بفاصلة، مثال: 212600000001,962790000000
     // رقم البوت نفسه مالك دائماً.
@@ -35,9 +35,9 @@ const settings = {
     // ===== مفاتيح فحص الصور بالذكاء الاصطناعي (لأمر .احضر) =====
     // يُجرَّب بالترتيب، وإن فشل أحدها ينتقل البوت للتالي تلقائياً
     anthropicApiKey: env("ANTHROPIC_API_KEY") || "",
-    geminiApiKey: env("GEMINI_API_KEY") || "",
+    geminiApiKey: env("GEMINI_API_KEY") || "AQ.Ab8RN6JCo5HYS0lodu6XfbqFWRXL4Ci3TG_dm-C7O55iXze7Zw",
     mistralApiKey: env("MISTRAL_API_KEY") || "",
-    openrouterApiKey: env("OPENROUTER_API_KEY") || "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",
+    openrouterApiKey: env("OPENROUTER_API_KEY") || "",
 
     // ===== موديلات الرؤية (اتركها فارغة = الافتراضي الجاهز) =====
     visionModels: {
