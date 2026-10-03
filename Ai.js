@@ -839,7 +839,8 @@ function openaiProviders() {
             "openrouter/free"
         ].filter(Boolean))];
         for (const model of models) {
-            list.push({ name: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model });
+            list.push({ name: "OpenRouter", url: "https://openrouter.ai/api/v1/chat/completions", key: process.env.OPENROUTER_API_KEY, model,
+                        headers: { "HTTP-Referer": "https://railway.app", "X-Title": "BOT PATHIRA" } });
         }
     }
     return list;
@@ -857,28 +858,56 @@ async function callAnthropic(b64, prompt) {
     return (j?.content || []).map(c => c.text || "").join("");
 }
 
+// مفاتيح Gemini نوعان: AI Studio (تبدأ بـ AIza) و Vertex Express (تبدأ بـ AQ.) — لكل نوع عنوان خدمة مختلف.
+// نجرّب النوع المتوقع حسب بداية المفتاح، وإن رفضه نجرّب الآخر، ونتذكر ما نجح.
+const GEMINI_VERTEX_MODELS = [...new Set([process.env.GEMINI_VISION_MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite"].filter(Boolean))];
+let geminiPref = null;   // { mode, model } آخر ما نجح
+
+function geminiUrl(mode, model, key) {
+    return mode === "vertex"
+        ? `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent?key=${encodeURIComponent(key)}`
+        : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+}
+
 async function callGemini(b64, prompt) {
+    const key = process.env.GEMINI_API_KEY;
     const parts = [{ text: prompt }];
-    if (b64) parts.push({ inline_data: { mime_type: "image/jpeg", data: b64 } });
-    const body = JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0, responseMimeType: "application/json" } });
-    for (;;) {
-        const model = GEMINI_MODELS[geminiModelIdx];
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    if (b64) parts.push({ inlineData: { mimeType: "image/jpeg", data: b64 } });
+    const body = JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: { temperature: 0, responseMimeType: "application/json" } });
+
+    const modes = /^AQ\./.test(key) ? ["vertex", "studio"] : ["studio", "vertex"];
+    const attempts = [];
+    if (geminiPref) attempts.push(geminiPref);
+    for (const mode of modes) {
+        for (const model of (mode === "vertex" ? GEMINI_VERTEX_MODELS : GEMINI_MODELS)) {
+            if (!attempts.some(a => a.mode === mode && a.model === model)) attempts.push({ mode, model });
+        }
+    }
+
+    let lastErr = null;
+    const skipMode = new Set();
+    for (const at of attempts) {
+        if (skipMode.has(at.mode)) continue;
         try {
-            const j = JSON.parse((await fetchBuf(url, {
+            const j = JSON.parse((await fetchBuf(geminiUrl(at.mode, at.model, key), {
                 method: "POST", body, timeout: 25000, maxBytes: 1024 * 1024,
                 headers: { "content-type": "application/json" }
             })).toString("utf8"));
-            return (j?.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+            const out = (j?.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+            geminiPref = at;
+            return out;
         } catch (e) {
-            if (/HTTP (404|400)/.test(String(e?.message)) && geminiModelIdx < GEMINI_MODELS.length - 1) {
-                console.warn(`⚠️ Ai: النموذج ${model} لا يعمل (${e.message})، سنجرب ${GEMINI_MODELS[geminiModelIdx + 1]}`);
-                geminiModelIdx++;
-                continue;
+            lastErr = new Error(`[${at.mode}/${at.model}] ${e?.message || e}`);
+            const msg = String(e?.message || "");
+            if (/HTTP (429|5\d\d)/.test(msg)) throw lastErr;                                  // حصة/ضغط: لا فائدة من تجريب غيره الآن
+            if (/HTTP (400|401|403)/.test(msg) && /api key|api_key|unauthenticated|permission|not valid|invalid/i.test(msg)) {
+                skipMode.add(at.mode);                                                           // المفتاح ليس لهذا النوع → النوع الآخر
+                if (geminiPref && geminiPref.mode === at.mode) geminiPref = null;
             }
-            throw e;
+            // 404 أو مشكلة موديل → ننتقل للموديل التالي
         }
     }
+    throw lastErr || new Error("Gemini: no attempt");
 }
 
 async function callOpenAI(oc, b64, prompt) {
@@ -887,7 +916,7 @@ async function callOpenAI(oc, b64, prompt) {
     const body = JSON.stringify({ model: oc.model, messages: [{ role: "user", content }], temperature: 0, max_tokens: 400 });
     const j = JSON.parse((await fetchBuf(oc.url, {
         method: "POST", body, timeout: 35000, maxBytes: 1024 * 1024,
-        headers: { "content-type": "application/json", authorization: "Bearer " + oc.key }
+        headers: { "content-type": "application/json", authorization: "Bearer " + oc.key, ...(oc.headers || {}) }
     })).toString("utf8"));
     return String(j?.choices?.[0]?.message?.content || "");
 }
@@ -942,6 +971,7 @@ async function askModelOnce(jpgBuf, prompt) {
     if (fresh.length) providers = fresh;
 
     let lastErr = null;
+    const roundErrors = [];
     for (const p of providers) {
         try {
             const out = await p.run(b64, prompt);
@@ -952,7 +982,8 @@ async function askModelOnce(jpgBuf, prompt) {
             const msg = String(e?.message || "");
             if (/HTTP (401|402|403)/.test(msg)) providerBadUntil.set(p.name, Date.now() + 10 * 60 * 1000);
             else if (/HTTP 429/.test(msg)) providerBadUntil.set(p.name, Date.now() + 45 * 1000);
-            lastVisionError = `${p.name}: ${msg}`.slice(0, 300);
+            roundErrors.push(`${p.name}: ${msg}`.slice(0, 260));
+            lastVisionError = roundErrors.join("\n").slice(0, 900);
             console.warn(`⚠️ Ai: المزود ${p.name} فشل (${msg}) — ننتقل للتالي إن وُجد`);
         }
     }
@@ -1339,8 +1370,17 @@ async function runDiagnostics(sock, jid, msg) {
     const lines = ["🔧 *تشخيص الذكاء الاصطناعي*", ""];
     lines.push(`sharp: ${sharp ? "✅" : "❌ غير مثبتة (npm i sharp)"}`);
 
+    const mask = (v) => v ? `✅ موجود (${String(v).slice(0, 9)}… طوله ${String(v).length})` : "❌ غير موجود";
+    lines.push(`مفتاح OpenRouter: ${mask(process.env.OPENROUTER_API_KEY)}`);
+    lines.push(`مفتاح Gemini: ${mask(process.env.GEMINI_API_KEY)}`);
+    lines.push(`مفتاح Mistral: ${mask(process.env.MISTRAL_API_KEY)}`);
+    lines.push(`مفتاح Claude: ${mask(process.env.ANTHROPIC_API_KEY)}`);
+    const orKey = process.env.OPENROUTER_API_KEY;
+    if (orKey && !/^sk-or-v1-[A-Za-z0-9]{40,}$/.test(orKey)) lines.push("⚠️ شكل مفتاح OpenRouter غير معتاد (يبدأ بـ sk-or-v1- ولا يحتوي مسافات/علامات اقتباس).");
+    lines.push("");
+
     const providers = visionProviderList();
-    if (!providers.length) lines.push("❌ لا يوجد أي مفتاح في settings.js");
+    if (!providers.length) lines.push("❌ لا يوجد أي مفتاح (ضعه في Variables على Railway)");
 
     let jpg = null;
     try {
