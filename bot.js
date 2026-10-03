@@ -360,20 +360,15 @@ function formatMention(number) {
 }
 
 function getOwnerNumbers() {
-    const configuredOwners = Array.isArray(settings.owners)
-        ? settings.owners
-        : settings.owners
-            ? [settings.owners]
-            : [];
+    const list = [];
+    const add = (v) => { const n = cleanNumber(v); if (n && !list.includes(n)) list.push(n); };
 
-    const owners = configuredOwners.map(cleanNumber).filter(Boolean);
+    // رقم البوت يُعتبر مالكاً دائماً، ثم أي مالكين إضافيين من settings.owners
+    add(settings.botNumber);
+    const extra = Array.isArray(settings.owners) ? settings.owners : settings.owners ? [settings.owners] : [];
+    extra.forEach(add);
 
-    if (owners.length === 0 && settings.botNumber) {
-        const botNumber = cleanNumber(settings.botNumber);
-        if (botNumber) owners.push(botNumber);
-    }
-
-    return [...new Set(owners)];
+    return list;
 }
 
 function getBotNumber(sock = currentSocket) {
@@ -766,7 +761,30 @@ async function reconnect() {
 
 async function createSocket() {
     try {
+        // 🔁 إذا غيّرت botNumber في settings.js: نمسح الجلسة القديمة تلقائياً ونطلب رمز اقتران جديداً
+        try {
+            const wanted = cleanNumber(settings.pairingNumber) || cleanNumber(settings.botNumber);
+            const marker = path.join(SESSION_FOLDER, ".number");
+            if (fs.existsSync(SESSION_FOLDER) && fs.existsSync(path.join(SESSION_FOLDER, "creds.json"))) {
+                const saved = fs.existsSync(marker) ? String(fs.readFileSync(marker, "utf8")).trim() : "";
+                if (saved && wanted && saved !== wanted) {
+                    console.warn(`🔁 تم تغيير رقم البوت (${saved} ← ${wanted}). سيتم مسح الجلسة القديمة وطلب رمز اقتران جديد.`);
+                    fs.rmSync(SESSION_FOLDER, { recursive: true, force: true });
+                }
+            }
+        } catch (e) {
+            console.error("⚠️ تعذر فحص رقم الجلسة:", e?.message || e);
+        }
+
         const { state, saveCreds } = await useMultiFileAuthState(SESSION_FOLDER);
+
+        try {
+            const wanted = cleanNumber(settings.pairingNumber) || cleanNumber(settings.botNumber);
+            if (wanted) {
+                fs.mkdirSync(SESSION_FOLDER, { recursive: true });
+                fs.writeFileSync(path.join(SESSION_FOLDER, ".number"), wanted, "utf8");
+            }
+        } catch (_) {}
 
         let version;
         try {
@@ -800,28 +818,30 @@ async function createSocket() {
             console.error("❌ تعذر تركيب jidfix:", error?.message || error);
         }
 
-        const owners = getOwnerNumbers();
-        const pairingNumber = owners[0] || cleanNumber(settings.botNumber);
+        // ✅ رمز الاقتران يجب أن يكون لرقم حساب واتساب الذي سيعمل كبوت (botNumber) وليس أول مالك
+        const pairingNumber = cleanNumber(settings.pairingNumber) || cleanNumber(settings.botNumber) || getOwnerNumbers()[0] || "";
 
         if (!state.creds.registered && pairingNumber) {
-            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
+            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: +${pairingNumber}`);
+            console.log("⚠️ يجب أن يكون هذا هو رقم حساب واتساب المفتوح على الهاتف الذي ستُدخل فيه الرمز.");
 
-            setTimeout(async () => {
+            const requestCode = async (attempt = 1) => {
                 try {
                     if (!currentSocket || currentSocket !== sock) return;
 
                     let code = await sock.requestPairingCode(pairingNumber);
+                    if (code) code = String(code).match(/.{1,4}/g)?.join("-") || code;
 
-                    if (code) {
-                        code = String(code).match(/.{1,4}/g)?.join("-") || code;
-                    }
-
-                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
-
+                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]`);
+                    console.log("📱 واتساب ← الأجهزة المرتبطة ← ربط جهاز ← الربط برقم الهاتف ← أدخل الرمز خلال دقيقة.");
+                    console.log("♻️ إذا ظهر «تعذّر ربط الجهاز» استعمل آخر رمز يظهر هنا فقط (كل إعادة اتصال تنشئ رمزاً جديداً).\n");
                 } catch (error) {
-                    console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
+                    console.error(`❌ خطأ في رمز الاقتران (محاولة ${attempt}):`, error?.message || error);
+                    if (attempt < 3 && currentSocket === sock) setTimeout(() => requestCode(attempt + 1), 4000);
                 }
-            }, 4000);
+            };
+
+            setTimeout(() => requestCode(1), 4000);
         }
 
         registerEvents(sock, saveCreds);
