@@ -51,6 +51,21 @@ let db = null;
 let currentSocket = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
+
+// 🔑 رمز اقتران واحد فقط: لا يُطلب رمز ثانٍ في نفس التشغيل، ولا قبل مرور مدة الانتظار (حماية الرقم من الحظر)
+let pairingRequestedThisRun = false;
+const PAIRING_COOLDOWN_MS = (Number(process.env.PAIRING_COOLDOWN_MINUTES) || 10) * 60 * 1000;
+const PAIRING_STATE_FILE = path.join(DATA_DIR, "pairing_state.json");
+
+function readPairingState() {
+    try { return JSON.parse(fs.readFileSync(PAIRING_STATE_FILE, "utf8")) || {}; } catch (_) { return {}; }
+}
+function writePairingState(number) {
+    try { fs.writeFileSync(PAIRING_STATE_FILE, JSON.stringify({ at: Date.now(), number }), "utf8"); } catch (_) {}
+}
+function clearPairingState() {
+    try { fs.unlinkSync(PAIRING_STATE_FILE); } catch (_) {}
+}
 let shuttingDown = false;
 let startPromise = null;
 let isReconnecting = false;
@@ -654,8 +669,19 @@ function registerEvents(sock, saveCreds) {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const loggedOut = statusCode === DisconnectReason.loggedOut;
 
+                // 🔎 سبب الإغلاق دائماً في السجل (مهم لتشخيص فشل الاقتران)
+                console.warn(`ℹ️ إغلاق الاتصال — الكود: ${statusCode ?? "غير معروف"} | مسجّل: ${Boolean(sock?.authState?.creds?.registered)}`);
+
+                // أثناء الاقتران (غير مسجّل بعد): لا نمسح الجلسة ولا ندخل حلقة رموز جديدة كل 5 ثوانٍ
+                if (loggedOut && !sock?.authState?.creds?.registered) {
+                    console.error("🚫 رفض واتساب الاتصال قبل إتمام الربط (الكود 401). أوقف البوت، تأكد من الرقم، ثم أعد التشغيل مرة واحدة.");
+                    try { if (currentSocket) cleanupSocket(currentSocket); } catch (_) {}
+                    currentSocket = null;
+                    return;
+                }
+
                 if (loggedOut) {
-                    // ✅ بدل أن يبقى البوت ساكناً للأبد: نحذف الجلسة التالفة ونطلب رمز اقتران جديد
+                    // جلسة كانت مربوطة ثم سُجّل خروجها: نحذفها ونطلب رمز اقتران جديد
                     console.error("🚫 تم تسجيل خروج الجلسة. سيتم مسح الجلسة وطلب رمز اقتران جديد خلال 5 ثوانٍ...");
                     try { if (currentSocket) cleanupSocket(currentSocket); } catch (_) {}
                     currentSocket = null;
@@ -670,6 +696,16 @@ function registerEvents(sock, saveCreds) {
                 if (statusCode === DisconnectReason.connectionReplaced) {
                     console.error("⚠️ الجلسة مفتوحة في جهاز/تشغيل آخر (connectionReplaced). أغلق النسخة الأخرى من البوت.");
                     reconnectAttempts = Math.max(reconnectAttempts, 6);
+                }
+
+                // 🛑 قبل إتمام الربط: لا نستمر بالمحاولات للأبد (حتى لا يعيد Railway تشغيل البوت ويطلب رمزاً جديداً)
+                if (!sock?.authState?.creds?.registered && pairingRequestedThisRun && reconnectAttempts >= 3) {
+                    console.error("⏹️ انتهت مهلة الربط ولم يكتمل. لطلب رمز جديد أعد تشغيل البوت مرة واحدة (سيُطلب رمز واحد فقط).");
+                    try { if (currentSocket) cleanupSocket(currentSocket); } catch (_) {}
+                    currentSocket = null;
+                    clearReconnectTimer();
+                    if (!global.__pairingKeepAlive) global.__pairingKeepAlive = setInterval(() => {}, 60 * 60 * 1000);
+                    return;
                 }
 
                 reconnectAttempts++;
@@ -729,7 +765,7 @@ function cleanupSocket(sock) {
 
     try {
         sock.ev.removeAllListeners();
-        try { sock.ws?.close(); } catch (_) {}   // ✅ كان الاتصال القديم يبقى مفتوحاً → رسائل مكررة/تعارض
+        try { if (sock.authState?.creds?.registered) sock.ws?.close(); } catch (_) {}   // لا نلمس الاتصال أثناء الاقتران
         console.log("🧹 تم تنظيف الـListeners من الـSocket القديم");
     } catch (error) {
         console.error("❌ خطأ في تنظيف الـSocket:", error?.message || error);
@@ -817,9 +853,8 @@ async function createSocket() {
             printQRInTerminal: false,
             logger: pino({ level: "silent" }),
             markOnlineOnConnect: true,
-            // ⚠️ كانت true: تحمّل كل تاريخ المحادثات وتستهلك ذاكرة كبيرة وتبطّئ/تعلّق البوت.
-            // .تنظيف يستعمل fetchMessageHistory الذي لا يحتاجها.
-            syncFullHistory: false
+            // مثل نسختك الأصلية (true) لدعم .تنظيف. إن ضاقت الذاكرة على Railway ضع Variable: SYNC_FULL_HISTORY=false
+            syncFullHistory: String(process.env.SYNC_FULL_HISTORY || "true").toLowerCase() !== "false"
         };
 
         if (version) {
@@ -835,31 +870,45 @@ async function createSocket() {
             console.error("❌ تعذر تركيب jidfix:", error?.message || error);
         }
 
-        // ✅ رمز الاقتران يجب أن يكون لرقم حساب واتساب الذي سيعمل كبوت (botNumber) وليس أول مالك
         const pairingNumber = cleanNumber(settings.pairingNumber) || cleanNumber(settings.botNumber) || getOwnerNumbers()[0] || "";
 
         if (!state.creds.registered && pairingNumber) {
-            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: +${pairingNumber}`);
-            console.log("⚠️ يجب أن يكون هذا هو رقم حساب واتساب المفتوح على الهاتف الذي ستُدخل فيه الرمز.");
+            console.log(`\n🤖 جار تجهيز رمز الاقتران للرقم: ${pairingNumber}`);
 
-            const requestCode = async (attempt = 1) => {
-                try {
-                    if (!currentSocket || currentSocket !== sock) return;
+            const prev = readPairingState();
+            const sinceMs = Date.now() - (Number(prev.at) || 0);
+            const forced = String(process.env.FORCE_PAIRING || "").toLowerCase() === "true";
 
-                    let code = await sock.requestPairingCode(pairingNumber);
-                    if (code) code = String(code).match(/.{1,4}/g)?.join("-") || code;
+            if (pairingRequestedThisRun) {
+                console.log("ℹ️ سبق طلب رمز اقتران في هذا التشغيل، لن يُطلب رمز آخر. إن انتهت صلاحيته أعد تشغيل البوت.");
+            } else if (!forced && prev.number === pairingNumber && sinceMs < PAIRING_COOLDOWN_MS) {
+                const left = Math.ceil((PAIRING_COOLDOWN_MS - sinceMs) / 60000);
+                console.log(`⏳ طُلب رمز لهذا الرقم قبل قليل. لحماية الرقم من الحظر لن يُطلب رمز جديد قبل ${left} دقيقة. (استعمل الرمز السابق أو انتظر)`);
+            } else {
+                pairingRequestedThisRun = true;   // نعلّمها قبل الطلب: مرة واحدة مهما حصل
 
-                    console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]`);
-                    console.log("📱 واتساب ← الأجهزة المرتبطة ← ربط جهاز ← الربط برقم الهاتف ← أدخل الرمز خلال دقيقة.");
-                    console.log("♻️ إذا ظهر «تعذّر ربط الجهاز» استعمل آخر رمز يظهر هنا فقط (كل إعادة اتصال تنشئ رمزاً جديداً).\n");
-                } catch (error) {
-                    console.error(`❌ خطأ في رمز الاقتران (محاولة ${attempt}):`, error?.message || error);
-                    if (attempt < 3 && currentSocket === sock) setTimeout(() => requestCode(attempt + 1), 4000);
-                }
-            };
+                setTimeout(async () => {
+                    try {
+                        if (!currentSocket || currentSocket !== sock) return;
 
-            setTimeout(() => requestCode(1), 4000);
+                        let code = await sock.requestPairingCode(pairingNumber);
+                        writePairingState(pairingNumber);
+
+                        if (code) {
+                            code = String(code).match(/.{1,4}/g)?.join("-") || code;
+                        }
+
+                        console.log(`🔑 رمز الاقتران الخاص بك هو: [ ${code} ]\n`);
+                        console.log("📱 هذا هو الرمز الوحيد الذي سيُطلب. أدخله من: واتساب ← الأجهزة المرتبطة ← ربط جهاز ← الربط برقم الهاتف.\n");
+
+                    } catch (error) {
+                        console.error("❌ خطأ في رمز الاقتران:", error?.message || error);
+                    }
+                }, 4000);
+            }
         }
+
+        if (state.creds.registered) clearPairingState();
 
         registerEvents(sock, saveCreds);
 
