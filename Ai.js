@@ -863,6 +863,14 @@ async function callAnthropic(b64, prompt) {
 const GEMINI_VERTEX_MODELS = [...new Set([process.env.GEMINI_VISION_MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite"].filter(Boolean))];
 let geminiPref = null;   // { mode, model } آخر ما نجح
 
+/** يختصر أخطاء HTTP الطويلة إلى «الرقم + أول رسالة» */
+function shortHttpErr(msg) {
+    const m = String(msg || "");
+    const code = (m.match(/HTTP (\d{3})/) || [])[1] || "";
+    const text = (m.match(/"message"\s*:\s*"([^"]{1,160})/) || [])[1] || m.replace(/\s+/g, " ").slice(0, 160);
+    return `${code ? "HTTP " + code + " — " : ""}${text}`;
+}
+
 function geminiUrl(mode, model, key) {
     return mode === "vertex"
         ? `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent?key=${encodeURIComponent(key)}`
@@ -885,6 +893,7 @@ async function callGemini(b64, prompt) {
     }
 
     let lastErr = null;
+    const errs = [];
     const skipMode = new Set();
     for (const at of attempts) {
         if (skipMode.has(at.mode)) continue;
@@ -897,8 +906,9 @@ async function callGemini(b64, prompt) {
             geminiPref = at;
             return out;
         } catch (e) {
-            lastErr = new Error(`[${at.mode}/${at.model}] ${e?.message || e}`);
             const msg = String(e?.message || "");
+            errs.push(`${at.mode}: ${shortHttpErr(msg)}`);
+            lastErr = new Error(errs.filter((x, i) => errs.indexOf(x) === i).join(" ⟵ "));
             if (/HTTP (429|5\d\d)/.test(msg)) throw lastErr;                                  // حصة/ضغط: لا فائدة من تجريب غيره الآن
             if (/HTTP (400|401|403)/.test(msg) && /api key|api_key|unauthenticated|permission|not valid|invalid/i.test(msg)) {
                 skipMode.add(at.mode);                                                           // المفتاح ليس لهذا النوع → النوع الآخر
