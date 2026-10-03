@@ -52,7 +52,6 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const JOB_TIMEOUT_MS = 130 * 1000;      // أقصى مدة لكل طلب
 const FETCH_BUDGET_MS = 105 * 1000;     // ميزانية البحث عن صورة الشخصية
 const USER_COOLDOWN_MS = 6 * 1000;     // فاصل بين طلبات نفس العضو
-const SLOW_NOTICE_MS = 11 * 1000;      // بعدها نرسل رسالة «الصورة صعبة، انتظر»
 const MAX_PARALLEL = 3;                // أقصى عدد طلبات متزامنة
 const EDIT_WAIT_MS = 3 * 60 * 1000;    // مهلة إرسال اسم النقابة بعد .تعديل
 const OUT_WIDTH = 1080;                // عرض الصورة النهائية لـ .احضر
@@ -1041,6 +1040,7 @@ async function identifyImage(buf) {
             `"framing":"head" | "bust" | "waist" | "full" | "other"  (head = face/head only; bust = head and shoulders/chest; waist = down to the waist; full = whole body),` +
             `"head_cropped":true if the head or face is cut off by the frame,` +
             `"colors_ok":true if the hair colour, eye colour and outfit colours match the OFFICIAL anime colours of the character you identified (fan-art shading or a different art style is fine; false if the picture is greyscale/black-and-white, tinted, filtered or the character is clearly recoloured),` +
+            `"confidence":0-10 how SURE you are about the character's identity (10 = certain, 0 = guess),` +
             `"quality":0-10 for sharpness, clean lines and pleasing vivid colours}`;
 
         const txt = await askModel(jpg, prompt);
@@ -1056,6 +1056,7 @@ async function identifyImage(buf) {
             collage: j.collage === true,
             color_mode: String(j.color_mode || "full_color").toLowerCase(),
             colors_ok: j.colors_ok !== false,
+            confidence: Number.isFinite(Number(j.confidence)) ? Number(j.confidence) : 7,
             facing: String(j.facing || "front").toLowerCase(),
             face_visible: j.face_visible !== false,
             neck_visible: j.neck_visible !== false,
@@ -1154,9 +1155,9 @@ function interleave(lists, limit) {
 }
 
 // المقاس المقبول: ليست طويلة جداً ولا عريضة جداً (صورة المثال 0.68 مقبولة)
-const AR_MIN = 0.6;
-const AR_MAX = 1.45;
-const MIN_SIDE = 300;
+const AR_MIN = 0.4;
+const AR_MAX = 2.2;
+const MIN_SIDE = 250;
 
 /** تنزيل دفعات صغيرة (4 بالتوازي) لحماية الذاكرة، مع حفظ ترتيب الصورة في نتائج البحث */
 async function downloadStage(pins, startRank, deadline) {
@@ -1228,9 +1229,9 @@ async function pickWithoutAi(pins, target, nameRaw, deadline) {
         const cands = await downloadStage(st.list, st.start, deadline);   // يستبعد المقاس غير المناسب والدقة المنخفضة
         const ok = [];
         for (const r of cands) {
-            if ((await colorRatio(r.buf)) < 0.03) { console.log(`[Ai] #${r.rank} ✗ بلا ألوان (أبيض وأسود)`); continue; }
+            const bw = (await colorRatio(r.buf)) < 0.03;
             const rel = titleRelevance(r.title, target, nameRaw);
-            const total = r.score + rel + Math.max(0, 10 - r.rank) * 1.5;
+            const total = r.score + rel + Math.max(0, 10 - r.rank) * 1.5 - (bw ? 15 : 0);
             ok.push({ r, rel, total });
         }
         if (!ok.length) continue;
@@ -1242,6 +1243,25 @@ async function pickWithoutAi(pins, target, nameRaw, deadline) {
     }
 
     const e = new Error("NOT_FOUND"); e.code = "NOT_FOUND"; throw e;
+}
+
+/** تأكيد نهائي: سؤال مباشر «هل هذه الشخصية بالتحديد؟» — إن تعذّر الطلب لا نمنع الصورة */
+async function confirmIdentity(buf, target) {
+    try {
+        const jpg = await toJpegForVision(buf);
+        const prompt =
+            `Is the MAIN character in this picture definitely "${target.fullName}"${target.series ? ` from "${target.series}"` : ""}?\n` +
+            `Siblings, relatives, look-alikes, other characters of the same series, cosplay, figures and real people are NOT the same.\n` +
+            `Reply ONLY with JSON: {"same":true|false,"confidence":0-10}`;
+        const txt = await askModel(jpg, prompt);
+        const m = String(txt).match(/\{[\s\S]*\}/);
+        if (!m) return true;
+        const j = JSON.parse(m[0]);
+        return j.same === true && (Number(j.confidence) || 0) >= 7;
+    } catch (e) {
+        console.warn("⚠️ Ai: تعذّر التأكيد النهائي، سنقبل الصورة:", e?.message || e);
+        return true;
+    }
 }
 
 /** يحلل مجموعة صور ويعيد المقبولة فقط (الشخصية + الشروط) مرتبة من الأفضل */
@@ -1261,23 +1281,23 @@ async function evaluateStage(cands, target, state, deadline) {
 
             const tag = `[Ai] #${r.rank} → ${id.character} / ${id.series} | ألوان:${id.color_mode} اتجاه:${id.facing} لقطة:${id.framing} جودة:${id.quality}`;
 
+            // الشرط الوحيد: أنمي + نفس الشخصية المطلوبة بثقة كافية. باقي الأمور (مقاس/ألوان/وضعية/نص) تفضيل فقط.
             if (!id.is_anime) { console.log(tag + " ✗ ليست أنمي"); continue; }
-            if (id.has_text) { console.log(tag + " ✗ فيها نص"); continue; }
-            if (id.collage || id.count !== 1) { console.log(tag + " ✗ ليست شخصية واحدة"); continue; }
-            if (id.color_mode !== "full_color") { console.log(tag + " ✗ ليست بألوانها الكاملة"); continue; }
-            if (!id.colors_ok) { console.log(tag + " ✗ ألوان الشخصية غير طبيعية"); continue; }
-            if (id.head_cropped) { console.log(tag + " ✗ الرأس مقطوع"); continue; }
-            if (id.facing !== "front" && id.facing !== "three_quarter") { console.log(tag + " ✗ الوضعية ليست أمامية"); continue; }
-            if (!id.face_visible || !id.neck_visible || !id.torso_visible) { console.log(tag + " ✗ الوجه/العنق/الجسم غير واضح"); continue; }
-            if (!["bust", "waist", "full"].includes(id.framing)) { console.log(tag + " ✗ لقطة غير مناسبة"); continue; }
-
+            if (id.confidence < 6) { console.log(tag + ` ✗ ثقة التعرف منخفضة (${id.confidence})`); continue; }
             if (!(await sameCharacter(target, id))) { console.log(tag + " ✗ ليست الشخصية المطلوبة"); continue; }
 
-            const frameBonus = id.framing === "bust" ? 8 : id.framing === "waist" ? 6 : -20;   // الجسم الكامل آخر خيار
-            const poseBonus = id.facing === "front" ? 6 : 2;
-            const total = id.quality * 10 + r.score * 0.4 + frameBonus + poseBonus;
-            console.log(tag + ` ✓ مقبولة (${total.toFixed(0)})`);
-            const excellent = id.quality >= 8 && id.facing === "front" && (id.framing === "bust" || id.framing === "waist");
+            let bonus = 0;
+            bonus += id.count === 1 ? 10 : -15;
+            bonus += id.has_text ? -10 : 8;
+            bonus += id.collage ? -25 : 0;
+            bonus += (id.color_mode === "full_color" && id.colors_ok) ? 8 : -6;
+            bonus += id.facing === "front" ? 5 : id.facing === "three_quarter" ? 3 : -5;
+            bonus += (id.framing === "bust" || id.framing === "waist") ? 5 : 0;
+            bonus += id.head_cropped ? -8 : 0;
+            bonus += Math.max(0, 10 - r.rank) * 0.5;
+            const total = id.quality * 8 + r.score * 0.4 + id.confidence * 5 + bonus;
+            console.log(tag + ` ✓ الشخصية صحيحة (ثقة ${id.confidence}) نقاط ${total.toFixed(0)}`);
+            const excellent = id.confidence >= 8 && id.count === 1 && !id.has_text && !id.collage && id.quality >= 7;
             accepted.push({ buf: r.buf, total, rank: r.rank, excellent });
         }
     }
@@ -1336,9 +1356,12 @@ async function fetchCharacterImage(nameRaw, hintRaw = "") {
 
         const accepted = await evaluateStage(cands, target, state, deadline);
 
-        if (accepted.length) {
-            console.log(`[Ai] ✅ تم اختيار الصورة رقم #${accepted[0].rank}`);
-            return accepted[0].buf;
+        for (const c of accepted.slice(0, 3)) {
+            if (await confirmIdentity(c.buf, target)) {
+                console.log(`[Ai] ✅ تم اختيار الصورة رقم #${c.rank} (بعد التأكيد النهائي)`);
+                return c.buf;
+            }
+            console.log(`[Ai] #${c.rank} ✗ لم يتأكد أنها الشخصية المطلوبة`);
         }
     }
 
@@ -1539,11 +1562,6 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
 
     await react(sock, jid, key, "⏳");
 
-    // إن تأخر البحث نخبر العضو مرة واحدة ثم نكمل
-    const slowTimer = setTimeout(() => {
-        safeSend(sock, jid, { text: "⏳ إيجاد صورة صعب لهذه الشخصية، رجاءً انتظر قليلاً…" }, { quoted: msg }).catch(() => {});
-    }, SLOW_NOTICE_MS);
-
     try {
         const result = await withTimeout(
             runFetch(parsed.arg, db),
@@ -1575,7 +1593,6 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
         }
         await safeSend(sock, jid, { text: reply }, { quoted: msg });
     } finally {
-        clearTimeout(slowTimer);
         activeJobs.delete(who);
         runningJobs = Math.max(0, runningJobs - 1);
     }
