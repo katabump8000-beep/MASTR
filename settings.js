@@ -17,37 +17,20 @@ for (const k of ["ANTHROPIC_API_KEY", "GEMINI_API_KEY", "MISTRAL_API_KEY", "OPEN
 const env = (name) => cleanValue(process.env[name]);
 
 const settings = {
-    // ┌────────────────────────────────────────────────────────────┐
-    // │ رقم البوت: يُقرأ من Variables باسم BOT_NUMBER (الأفضل على Railway) │
-    // │ أو غيّر الرقم الاحتياطي بين علامتي الاقتباس هنا.                   │
-    // │ بصيغة دولية بدون + وبدون صفر. مثال: 48459074937                    │
-    // │ عند تغيير الرقم يمسح البوت الجلسة القديمة ويعطيك رمز اقتران جديد   │
-    // └────────────────────────────────────────────────────────────┘
     botNumber: env("BOT_NUMBER") || "48459074937",
-
-    // مالكون إضافيون (اختياري): من Variables باسم OWNERS مفصولة بفاصلة، مثال: 212600000001,962790000000
-    // رقم البوت نفسه مالك دائماً.
     owners: env("OWNERS").split(",").map(x => x.trim()).filter(Boolean),
 
     sessionFolder: "session",
     botName: "BOT PATHIRA",
 
-    // ===== مفاتيح فحص الصور بالذكاء الاصطناعي (لأمر .احضر) =====
-    // يُجرَّب بالترتيب، وإن فشل أحدها ينتقل البوت للتالي تلقائياً
+    // ===== مفاتيح الذكاء الاصطناعي (كلها تُقرأ من Variables) =====
     anthropicApiKey: env("ANTHROPIC_API_KEY") || "",
-    geminiApiKey: env("GEMINI_API_KEY") || "AQ.Ab8RN6JCo5HYS0lodu6XfbqFWRXL4Ci3TG_dm-C7O55iXze7Zw",
+    geminiApiKey: env("GEMINI_API_KEY") || "",
     mistralApiKey: env("MISTRAL_API_KEY") || "",
     openrouterApiKey: env("OPENROUTER_API_KEY") || "",
 
-    // ===== موديلات الرؤية (اتركها فارغة = الافتراضي الجاهز) =====
-    visionModels: {
-        anthropic: "",
-        gemini: "",
-        mistral: "",
-        openrouter: ""
-    },
+    visionModels: { anthropic: "", gemini: "", mistral: "", openrouter: "" },
 
-    // ===== (اختياري) بحث Google الرسمي =====
     googleApiKey: env("GOOGLE_API_KEY") || "",
     googleCx: env("GOOGLE_CX") || ""
 };
@@ -58,7 +41,6 @@ const settings = {
     else console.log(`⚙️ رقم البوت المقروء من الإعدادات: +${digits(settings.botNumber)}`);
 })();
 
-// يُمرَّر لملف Ai.js (لا تغيّر هذه الأسطر)
 const pass = (envName, val) => { if (val && !process.env[envName]) process.env[envName] = val; };
 pass("ANTHROPIC_API_KEY", settings.anthropicApiKey);
 pass("GEMINI_API_KEY", settings.geminiApiKey);
