@@ -24,9 +24,24 @@ const settings = require("./settings");
 // Paths
 // ============================================================
 
-const DB_FILE = path.join(__dirname, "database.json");
+// 📁 مجلد البيانات: على Railway ضع Volume (مثلاً /data) فتبقى الجلسة وقاعدة البيانات بعد كل إعادة تشغيل.
+// الأولوية: DATA_DIR ← RAILWAY_VOLUME_MOUNT_PATH (يضعه Railway تلقائياً مع الـ Volume) ← مجلد المشروع
+const DATA_DIR = String(process.env.DATA_DIR || process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname).trim() || __dirname;
+try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (_) {}
+
+const DB_FILE = path.join(DATA_DIR, "database.json");
+global.DB_FILE = DB_FILE;
+
+// أول تشغيل على Volume فارغ: ننسخ database.json الموجود مع المشروع (إن وُجد) كبداية
+try {
+    const seed = path.join(__dirname, "database.json");
+    if (DATA_DIR !== __dirname && !fs.existsSync(DB_FILE) && fs.existsSync(seed)) {
+        fs.copyFileSync(seed, DB_FILE);
+        console.log("📦 تم نسخ database.json الأولي إلى مجلد البيانات.");
+    }
+} catch (_) {}
 const DB_BAK = DB_FILE + ".bak";
-const SESSION_FOLDER = path.join(__dirname, settings.sessionFolder || "session");
+const SESSION_FOLDER = path.join(DATA_DIR, settings.sessionFolder || "session");
 
 // ============================================================
 // Runtime
@@ -252,7 +267,7 @@ function loadDatabase() {
 
         // 🛡️ لا نمسح البيانات أبداً: نحفظ نسخة من الملف التالف ثم نجرّب النسخة الاحتياطية
         try {
-            const keep = path.join(__dirname, `database.corrupt-${Date.now()}.json`);
+            const keep = path.join(DATA_DIR, `database.corrupt-${Date.now()}.json`);
             fs.copyFileSync(DB_FILE, keep);
             console.error(`📦 حُفظت نسخة من الملف التالف: ${path.basename(keep)}`);
         } catch (_) {}
@@ -761,6 +776,8 @@ async function reconnect() {
 
 async function createSocket() {
     try {
+        console.log(`📁 مجلد البيانات: ${DATA_DIR}${DATA_DIR === __dirname ? "  ⚠️ (غير دائم على Railway — أضف Volume)" : "  ✅"}`);
+
         // 🔁 إذا غيّرت botNumber في settings.js: نمسح الجلسة القديمة تلقائياً ونطلب رمز اقتران جديداً
         try {
             const wanted = cleanNumber(settings.pairingNumber) || cleanNumber(settings.botNumber);
