@@ -1185,6 +1185,65 @@ async function downloadStage(pins, startRank, deadline) {
     return out;
 }
 
+// ============================================================
+// 🆓 الوضع بدون ذكاء اصطناعي (احتياطي تلقائي، أو إجباري بـ AI_MODE=off)
+// فحوصات تقنية فقط: ترتيب نتيجة البحث + تطابق اسم الشخصية مع عنوان الصورة + المقاس + الدقة + وجود ألوان
+// لا يتحقق من الوضعية ولا من صحة الألوان ولا من النصوص على الصورة (هذه تحتاج رؤية حاسوبية)
+// ============================================================
+
+async function colorRatio(buf) {
+    if (!sharp) return 1;
+    try {
+        const { data } = await sharp(buf, { failOn: "none", limitInputPixels: 40e6 })
+            .resize(96, 96, { fit: "fill" }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+        let c = 0, n = 0;
+        for (let i = 0; i + 2 < data.length; i += 3) {
+            const mx = Math.max(data[i], data[i + 1], data[i + 2]);
+            const mn = Math.min(data[i], data[i + 1], data[i + 2]);
+            if (mx > 30 && (mx - mn) / mx > 0.06) c++;
+            n++;
+        }
+        return n ? c / n : 1;
+    } catch (_) { return 1; }
+}
+
+function titleRelevance(title, target, nameRaw) {
+    const t = String(title || "");
+    if (!t) return 0;
+    let r = 0;
+    const lower = t.toLowerCase();
+    if (nameTokens(target.fullName).some(w => lower.includes(w))) r += 30;
+    const nt = normArabic(t);
+    if (normArabic(nameRaw).split(/\s+/).filter(w => w.length >= 2).some(w => nt.includes(w))) r += 30;
+    if (target.series && nameTokens(target.series).some(w => lower.includes(w))) r += 10;
+    return Math.min(r, 45);
+}
+
+async function pickWithoutAi(pins, target, nameRaw, deadline) {
+    const stages = [{ list: pins.slice(0, 10), start: 0 }, { list: pins.slice(10, 15), start: 10 }];
+
+    for (const st of stages) {
+        if (!st.list.length || Date.now() > deadline) continue;
+
+        const cands = await downloadStage(st.list, st.start, deadline);   // يستبعد المقاس غير المناسب والدقة المنخفضة
+        const ok = [];
+        for (const r of cands) {
+            if ((await colorRatio(r.buf)) < 0.03) { console.log(`[Ai] #${r.rank} ✗ بلا ألوان (أبيض وأسود)`); continue; }
+            const rel = titleRelevance(r.title, target, nameRaw);
+            const total = r.score + rel + Math.max(0, 10 - r.rank) * 1.5;
+            ok.push({ r, rel, total });
+        }
+        if (!ok.length) continue;
+
+        const matched = ok.filter(x => x.rel > 0);               // الأولوية للصور التي يطابق عنوانها اسم الشخصية
+        const pool = (matched.length ? matched : ok).sort((a, b) => b.total - a.total);
+        console.log(`[Ai] ✅ (بدون ذكاء اصطناعي) تم اختيار #${pool[0].r.rank} | تطابق الاسم: ${pool[0].rel} | نقاط: ${pool[0].total.toFixed(0)}`);
+        return pool[0].r.buf;
+    }
+
+    const e = new Error("NOT_FOUND"); e.code = "NOT_FOUND"; throw e;
+}
+
 /** يحلل مجموعة صور ويعيد المقبولة فقط (الشخصية + الشروط) مرتبة من الأفضل */
 async function evaluateStage(cands, target, state, deadline) {
     const accepted = [];
@@ -1236,10 +1295,8 @@ async function fetchCharacterImage(nameRaw, hintRaw = "") {
     const fail = (code) => { const e = new Error(code); e.code = code; return e; };
     const deadline = Date.now() + FETCH_BUDGET_MS;
 
-    if (!visionAvailable()) {
-        console.error("[Ai] ❌ لا يوجد مفتاح لفحص الصور");
-        throw fail("NO_VISION");
-    }
+    const aiOn = visionAvailable() && String(process.env.AI_MODE || "").toLowerCase() !== "off";
+    if (!aiOn) console.log("[Ai] ℹ️ الوضع بدون ذكاء اصطناعي (لا مفتاح أو AI_MODE=off)");
 
     // --- الاسم والأنمي بالإنجليزية (للمقارنة فقط) ---
     const key = normArabic(nameRaw);
@@ -1266,6 +1323,8 @@ async function fetchCharacterImage(nameRaw, hintRaw = "") {
     console.log(`[Ai] بحث: "${query}" | pinterest:${pinRes.length} google:${gooRes.length} | المطلوب: ${target.fullName}${target.series ? " (" + target.series + ")" : ""}`);
     if (!pins.length) throw fail("NOT_FOUND");
 
+    if (!aiOn) return await pickWithoutAi(pins, target, nameRaw, deadline);
+
     const state = { analysed: 0, failed: 0 };
     const stages = [{ list: pins.slice(0, 10), start: 0 }, { list: pins.slice(10, 15), start: 10 }];
 
@@ -1284,8 +1343,8 @@ async function fetchCharacterImage(nameRaw, hintRaw = "") {
     }
 
     if (state.analysed === 0 && state.failed > 0) {
-        console.error("[Ai] ❌ فشلت كل طلبات التحليل (تحقق من المفتاح/الحصة/اسم النموذج)");
-        throw fail("VISION_DOWN");
+        console.error("[Ai] ❌ فشلت كل طلبات التحليل (المفتاح/الحصة) — تحويل تلقائي للوضع بدون ذكاء اصطناعي");
+        return await pickWithoutAi(pins, target, nameRaw, Date.now() + 40 * 1000);
     }
     throw fail("NOT_FOUND");
 }
