@@ -389,7 +389,7 @@ async function isUserInMainGroup(sock, db, userNumber) {
 // الحفظ التلقائي
 // ============================================================
 
-const DB_FILE = path.join(__dirname, "database.json");
+const DB_FILE = global.DB_FILE || path.join(__dirname, "database.json");
 
 function getDatabaseContent() {
     try {
