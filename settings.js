@@ -1,6 +1,20 @@
 // settings.js - إعدادات البوت الأساسية
 
-const env = (name) => String(process.env[name] || "").trim();
+// ينظّف القيمة: يحذف المسافات والأسطر والرموز الخفية وعلامات الاقتباس وكلمة Bearer إن لُصقت مع المفتاح
+const cleanValue = (v) => {
+    let x = String(v || "").replace(/[\u200b-\u200f\u202a-\u202e\ufeff]/g, "").trim();
+    for (let i = 0; i < 3; i++) {
+        x = x.replace(/^["'`]+|["'`]+$/g, "").trim();
+        x = x.replace(/^authorization\s*:\s*/i, "").replace(/^bearer\s+/i, "").trim();
+    }
+    return x;
+};
+
+for (const k of ["ANTHROPIC_API_KEY", "GEMINI_API_KEY", "MISTRAL_API_KEY", "OPENROUTER_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CX"]) {
+    if (process.env[k] !== undefined) process.env[k] = cleanValue(process.env[k]);
+}
+
+const env = (name) => cleanValue(process.env[name]);
 
 const settings = {
     // ┌────────────────────────────────────────────────────────────┐
@@ -23,7 +37,7 @@ const settings = {
     anthropicApiKey: env("ANTHROPIC_API_KEY") || "",
     geminiApiKey: env("GEMINI_API_KEY") || "",
     mistralApiKey: env("MISTRAL_API_KEY") || "",
-    openrouterApiKey: env("OPENROUTER_API_KEY") || "",   // ضعه في Variables، لا تكتبه هنا (ملفاتك على GitHub)
+    openrouterApiKey: env("OPENROUTER_API_KEY") || "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",
 
     // ===== موديلات الرؤية (اتركها فارغة = الافتراضي الجاهز) =====
     visionModels: {
