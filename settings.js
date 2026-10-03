@@ -17,7 +17,7 @@ for (const k of ["ANTHROPIC_API_KEY", "GEMINI_API_KEY", "MISTRAL_API_KEY", "OPEN
 const env = (name) => cleanValue(process.env[name]);
 
 const settings = {
-    botNumber: env("BOT_NUMBER") || "48459074937",
+    botNumber: env("BOT_NUMBER") || "48699554086",
     owners: env("OWNERS").split(",").map(x => x.trim()).filter(Boolean),
 
     sessionFolder: "session",
