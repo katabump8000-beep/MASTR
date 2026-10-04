@@ -49,8 +49,8 @@ try { fs.mkdirSync(FONT_DIR, { recursive: true }); } catch (_) {}
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
-const JOB_TIMEOUT_MS = 130 * 1000;      // أقصى مدة لكل طلب
-const FETCH_BUDGET_MS = 105 * 1000;     // ميزانية البحث عن صورة الشخصية
+const JOB_TIMEOUT_MS = 200 * 1000;      // أقصى مدة لكل طلب
+const FETCH_BUDGET_MS = 170 * 1000;     // ميزانية البحث عن صورة الشخصية
 const USER_COOLDOWN_MS = 6 * 1000;     // فاصل بين طلبات نفس العضو
 const MAX_PARALLEL = 3;                // أقصى عدد طلبات متزامنة
 const EDIT_WAIT_MS = 3 * 60 * 1000;    // مهلة إرسال اسم النقابة بعد .تعديل
@@ -1029,6 +1029,7 @@ async function identifyImage(buf) {
             `{"character":"the main character's full name in English, or \\"unknown\\"",` +
             `"series":"the anime/manga title, or \\"unknown\\"",` +
             `"count":number of distinct characters clearly visible,` +
+            `"others":[full names of OTHER distinct characters clearly visible besides the main one, max 3, or an empty array],` +
             `"is_anime":true if it is anime/manga art (not a real person, cosplay, figure or toy),` +
             `"has_text":true if the picture has OVERLAID text or graphics added on top of the art: captions, name labels, titles, logos, watermarks, big numbers (ignore small lettering that is naturally part of the drawn scene, such as writing on clothing),` +
             `"collage":true if it is a collage, grid, split panels or several pictures in one,` +
@@ -1057,6 +1058,7 @@ async function identifyImage(buf) {
             color_mode: String(j.color_mode || "full_color").toLowerCase(),
             colors_ok: j.colors_ok !== false,
             confidence: Number.isFinite(Number(j.confidence)) ? Number(j.confidence) : 7,
+            others: Array.isArray(j.others) ? j.others.map(x => String(x || "")).filter(Boolean).slice(0, 3) : [],
             facing: String(j.facing || "front").toLowerCase(),
             face_visible: j.face_visible !== false,
             neck_visible: j.neck_visible !== false,
@@ -1155,9 +1157,10 @@ function interleave(lists, limit) {
 }
 
 // المقاس المقبول: ليست طويلة جداً ولا عريضة جداً (صورة المثال 0.68 مقبولة)
-const AR_MIN = 0.4;
-const AR_MAX = 2.2;
-const MIN_SIDE = 250;
+const MAX_SCAN = Math.max(15, Number(process.env.MAX_SCAN_IMAGES) || 40);   // أقصى عدد صور يفحصها البوت حتى يجد المطلوبة
+const AR_MIN = 0.2;
+const AR_MAX = 5;
+const MIN_SIDE = 200;
 
 /** تنزيل دفعات صغيرة (4 بالتوازي) لحماية الذاكرة، مع حفظ ترتيب الصورة في نتائج البحث */
 async function downloadStage(pins, startRank, deadline) {
@@ -1221,7 +1224,7 @@ function titleRelevance(title, target, nameRaw) {
 }
 
 async function pickWithoutAi(pins, target, nameRaw, deadline) {
-    const stages = [{ list: pins.slice(0, 10), start: 0 }, { list: pins.slice(10, 15), start: 10 }];
+    const stages = scanStages(pins);
 
     for (const st of stages) {
         if (!st.list.length || Date.now() > deadline) continue;
@@ -1250,7 +1253,7 @@ async function confirmIdentity(buf, target) {
     try {
         const jpg = await toJpegForVision(buf);
         const prompt =
-            `Is the MAIN character in this picture definitely "${target.fullName}"${target.series ? ` from "${target.series}"` : ""}?\n` +
+            `Is "${target.fullName}"${target.series ? ` from "${target.series}"` : ""} clearly and definitely shown in this picture (as the main character or one of the clearly visible characters)?\n` +
             `Siblings, relatives, look-alikes, other characters of the same series, cosplay, figures and real people are NOT the same.\n` +
             `Reply ONLY with JSON: {"same":true|false,"confidence":0-10}`;
         const txt = await askModel(jpg, prompt);
@@ -1262,6 +1265,13 @@ async function confirmIdentity(buf, target) {
         console.warn("⚠️ Ai: تعذّر التأكيد النهائي، سنقبل الصورة:", e?.message || e);
         return true;
     }
+}
+
+/** مراحل الفحص: 10 صور في كل مرحلة حتى MAX_SCAN صورة أو إيجاد المطلوبة */
+function scanStages(pins) {
+    const out = [];
+    for (let i = 0; i < Math.min(pins.length, MAX_SCAN); i += 10) out.push({ list: pins.slice(i, i + 10), start: i });
+    return out;
 }
 
 /** يحلل مجموعة صور ويعيد المقبولة فقط (الشخصية + الشروط) مرتبة من الأفضل */
@@ -1281,23 +1291,27 @@ async function evaluateStage(cands, target, state, deadline) {
 
             const tag = `[Ai] #${r.rank} → ${id.character} / ${id.series} | ألوان:${id.color_mode} اتجاه:${id.facing} لقطة:${id.framing} جودة:${id.quality}`;
 
-            // الشرط الوحيد: أنمي + نفس الشخصية المطلوبة بثقة كافية. باقي الأمور (مقاس/ألوان/وضعية/نص) تفضيل فقط.
+            // الشرط الوحيد: أنمي + الشخصية المطلوبة ظاهرة في الصورة (الرئيسية أو ضمن شخصيات ظاهرة). لا شروط مقاس/ألوان/وضعية.
             if (!id.is_anime) { console.log(tag + " ✗ ليست أنمي"); continue; }
             if (id.confidence < 6) { console.log(tag + ` ✗ ثقة التعرف منخفضة (${id.confidence})`); continue; }
-            if (!(await sameCharacter(target, id))) { console.log(tag + " ✗ ليست الشخصية المطلوبة"); continue; }
+
+            let matched = await sameCharacter(target, id);
+            let viaOther = false;
+            if (!matched && id.others.length) {
+                for (const o of id.others) {
+                    if (await sameCharacter(target, { character: o, series: id.series })) { matched = true; viaOther = true; break; }
+                }
+            }
+            if (!matched) { console.log(tag + " ✗ ليست الشخصية المطلوبة"); continue; }
 
             let bonus = 0;
-            bonus += id.count === 1 ? 10 : -15;
-            bonus += id.has_text ? -10 : 8;
+            bonus += (id.count === 1 && !viaOther) ? 10 : -12;     // نفضّل الصورة المركّزة على الشخصية
+            bonus += id.has_text ? -8 : 4;
             bonus += id.collage ? -25 : 0;
-            bonus += (id.color_mode === "full_color" && id.colors_ok) ? 8 : -6;
-            bonus += id.facing === "front" ? 5 : id.facing === "three_quarter" ? 3 : -5;
-            bonus += (id.framing === "bust" || id.framing === "waist") ? 5 : 0;
-            bonus += id.head_cropped ? -8 : 0;
             bonus += Math.max(0, 10 - r.rank) * 0.5;
-            const total = id.quality * 8 + r.score * 0.4 + id.confidence * 5 + bonus;
-            console.log(tag + ` ✓ الشخصية صحيحة (ثقة ${id.confidence}) نقاط ${total.toFixed(0)}`);
-            const excellent = id.confidence >= 8 && id.count === 1 && !id.has_text && !id.collage && id.quality >= 7;
+            const total = id.quality * 8 + r.score * 0.2 + id.confidence * 5 + bonus;
+            console.log(tag + ` ✓ الشخصية ظاهرة${viaOther ? " (ضمن شخصيات أخرى)" : ""} (ثقة ${id.confidence}) نقاط ${total.toFixed(0)}`);
+            const excellent = id.confidence >= 8 && !viaOther && !id.collage;
             accepted.push({ buf: r.buf, total, rank: r.rank, excellent });
         }
     }
@@ -1311,6 +1325,49 @@ async function evaluateStage(cands, target, state, deadline) {
 //   3) إن لم تنجح أي واحدة: نفحص الـ 5 التالية (11–15)
 //   4) إن لم تنجح: «الشخصية غير موجودة»
 // ============================================================
+// ============================================================
+// استراتيجية الاسم: الاسم (عربي→إنجليزي رسمي) + الأنمي → "Full Name from the anime Anime Name"
+// ============================================================
+
+const strategyCache = new Map();   // مفتاح الطلب → النتيجة (لتوفير الطلبات)
+
+async function resolveByStrategy(nameRaw, hintRaw) {
+    const ck = normArabic(nameRaw) + "|" + normArabic(hintRaw);
+    if (strategyCache.has(ck)) return strategyCache.get(ck);
+
+    const prompt =
+        `You identify anime characters. Follow these steps exactly.\n` +
+        `1. Take the character name: "${nameRaw}"${hintRaw ? ` (the anime is given: "${hintRaw}")` : ""}.\n` +
+        `2. If it is Arabic, convert it to English using the official, correct Romanized name.\n` +
+        `3. Identify the anime this character belongs to.\n` +
+        `4. Always use the character's FULL official name, never a shortened name.\n` +
+        `Examples: "ناروتو" -> Naruto Uzumaki / Naruto. "كاكاشي" -> Kakashi Hatake / Naruto. "لوفي" -> Monkey D. Luffy / One Piece. "الوكا" -> Alluka Zoldyck / Hunter x Hunter.\n` +
+        `Do not ask if you are sure. Only if the name is truly ambiguous and clearly refers to more than one different character, set "ambiguous" to true and give exactly 2 options.\n` +
+        `Reply with ONLY one JSON object, no other text:\n` +
+        `{"ambiguous":false,"full_name":"Full Name","anime":"Anime Name","options":[{"name":"Name 1","anime":"Anime 1"},{"name":"Name 2","anime":"Anime 2"}]}`;
+
+    const txt = await askModel(null, prompt);
+    const m = String(txt).match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    const j = JSON.parse(m[0]);
+
+    if (j.ambiguous === true && !hintRaw && Array.isArray(j.options) && j.options.length >= 2 && j.options[0]?.name && j.options[1]?.name) {
+        const e = new Error("AMBIGUOUS");
+        e.code = "AMBIGUOUS";
+        e.options = j.options.slice(0, 2).map(o => ({ name: String(o.name), anime: String(o.anime || "") }));
+        throw e;
+    }
+
+    const fullName = String(j.full_name || "").replace(/\s+/g, " ").trim();
+    const series = String(j.anime || "").replace(/\s+/g, " ").trim();
+    if (!fullName || /^unknown$/i.test(fullName)) return null;
+
+    const res = { fullName, series, line: `${fullName} from the anime ${series}` };
+    strategyCache.set(ck, res);
+    if (strategyCache.size > 300) strategyCache.delete(strategyCache.keys().next().value);
+    return res;
+}
+
 async function fetchCharacterImage(nameRaw, hintRaw = "") {
     const fail = (code) => { const e = new Error(code); e.code = code; return e; };
     const deadline = Date.now() + FETCH_BUDGET_MS;
@@ -1318,35 +1375,50 @@ async function fetchCharacterImage(nameRaw, hintRaw = "") {
     const aiOn = visionAvailable() && String(process.env.AI_MODE || "").toLowerCase() !== "off";
     if (!aiOn) console.log("[Ai] ℹ️ الوضع بدون ذكاء اصطناعي (لا مفتاح أو AI_MODE=off)");
 
-    // --- الاسم والأنمي بالإنجليزية (للمقارنة فقط) ---
-    const key = normArabic(nameRaw);
-    const english = NAME_ALIASES[key] || (await toEnglish(nameRaw)).replace(/\s+/g, " ").trim() || nameRaw;
-
-    let seriesEn = "";
-    if (hintRaw) {
-        const hk = normArabic(hintRaw);
-        seriesEn = SERIES_ALIASES[hk] || SERIES_ALIASES[hintRaw.trim()] || (await toEnglish(hintRaw)).replace(/\s+/g, " ").trim();
+    // --- الاسم الكامل + الأنمي (الاستراتيجية بالذكاء الاصطناعي، وإن تعذّر نستعمل القواميس + AniList) ---
+    let target = null;
+    if (aiOn) {
+        try {
+            const st = await resolveByStrategy(nameRaw, hintRaw);
+            if (st) { target = { fullName: st.fullName, series: st.series, hint: hintRaw || "" }; console.log(`[Ai] 🧭 ${st.line}`); }
+        } catch (e) {
+            if (e && e.code === "AMBIGUOUS") throw e;
+            console.warn("⚠️ Ai: تعذّرت استراتيجية الاسم، سنستعمل القواميس:", e?.message || e);
+        }
     }
-    const info = await resolveCharacter(english, seriesEn);
-    const target = { fullName: info?.name || english, series: seriesEn || info?.series || "", hint: hintRaw || "" };
+    if (!target) {
+        const key = normArabic(nameRaw);
+        const english = NAME_ALIASES[key] || (await toEnglish(nameRaw)).replace(/\s+/g, " ").trim() || nameRaw;
 
-    // ===== الخطوة 1: بحث واحد في Pinterest + Google =====
-    const query = `شخصية ${nameRaw}${hintRaw ? " " + hintRaw : ""}`.replace(/\s+/g, " ").trim();
-    const [pinRes, gooRes] = await Promise.all([
-        searchPinterest(query).catch(() => []),
-        searchGoogle(query).catch(() => [])
-    ]);
+        let seriesEn = "";
+        if (hintRaw) {
+            const hk = normArabic(hintRaw);
+            seriesEn = SERIES_ALIASES[hk] || SERIES_ALIASES[hintRaw.trim()] || (await toEnglish(hintRaw)).replace(/\s+/g, " ").trim();
+        }
+        const info = await resolveCharacter(english, seriesEn);
+        target = { fullName: info?.name || english, series: seriesEn || info?.series || "", hint: hintRaw || "" };
+    }
 
-    let pins = interleave([pinRes, gooRes], 60)
+    // ===== بحث موسّع: الصيغة الإنجليزية + العربية في Pinterest و Google =====
+    const enQuery = target.series ? `${target.fullName} from the anime ${target.series}` : `${target.fullName} anime character`;
+    const arQuery = `شخصية ${nameRaw}${hintRaw ? " " + hintRaw : ""}`.replace(/\s+/g, " ").trim();
+    const queries = [...new Set([enQuery, arQuery])];
+
+    const lists = await Promise.all(queries.flatMap(q => [
+        searchPinterest(q).catch(() => []),
+        searchGoogle(q).catch(() => [])
+    ]));
+
+    const pins = interleave(lists, 200)
         .filter(p => !BAD_HOST.test(p.url) && !BAD_TITLE.test(p.title || ""));
 
-    console.log(`[Ai] بحث: "${query}" | pinterest:${pinRes.length} google:${gooRes.length} | المطلوب: ${target.fullName}${target.series ? " (" + target.series + ")" : ""}`);
+    console.log(`[Ai] بحث: ${queries.map(q => `"${q}"`).join(" + ")} | نتائج: ${lists.map(l => l.length).join("/")} | المرشحة: ${pins.length} | المطلوب: ${target.fullName}${target.series ? " (" + target.series + ")" : ""}`);
     if (!pins.length) throw fail("NOT_FOUND");
 
     if (!aiOn) return await pickWithoutAi(pins, target, nameRaw, deadline);
 
     const state = { analysed: 0, failed: 0 };
-    const stages = [{ list: pins.slice(0, 10), start: 0 }, { list: pins.slice(10, 15), start: 10 }];
+    const stages = scanStages(pins);
 
     for (const st of stages) {
         if (!st.list.length || Date.now() > deadline) continue;
@@ -1576,10 +1648,14 @@ async function handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, ow
         if (!sent) throw new Error("send failed");
     } catch (e) {
         console.error("❌ Ai job error:", e?.message || e);
-        await react(sock, jid, key, "❌");
+        await react(sock, jid, key, (e && e.code === "AMBIGUOUS") ? "❓" : "❌");
 
         let reply;
-        if (e && e.code === "BLOCKED") {
+        if (e && e.code === "AMBIGUOUS" && Array.isArray(e.options) && e.options.length >= 2) {
+            const [o1, o2] = e.options;
+            const shownName = parseTarget(parsed.arg).name;
+            reply = `هل تقصد ${o1.name} من ${o1.anime} ام ${o2.name} من ${o2.anime}؟\n\nأعد الأمر مع اسم الأنمي، مثال:\n.احضر ${shownName} من ${o1.anime}`;
+        } else if (e && e.code === "BLOCKED") {
             reply = "⛔ لا يمكنني تنفيذ هذا الطلب.";
         } else if (e && (e.code === "NO_VISION" || e.code === "VISION_DOWN")) {
             reply = "⚠️ خدمة تحليل الصور غير متاحة حالياً، أبلغ المشرف.";
