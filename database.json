@@ -95,515 +95,1399 @@
   },
   "receiveGroups": {
     "120363428795355362@g.us": true,
-    "120363429307505498@g.us": true,
-    "120363432781368382@g.us": true,
-    "120363430725714297@g.us": true
+    "120363428430538684@g.us": true
   },
   "mainGroup": {
-    "120363429233086206@g.us": true,
-    "120363428781928659@g.us": true,
-    "120363412416383659@g.us": true
+    "120363414055337881@g.us": true
   },
   "cooldowns": {},
   "users": {
-    "93527811833871": { "balance": 372, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "ايتاتشي" },
-    "1954763767962": { "balance": 107511, "nickname": "كاكاشي", "rank": "آلَمِــــًسًـــتُــشــــآر", "maxInteraction": 229, "friend": "ناروتو" },
-    "124468773036057": { "balance": 50, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "81497742643328": { "balance": 795, "nickname": "", "rank": "آدمِــــــ♝ــيـــــــّرال", "maxInteraction": 698, "friend": "" },
-    "138195471728731": { "balance": 999999999899, "nickname": "", "rank": "آلَآمِـــــبّــ@♛ـــراطور", "maxInteraction": 0, "friend": "" },
-    "152665149419590": { "balance": 1238, "nickname": "", "rank": "آلَعــــــــمِــــــــيـــــــّد", "maxInteraction": 1047, "friend": "روبي" },
-    "110591767273686": { "balance": 16390, "nickname": "", "rank": "مِــــــــآركَيـــــــّز", "maxInteraction": 161, "friend": "إزوكو" },
-    "185225481064568": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "137851857572050": { "balance": 913, "nickname": "", "rank": "الجنرال", "maxInteraction": 0, "friend": "" },
-    "160284270424266": { "balance": 400, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "173969881694378": { "balance": 4112, "nickname": "شادو", "rank": "", "maxInteraction": 362, "friend": "ساكورا" },
-    "155689074827319": { "balance": 300, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "42366245314800": { "balance": 2350, "nickname": "", "rank": "الــــجــــنــــرال", "maxInteraction": 755, "friend": "كيرا" },
-    "204475474120734": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "55358420738155": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "148022474322076": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "15926208499811": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "180354954567746": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "106288377790512": { "balance": 50, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "215638194794703": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "200000269209688": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "154499251454159": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "جوهان" },
-    "4046630957135": { "balance": 1000, "nickname": "", "rank": "آلَمِــــــــلَآزمِ آلَثًــــــــآنــــٌي", "maxInteraction": 1642, "friend": "فيدل" },
-    "9496877355053": { "balance": 86, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "249211215937596": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "50535071793351": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "126577316757545": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "105158717481064": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "117583403593752": { "balance": 500, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "45514288529589": { "balance": 3600, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "6447081459892": { "balance": 1419, "nickname": "", "rank": "آلَمِـــــلَآزمِ آلَثًـــآنــــٌي", "maxInteraction": 0, "friend": "" },
-    "135215032877087": { "balance": 20102, "nickname": "كيرا💤", "rank": "أدمِــــــــيـــــــّرال", "maxInteraction": 911, "friend": "رين" },
-    "94601906008064": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "280577831886948": { "balance": 404, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "اكسيليتور" },
-    "82317980749931": { "balance": 53, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "170386452938821": { "balance": 2657, "nickname": "", "rank": "الـمـلازم الـثـانـي", "maxInteraction": 1392, "friend": "إيروين" },
-    "225250163826809": { "balance": 535, "nickname": "", "rank": "", "maxInteraction": 164, "friend": "" },
-    "127097511100664": { "balance": 999997729, "nickname": "آلَجَيـــــــّسـي", "rank": "آلَآمِــــــــبّـــــ♕ــراطور", "maxInteraction": 99917658, "friend": "نيزوكو" },
-    "248937260818433": { "balance": 0, "nickname": "", "rank": "آلَمِــــــــلَكَ", "maxInteraction": 999999, "friend": "قرد" },
-    "29910940811361": { "balance": 999, "nickname": "", "rank": "", "maxInteraction": 421, "friend": "" },
-    "85277280329876": { "balance": 3050, "nickname": "", "rank": "آلَعــــــــمِــــــــيـــــــّد", "maxInteraction": 137, "friend": "كيلوا" },
-    "103264234291251": { "balance": 700, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "260520653361351": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "39226741625052": { "balance": 150, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "272434792026321": { "balance": 10, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "69832192045113": { "balance": 998738, "nickname": "يوريتشي", "rank": "آلَلَوُرد", "maxInteraction": 386, "friend": "" },
-    "237143012159682": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "33801895985213": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "85908724420719": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "194021607616627": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "163299673026700": { "balance": 1, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "117940506632310": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "95194192019637": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "171666286092443": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "129003956486233": { "balance": 135, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "195601786515696": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "73002230231238": { "balance": 872, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "اكسيليتور" },
-    "126087640146139": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "119705805287495": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "102667636445254": { "balance": 994941, "nickname": "ايرين", "rank": "نائب امبراطور", "maxInteraction": 31, "friend": "" },
-    "180346213630206": { "balance": 176, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "248700819476614": { "balance": 590, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "ايدا" },
-    "59937040412786": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "ليون" },
-    "37620356763893": { "balance": 300, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "50444508364933": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "254314241089717": { "balance": 400, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "167122076495986": { "balance": 2532, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "إيروين" },
-    "79534992953430": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "205566311956527": { "balance": 210, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "128381303685249": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "76755662573742": { "balance": 533, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "هيمورا" },
-    "60460422435015": { "balance": 229, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "هاروكي" },
-    "89683883258064": { "balance": 2600, "nickname": "", "rank": "حـامـــــل البــــيــࢪق", "maxInteraction": 0, "friend": "كيرا" },
-    "76730245079087": { "balance": 510, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "44238851051528": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "47455630585913": { "balance": 164, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "23988130549861": { "balance": 450, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "275703144673510": { "balance": 300, "nickname": "", "rank": "", "maxInteraction": 11, "friend": "" },
-    "69403148329086": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 275, "friend": "" },
-    "203496053805270": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 49, "friend": "" },
-    "66491126906886": { "balance": 540, "nickname": "سوهو", "rank": "", "maxInteraction": 23, "friend": "" },
-    "230623201468567": { "balance": 230, "nickname": "", "rank": "", "maxInteraction": 2, "friend": "ككاشي" },
-    "77078288453880": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 3, "friend": "" },
-    "39939538464877": { "balance": 210, "nickname": "", "rank": "", "maxInteraction": 96, "friend": "" },
-    "83503458828370": { "balance": 200, "nickname": "", "rank": "", "maxInteraction": 1, "friend": "" },
-    "124507444482192": { "balance": 792, "nickname": "", "rank": "حامل البيرق", "maxInteraction": 7, "friend": "" },
-    "170038459899950": { "balance": 200, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "124640638845116": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "196667391377484": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 6, "friend": "" },
-    "17704677306438": { "balance": 99500, "nickname": "آلَمِــــــــلَكَ", "rank": "آلَمِــــــــلَكَ", "maxInteraction": 61, "friend": "" },
-    "65962896310518": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 26, "friend": "" },
-    "8672193310829": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 118, "friend": "" },
-    "62187267743910": { "balance": 115, "nickname": "ناغي", "rank": "", "maxInteraction": 104, "friend": "ايتادوري" },
-    "180174616309835": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 57, "friend": "" },
-    "186389417218180": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 61, "friend": "" },
-    "144165560148097": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 104, "friend": "" },
-    "132422700167262": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 1, "friend": "" },
-    "267551397380275": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 2, "friend": "" },
-    "88597256519929": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 10, "friend": "" },
-    "94545752645830": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 96, "friend": "" },
-    "115758696812792": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 23, "friend": "" },
-    "277919381336187": { "balance": 200, "nickname": "", "rank": "", "maxInteraction": 1, "friend": "" },
-    "163192198152378": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "7860427685892": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "252471851118630": { "balance": 9999, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "242511754879037": { "balance": 0, "nickname": "اورتشيمارو", "rank": "", "maxInteraction": 0, "friend": "" },
-    "228544537993460": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "110612738744540": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "152076822798511": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "176510908506164": { "balance": 200, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "168866017718274": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "238255408738386": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "66804458213483": { "balance": 150, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "10978573959213": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "107885635887131": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "208787453521992": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "104226625708086": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "132817887441116": { "balance": 0, "nickname": "الناب الأبيض", "rank": "", "maxInteraction": 0, "friend": "" },
-    "5201289339089": { "balance": 1914, "nickname": "ايتادوري", "rank": "حامل الرايه", "maxInteraction": 200, "friend": "ناغي" },
-    "269660176015540": { "balance": 400, "nickname": "", "rank": "العميد", "maxInteraction": 220, "friend": "كاكاشي" },
-    "27836303843385": { "balance": 1600, "nickname": "", "rank": "حامل بيرق", "maxInteraction": 502, "friend": "" },
-    "228325310095509": { "balance": 1071, "nickname": "كلينتون", "rank": "", "maxInteraction": 169, "friend": "توموكو" },
-    "75330119311597": { "balance": 350, "nickname": "هيسوكا", "rank": "حامل الرايه", "maxInteraction": 163, "friend": "" },
-    "71614871957622": { "balance": 760, "nickname": "", "rank": "", "maxInteraction": 70, "friend": "" },
-    "25349484216519": { "balance": 200, "nickname": "زورو", "rank": "", "maxInteraction": 17, "friend": "" },
-    "281415367282718": { "balance": 683, "nickname": "", "rank": "حامل الرايه", "maxInteraction": 0, "friend": "" },
-    "91341807730726": { "balance": 3143, "nickname": "", "rank": "", "maxInteraction": 2, "friend": "" },
-    "197337104285832": { "balance": 1600, "nickname": "تانجيرو", "rank": "حامل الرايه", "maxInteraction": 149, "friend": "كيرا" },
-    "64060091580535": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "257986505240659": { "balance": 4421, "nickname": "توموكو", "rank": "حامل الرايه", "maxInteraction": 784, "friend": "كلينتون" },
-    "268659347968076": { "balance": 10, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "191148240941077": { "balance": 4006, "nickname": "ميكو", "rank": "حامل الرايه", "maxInteraction": 159, "friend": "فانغ" },
-    "188953227472918": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "6077932433485": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "12189620543589": { "balance": 200, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "12833848836164": { "balance": 76, "nickname": "", "rank": "", "maxInteraction": 904, "friend": "غبيمارو" },
-    "61912087834835": { "balance": 0, "nickname": "سيتو كايبا", "rank": "", "maxInteraction": 35, "friend": "" },
-    "202989516152919": { "balance": 4244, "nickname": "فانغ", "rank": "", "maxInteraction": 397, "friend": "ميموكو" },
-    "131469804621891": { "balance": 250, "nickname": "ايتاتشي", "rank": "", "maxInteraction": 166, "friend": "" },
-    "136790950281428": { "balance": 200, "nickname": "", "rank": "", "maxInteraction": 4, "friend": "" },
-    "108109209018554": { "balance": 200, "nickname": "لويد", "rank": "", "maxInteraction": 0, "friend": "" },
-    "216862059180229": { "balance": 538, "nickname": "اغريس", "rank": "", "maxInteraction": 46, "friend": "" },
-    "126582014357740": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "151767752945738": { "balance": 200, "nickname": "اترن", "rank": "", "maxInteraction": 0, "friend": "" },
-    "181278355775702": { "balance": 200, "nickname": "", "rank": "", "maxInteraction": 10, "friend": "" },
-    "246527599579212": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 138, "friend": "مايكي" },
-    "111910372528285": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 13, "friend": "" },
-    "34863038116008": { "balance": 9190, "nickname": "الحماية", "rank": "", "maxInteraction": 32, "friend": "" },
-    "229961893998792": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 3, "friend": "" },
-    "250560322232428": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 3, "friend": "" },
-    "18301610672370": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 25, "friend": "" },
-    "244100892754111": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "53270999519307": { "balance": 60, "nickname": "ناروتو", "rank": "", "maxInteraction": 100, "friend": "كاكاشي" },
-    "96667701362773": { "balance": 260, "nickname": "", "rank": "", "maxInteraction": 128, "friend": "آلَجَيـــــــّسـي" },
-    "114787832881247": { "balance": 100, "nickname": "عيون ميدو", "rank": "", "maxInteraction": 33, "friend": "" },
-    "88627220635828": { "balance": 0, "nickname": "نيرو", "rank": "", "maxInteraction": 1, "friend": "" },
-    "10076697935997": { "balance": 130, "nickname": "توجي", "rank": "", "maxInteraction": 31, "friend": "" },
-    "203805559922855": { "balance": 300, "nickname": "", "rank": "", "maxInteraction": 28, "friend": "" },
-    "82038975635529": { "balance": 1150, "nickname": "سوبارو", "rank": "العميد", "maxInteraction": 73, "friend": "" },
-    "135042982502527": { "balance": -200, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "32173935571092": { "balance": 210, "nickname": "رين", "rank": "", "maxInteraction": 2, "friend": "كيرا💤" },
-    "209900017819855": { "balance": 0, "nickname": "سوكونا", "rank": "", "maxInteraction": 0, "friend": "" },
-    "33814395015284": { "balance": 1100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "39969569697947": { "balance": 100, "nickname": "اوباناي", "rank": "", "maxInteraction": 0, "friend": "" },
-    "209779641299046": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "205703818043642": { "balance": 82, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "71322965151807": { "balance": 0, "nickname": "جيرايا", "rank": "", "maxInteraction": 0, "friend": "" },
-    "157909371646134": { "balance": 100, "nickname": "تودوروكي", "rank": "", "maxInteraction": 0, "friend": "" },
-    "1830293659829": { "balance": 655, "nickname": "غون", "rank": "", "maxInteraction": 0, "friend": "" },
-    "223115648958529": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "185813723791537": { "balance": 100, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "254348818939953": { "balance": 1283, "nickname": "نوبارا", "rank": "", "maxInteraction": 0, "friend": "" },
-    "159318305411250": { "balance": 0, "nickname": "", "rank": "", "maxInteraction": 0, "friend": "" },
-    "249005661548740": { "balance": 300, "nickname": "تنغن", "rank": "", "maxInteraction": 0, "friend": "" },
-    "68071507132439": { "balance": 900, "nickname": "ايتاشي", "rank": "", "maxInteraction": 0, "friend": "" },
-    "93188509417677": { "balance": 100, "nickname": "بوروتو", "rank": "", "maxInteraction": 0, "friend": "" },
-    "170966206394552": { "balance": 0, "nickname": "لوفي", "rank": "", "maxInteraction": 0, "friend": "" },
-    "187415662690523": { "balance": 594, "nickname": "كويوكي", "rank": "", "maxInteraction": 0, "friend": "" }
+    "93527811833871": {
+      "balance": 372,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": "ايتاتشي"
+    },
+    "1954763767962": {
+      "balance": 4375,
+      "nickname": "",
+      "rank": "آلأدمـــيــــّرال",
+      "maxInteraction": 151,
+      "friend": ""
+    },
+    "124468773036057": {
+      "balance": 50,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "81497742643328": {
+      "balance": 200,
+      "nickname": "",
+      "rank": "آلمـلآزم آلثآنيـﮯ",
+      "maxInteraction": 698,
+      "friend": ""
+    },
+    "138195471728731": {
+      "balance": 999999999899,
+      "nickname": "",
+      "rank": "آلَآمِـــــبّــ@♛ـــراطور",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "152665149419590": {
+      "balance": 255,
+      "nickname": "",
+      "rank": "الــــجــــنــــࢪال",
+      "maxInteraction": 1047,
+      "friend": "روبي"
+    },
+    "110591767273686": {
+      "balance": 29196,
+      "nickname": "إيروين",
+      "rank": "آلَمِـــــًسًــــتــــشـــــآر",
+      "maxInteraction": 306,
+      "friend": "ميليوداس"
+    },
+    "185225481064568": {
+      "balance": 3341,
+      "nickname": "فايوليت",
+      "rank": "",
+      "maxInteraction": 210,
+      "friend": ""
+    },
+    "137851857572050": {
+      "balance": 1400,
+      "nickname": "ناروتو",
+      "rank": "الجنرال",
+      "maxInteraction": 437,
+      "friend": ""
+    },
+    "160284270424266": {
+      "balance": 430,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 34,
+      "friend": ""
+    },
+    "173969881694378": {
+      "balance": 30,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 362,
+      "friend": "ساكورا"
+    },
+    "155689074827319": {
+      "balance": 300,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "42366245314800": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "الــــجــــنــــرال",
+      "maxInteraction": 755,
+      "friend": "كيرا"
+    },
+    "204475474120734": {
+      "balance": 0,
+      "nickname": "شيسوي",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "55358420738155": {
+      "balance": 580,
+      "nickname": "ثورفين",
+      "rank": "",
+      "maxInteraction": 94,
+      "friend": ""
+    },
+    "148022474322076": {
+      "balance": 0,
+      "nickname": "ايرين",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "15926208499811": {
+      "balance": 0,
+      "nickname": "مادارا",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "180354954567746": {
+      "balance": 0,
+      "nickname": "ساي",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "106288377790512": {
+      "balance": 0,
+      "nickname": "ثراغ",
+      "rank": "",
+      "maxInteraction": 18,
+      "friend": ""
+    },
+    "215638194794703": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "200000269209688": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "154499251454159": {
+      "balance": 200,
+      "nickname": "فيدل",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": "جوهان"
+    },
+    "4046630957135": {
+      "balance": 2660,
+      "nickname": "جوهان",
+      "rank": "آلَمِـــــلَآزمِ آلَثًــــآنــــٌي",
+      "maxInteraction": 1642,
+      "friend": "فيدل"
+    },
+    "9496877355053": {
+      "balance": 86,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "249211215937596": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "50535071793351": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "126577316757545": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "105158717481064": {
+      "balance": 0,
+      "nickname": "غابيمارو",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "117583403593752": {
+      "balance": 520,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "45514288529589": {
+      "balance": 8630,
+      "nickname": "غوير",
+      "rank": "آلَمِـــــلَآزمِ آلَثًــــآنــــــٌي",
+      "maxInteraction": 90,
+      "friend": "سونغ"
+    },
+    "6447081459892": {
+      "balance": 1419,
+      "nickname": "",
+      "rank": "آلَمِـــــلَآزمِ آلَثًـــآنــــٌي",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "135215032877087": {
+      "balance": 1544,
+      "nickname": "كيرا",
+      "rank": "أدمِــــيــــّرال",
+      "maxInteraction": 911,
+      "friend": "هوتارو"
+    },
+    "94601906008064": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "280577831886948": {
+      "balance": 70,
+      "nickname": "",
+      "rank": "المِـــــلَآزمِه الثًــــآنـــــٌيه",
+      "maxInteraction": 193,
+      "friend": "اكسيليتور"
+    },
+    "82317980749931": {
+      "balance": 53,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "170386452938821": {
+      "balance": 5110,
+      "nickname": "كيلوا",
+      "rank": "الـمـلازم الـثـانـي",
+      "maxInteraction": 1392,
+      "friend": "إيروين"
+    },
+    "225250163826809": {
+      "balance": 535,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 164,
+      "friend": ""
+    },
+    "127097511100664": {
+      "balance": 1000000986,
+      "nickname": "آلَجَيـــــــًسًـــ亗ـــــي",
+      "rank": "آلَآمِــــبّـــــ♕ــراطور",
+      "maxInteraction": 99917658,
+      "friend": "مجعص"
+    },
+    "248937260818433": {
+      "balance": 1001750,
+      "nickname": "",
+      "rank": "آلَمِــــلَكَ",
+      "maxInteraction": 9999999999,
+      "friend": "قرد"
+    },
+    "29910940811361": {
+      "balance": 1089,
+      "nickname": "إل",
+      "rank": "",
+      "maxInteraction": 421,
+      "friend": ""
+    },
+    "85277280329876": {
+      "balance": 1770,
+      "nickname": "",
+      "rank": "العــمــــيــد",
+      "maxInteraction": 0,
+      "friend": "غوكو"
+    },
+    "103264234291251": {
+      "balance": 700,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "260520653361351": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "39226741625052": {
+      "balance": 0,
+      "nickname": "غوجو",
+      "rank": "",
+      "maxInteraction": 102,
+      "friend": ""
+    },
+    "272434792026321": {
+      "balance": 10,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "69832192045113": {
+      "balance": 10431,
+      "nickname": "يوريتشي",
+      "rank": "",
+      "maxInteraction": 10,
+      "friend": ""
+    },
+    "237143012159682": {
+      "balance": 100,
+      "nickname": "ميلودس",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "33801895985213": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "85908724420719": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "194021607616627": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "163299673026700": {
+      "balance": 1,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "117940506632310": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "95194192019637": {
+      "balance": 0,
+      "nickname": "ايمو",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "171666286092443": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "129003956486233": {
+      "balance": 135,
+      "nickname": "ريوزاكي",
+      "rank": "",
+      "maxInteraction": 15,
+      "friend": ""
+    },
+    "195601786515696": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "73002230231238": {
+      "balance": 872,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": "اكسيليتور"
+    },
+    "126087640146139": {
+      "balance": 100,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "119705805287495": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "102667636445254": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 31,
+      "friend": ""
+    },
+    "180346213630206": {
+      "balance": 4998,
+      "nickname": "مومو",
+      "rank": "",
+      "maxInteraction": 34,
+      "friend": ""
+    },
+    "248700819476614": {
+      "balance": 590,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": "ايدا"
+    },
+    "59937040412786": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": "ليون"
+    },
+    "37620356763893": {
+      "balance": 300,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "50444508364933": {
+      "balance": 232,
+      "nickname": "ميليوداس",
+      "rank": "",
+      "maxInteraction": 75,
+      "friend": "إيروين"
+    },
+    "254314241089717": {
+      "balance": 400,
+      "nickname": "رينتارو",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "167122076495986": {
+      "balance": 4900,
+      "nickname": "",
+      "rank": "حـامـل الـبـيـرق 🛡️",
+      "maxInteraction": 501,
+      "friend": "إيروين"
+    },
+    "79534992953430": {
+      "balance": 100,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "205566311956527": {
+      "balance": 210,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 1,
+      "friend": ""
+    },
+    "128381303685249": {
+      "balance": 100,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "76755662573742": {
+      "balance": 5500,
+      "nickname": "",
+      "rank": "حـامـل الـرايـة",
+      "maxInteraction": 360,
+      "friend": "هيمورا"
+    },
+    "60460422435015": {
+      "balance": 5640,
+      "nickname": "",
+      "rank": "حــــامله بــيــــرق",
+      "maxInteraction": 360,
+      "friend": "هاروكي"
+    },
+    "89683883258064": {
+      "balance": 312,
+      "nickname": "",
+      "rank": "حـامــــل البــــيــࢪق",
+      "maxInteraction": 136,
+      "friend": "كيرا"
+    },
+    "76730245079087": {
+      "balance": 510,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "44238851051528": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "47455630585913": {
+      "balance": 414,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "23988130549861": {
+      "balance": 450,
+      "nickname": "ميسا",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "275703144673510": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "66091795664976": {
+      "balance": 0,
+      "nickname": "ساسكي",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "211875836993650": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "1336405979283": {
+      "balance": 35,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "67285528084583": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "208066100355102": {
+      "balance": 328,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "26230086734016": {
+      "balance": 9792,
+      "nickname": "تيا",
+      "rank": "",
+      "maxInteraction": 325,
+      "friend": ""
+    },
+    "35889115885583": {
+      "balance": 1500,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "81138190180522": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "17704677306438": {
+      "balance": 19997135,
+      "nickname": "",
+      "rank": "آلَمِــــلَكَ",
+      "maxInteraction": 39000000,
+      "friend": ""
+    },
+    "152849883373672": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 19,
+      "friend": ""
+    },
+    "162483646009372": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "233445078892552": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 8,
+      "friend": ""
+    },
+    "24284080685113": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 4,
+      "friend": ""
+    },
+    "126582014357740": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "241794361069634": {
+      "balance": 0,
+      "nickname": "يوهابخ",
+      "rank": "",
+      "maxInteraction": 3,
+      "friend": ""
+    },
+    "39935075709000": {
+      "balance": 508,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 194,
+      "friend": ""
+    },
+    "10076697935997": {
+      "balance": 1541,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 196,
+      "friend": ""
+    },
+    "137903430754335": {
+      "balance": 210,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 112,
+      "friend": ""
+    },
+    "32032621121751": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 10,
+      "friend": ""
+    },
+    "26573583433833": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 1,
+      "friend": ""
+    },
+    "94545752645830": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 21,
+      "friend": ""
+    },
+    "120363414055337881": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 4,
+      "friend": ""
+    },
+    "203144101376178": {
+      "balance": 7000,
+      "nickname": "",
+      "rank": "تُـــشــــيــبّــــوُكاي",
+      "maxInteraction": 326,
+      "friend": "هاروكي"
+    },
+    "65962896310518": {
+      "balance": 9999999552,
+      "nickname": "",
+      "rank": "『الملك شين』",
+      "maxInteraction": 159,
+      "friend": ""
+    },
+    "230605535064263": {
+      "balance": 1139,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 114,
+      "friend": ""
+    },
+    "236885314166931": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 38,
+      "friend": ""
+    },
+    "153172089774297": {
+      "balance": 80,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 63,
+      "friend": ""
+    },
+    "173199505498130": {
+      "balance": 0,
+      "nickname": "القائد سميث",
+      "rank": "آلَمِــــآركيز",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "92888012746909": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "229661279825920": {
+      "balance": 0,
+      "nickname": "داي",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "244100892754111": {
+      "balance": 5071,
+      "nickname": "ميغومي",
+      "rank": "حامل راية",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "271550079082606": {
+      "balance": 735,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "34863038116008": {
+      "balance": 200,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "231357791907855": {
+      "balance": 0,
+      "nickname": "☘️◆━─⊱𝑩𝑶𝑻⊰─━◆☘️⁩",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "229961893998792": {
+      "balance": 1030,
+      "nickname": "سونغ",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "5201289339089": {
+      "balance": 0,
+      "nickname": "",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "90022917202133": {
+      "balance": 210,
+      "nickname": "تينغن",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    },
+    "140029154300093": {
+      "balance": 200,
+      "nickname": "غوكو",
+      "rank": "",
+      "maxInteraction": 0,
+      "friend": ""
+    }
   },
   "admins": {},
   "permissions": {
-    "1": ["138195471728731","248937260818433","135215032877087","127097511100664","110591767273686","1954763767962","17704677306438","94545752645830","269660176015540","69832192045113","102667636445254"],
-    "2": ["135215032877087","110591767273686","152665149419590","248937260818433","1954763767962","138195471728731","127097511100664","81497742643328","85277280329876","137851857572050","117583403593752","17704677306438","8672193310829","94545752645830","269660176015540","69832192045113","102667636445254","5201289339089"],
-    "3": ["138195471728731","110591767273686","127097511100664","17704677306438","94545752645830","81497742643328","1954763767962","269660176015540","69832192045113","102667636445254"],
-    "4": ["135215032877087","138195471728731","110591767273686","248937260818433","127097511100664","17704677306438","94545752645830","81497742643328","1954763767962","69832192045113","269660176015540","102667636445254"],
-    "5": ["102667636445254"]
+    "1": [
+      "138195471728731",
+      "248937260818433",
+      "135215032877087",
+      "127097511100664",
+      "110591767273686",
+      "17704677306438",
+      "1954763767962",
+      "173199505498130"
+    ],
+    "2": [
+      "135215032877087",
+      "110591767273686",
+      "152665149419590",
+      "248937260818433",
+      "1954763767962",
+      "138195471728731",
+      "127097511100664",
+      "81497742643328",
+      "85277280329876",
+      "137851857572050",
+      "117583403593752",
+      "4046630957135",
+      "17704677306438",
+      "173199505498130",
+      "244100892754111"
+    ],
+    "3": [
+      "138195471728731",
+      "110591767273686",
+      "127097511100664",
+      "17704677306438",
+      "1954763767962",
+      "173199505498130"
+    ],
+    "4": [
+      "135215032877087",
+      "138195471728731",
+      "110591767273686",
+      "248937260818433",
+      "127097511100664",
+      "17704677306438",
+      "1954763767962",
+      "173199505498130"
+    ],
+    "5": []
   },
-  "gamePermissions": ["138195471728731","170386452938821","4046630957135","110591767273686","81497742643328","42366245314800","45514288529589","85277280329876","173969881694378","137851857572050","135215032877087","17704677306438","94545752645830","127097511100664","1954763767962","69832192045113","102667636445254"],
+  "gamePermissions": [
+    "138195471728731",
+    "1954763767962",
+    "127097511100664",
+    "170386452938821",
+    "4046630957135",
+    "110591767273686",
+    "81497742643328",
+    "42366245314800",
+    "45514288529589",
+    "85277280329876",
+    "173969881694378",
+    "137851857572050",
+    "135215032877087",
+    "17704677306438",
+    "173199505498130"
+  ],
   "gameCooldown": {
-    "120363414055337881@g.us": 1789182394686,
-    "120363429453389753@g.us": 1789507775948,
-    "120363429233086206@g.us": 1789991251170,
-    "120363428503543158@g.us": 1789554130835,
-    "120363412416383659@g.us": 1791126269343
+    "120363414055337881@g.us": 1790771734861,
+    "120363428503543158@g.us": 1789554130814
   },
   "monitoredUsers": {
-    "120363429233086206@g.us": ["127097511100664","135215032877087","17704677306438"]
+    "120363414055337881@g.us": [
+      "248937260818433",
+      "127097511100664",
+      "110591767273686"
+    ]
   },
   "dailyData": {
-    "152665149419590": {"day":9,"lastClaim":1789025763788},
-    "110591767273686": {"day":11,"lastClaim":1790971272688},
-    "135215032877087": {"day":14,"lastClaim":1791023766753},
-    "93527811833871": {"day":1,"lastClaim":1788669951607},
-    "117583403593752": {"day":3,"lastClaim":1789149551225},
-    "45514288529589": {"day":10,"lastClaim":1789132467648},
-    "6447081459892": {"day":1,"lastClaim":1788688136947},
-    "42366245314800": {"day":5,"lastClaim":1789140469426},
-    "1954763767962": {"day":11,"lastClaim":1791025940403},
-    "170386452938821": {"day":4,"lastClaim":1789132795381},
-    "4046630957135": {"day":3,"lastClaim":1789142562890},
-    "127097511100664": {"day":2,"lastClaim":1789029627277},
-    "137851857572050": {"day":4,"lastClaim":1789140480387},
-    "81497742643328": {"day":2,"lastClaim":1789072458824},
-    "85277280329876": {"day":5,"lastClaim":1789805448239},
-    "272434792026321": {"day":1,"lastClaim":1788956436118},
-    "69832192045113": {"day":2,"lastClaim":1790458880034},
-    "39226741625052": {"day":2,"lastClaim":1789037554284},
-    "180346213630206": {"day":1,"lastClaim":1788992304422},
-    "29910940811361": {"day":2,"lastClaim":1789071189541},
-    "73002230231238": {"day":1,"lastClaim":1789025793970},
-    "173969881694378": {"day":12,"lastClaim":1791100998503},
-    "102667636445254": {"day":4,"lastClaim":1791030095730},
-    "205566311956527": {"day":1,"lastClaim":1789072438530},
-    "89683883258064": {"day":2,"lastClaim":1789180493666},
-    "60460422435015": {"day":1,"lastClaim":1789132560411},
-    "47455630585913": {"day":1,"lastClaim":1789180532290},
-    "230623201468567": {"day":2,"lastClaim":1789802106648},
-    "39939538464877": {"day":1,"lastClaim":1789671001722},
-    "115758696812792": {"day":3,"lastClaim":1790431081179},
-    "66491126906886": {"day":7,"lastClaim":1791124956372},
-    "17704677306438": {"day":1,"lastClaim":1789991433472},
-    "124507444482192": {"day":1,"lastClaim":1789992122514},
-    "269660176015540": {"day":5,"lastClaim":1790839392131},
-    "27836303843385": {"day":8,"lastClaim":1791018552492},
-    "75330119311597": {"day":2,"lastClaim":1791030143391},
-    "281415367282718": {"day":2,"lastClaim":1790479410226},
-    "71614871957622": {"day":6,"lastClaim":1790964022153},
-    "10978573959213": {"day":1,"lastClaim":1790434842926},
-    "91341807730726": {"day":2,"lastClaim":1790615784790},
-    "5201289339089": {"day":8,"lastClaim":1791098097070},
-    "228325310095509": {"day":10,"lastClaim":1791097973076},
-    "6077932433485": {"day":2,"lastClaim":1790502677536},
-    "268659347968076": {"day":1,"lastClaim":1790458831120},
-    "191148240941077": {"day":9,"lastClaim":1791108398185},
-    "197337104285832": {"day":5,"lastClaim":1790803947297},
-    "12833848836164": {"day":4,"lastClaim":1790695700395},
-    "257986505240659": {"day":9,"lastClaim":1791097684825},
-    "202989516152919": {"day":8,"lastClaim":1791070720986},
-    "61912087834835": {"day":8,"lastClaim":1791105379452},
-    "246527599579212": {"day":2,"lastClaim":1790811021636},
-    "216862059180229": {"day":3,"lastClaim":1791124878505},
-    "82038975635529": {"day":3,"lastClaim":1791050930212},
-    "131469804621891": {"day":4,"lastClaim":1791116949855},
-    "32173935571092": {"day":1,"lastClaim":1790965281764},
-    "203805559922855": {"day":1,"lastClaim":1790966662698},
-    "96667701362773": {"day":1,"lastClaim":1791013135152},
-    "33814395015284": {"day":1,"lastClaim":1791030144600},
-    "205703818043642": {"day":2,"lastClaim":1791090676951},
-    "209900017819855": {"day":2,"lastClaim":1791108403086},
-    "1830293659829": {"day":1,"lastClaim":1791103577292},
-    "254348818939953": {"day":1,"lastClaim":1791103585446},
-    "187415662690523": {"day":1,"lastClaim":1791124939209}
+    "152665149419590": {
+      "day": 23,
+      "lastClaim": 1790229984861
+    },
+    "110591767273686": {
+      "day": 18,
+      "lastClaim": 1790753450901
+    },
+    "135215032877087": {
+      "day": 11,
+      "lastClaim": 1789395290448
+    },
+    "93527811833871": {
+      "day": 1,
+      "lastClaim": 1788669951607
+    },
+    "117583403593752": {
+      "day": 4,
+      "lastClaim": 1789221283372
+    },
+    "45514288529589": {
+      "day": 4,
+      "lastClaim": 1790852713608
+    },
+    "6447081459892": {
+      "day": 1,
+      "lastClaim": 1788688136947
+    },
+    "42366245314800": {
+      "day": 7,
+      "lastClaim": 1789307101104
+    },
+    "1954763767962": {
+      "day": 3,
+      "lastClaim": 1789668894892
+    },
+    "170386452938821": {
+      "day": 11,
+      "lastClaim": 1790881942058
+    },
+    "4046630957135": {
+      "day": 22,
+      "lastClaim": 1790858511272
+    },
+    "127097511100664": {
+      "day": 5,
+      "lastClaim": 1790203995065
+    },
+    "137851857572050": {
+      "day": 11,
+      "lastClaim": 1789655535259
+    },
+    "81497742643328": {
+      "day": 2,
+      "lastClaim": 1789072458824
+    },
+    "85277280329876": {
+      "day": 8,
+      "lastClaim": 1789382983249
+    },
+    "272434792026321": {
+      "day": 1,
+      "lastClaim": 1788956436118
+    },
+    "69832192045113": {
+      "day": 2,
+      "lastClaim": 1789950687686
+    },
+    "39226741625052": {
+      "day": 8,
+      "lastClaim": 1790356262528
+    },
+    "180346213630206": {
+      "day": 12,
+      "lastClaim": 1790878821889
+    },
+    "29910940811361": {
+      "day": 3,
+      "lastClaim": 1789206877138
+    },
+    "73002230231238": {
+      "day": 1,
+      "lastClaim": 1789025793970
+    },
+    "173969881694378": {
+      "day": 10,
+      "lastClaim": 1789735531058
+    },
+    "102667636445254": {
+      "day": 1,
+      "lastClaim": 1789059887291
+    },
+    "205566311956527": {
+      "day": 1,
+      "lastClaim": 1789072438530
+    },
+    "89683883258064": {
+      "day": 10,
+      "lastClaim": 1790023012374
+    },
+    "60460422435015": {
+      "day": 7,
+      "lastClaim": 1789731511603
+    },
+    "47455630585913": {
+      "day": 1,
+      "lastClaim": 1789180532290
+    },
+    "167122076495986": {
+      "day": 19,
+      "lastClaim": 1790423987839
+    },
+    "76755662573742": {
+      "day": 16,
+      "lastClaim": 1790482316208
+    },
+    "1336405979283": {
+      "day": 1,
+      "lastClaim": 1789216392051
+    },
+    "185225481064568": {
+      "day": 6,
+      "lastClaim": 1790456130685
+    },
+    "26230086734016": {
+      "day": 9,
+      "lastClaim": 1790744942843
+    },
+    "50444508364933": {
+      "day": 13,
+      "lastClaim": 1790431223595
+    },
+    "280577831886948": {
+      "day": 9,
+      "lastClaim": 1790157631303
+    },
+    "17704677306438": {
+      "day": 1,
+      "lastClaim": 1789576667972
+    },
+    "39935075709000": {
+      "day": 3,
+      "lastClaim": 1789905081776
+    },
+    "230605535064263": {
+      "day": 1,
+      "lastClaim": 1789851652878
+    },
+    "203144101376178": {
+      "day": 1,
+      "lastClaim": 1789915725644
+    },
+    "137903430754335": {
+      "day": 8,
+      "lastClaim": 1790494772502
+    },
+    "244100892754111": {
+      "day": 4,
+      "lastClaim": 1790859939340
+    },
+    "90022917202133": {
+      "day": 1,
+      "lastClaim": 1790788219523
+    }
   },
   "dailyCooldown": {
-    "152665149419590": 1789025763788,
+    "152665149419590": 1790229984861,
     "93527811833871": 1788669951607,
-    "117583403593752": 1789149551225,
-    "135215032877087": 1791023766753,
-    "45514288529589": 1789132467648,
+    "117583403593752": 1789221283372,
+    "135215032877087": 1789395290448,
+    "45514288529589": 1790852713608,
     "6447081459892": 1788688136947,
-    "42366245314800": 1789140469426,
-    "1954763767962": 1791025940403,
-    "170386452938821": 1789132795381,
-    "4046630957135": 1789142562890,
-    "127097511100664": 1789029627277,
-    "137851857572050": 1789140480387,
+    "42366245314800": 1789307101104,
+    "1954763767962": 1789668894892,
+    "170386452938821": 1790881942058,
+    "4046630957135": 1790858511272,
+    "127097511100664": 1790203995065,
+    "137851857572050": 1789655535259,
     "81497742643328": 1789072458824,
-    "85277280329876": 1789805448239,
+    "85277280329876": 1789382983249,
     "272434792026321": 1788956436118,
-    "110591767273686": 1790971272688,
-    "69832192045113": 1790458880034,
-    "39226741625052": 1789037554284,
-    "180346213630206": 1788992304422,
-    "29910940811361": 1789071189541,
+    "110591767273686": 1790753450901,
+    "69832192045113": 1789950687686,
+    "39226741625052": 1790356262528,
+    "180346213630206": 1790878821889,
+    "29910940811361": 1789206877138,
     "73002230231238": 1789025793970,
-    "173969881694378": 1791100998503,
-    "102667636445254": 1791030095730,
+    "173969881694378": 1789735531058,
+    "102667636445254": 1789059887291,
     "205566311956527": 1789072438530,
-    "89683883258064": 1789180493666,
-    "60460422435015": 1789132560411,
+    "89683883258064": 1790023012374,
+    "60460422435015": 1789731511603,
     "47455630585913": 1789180532290,
-    "230623201468567": 1789802106648,
-    "39939538464877": 1789671001722,
-    "115758696812792": 1790431081179,
-    "66491126906886": 1791124956372,
-    "17704677306438": 1789991433472,
-    "124507444482192": 1789992122514,
-    "269660176015540": 1790839392131,
-    "27836303843385": 1791018552492,
-    "75330119311597": 1791030143391,
-    "281415367282718": 1790479410226,
-    "71614871957622": 1790964022153,
-    "10978573959213": 1790434842926,
-    "91341807730726": 1790615784790,
-    "5201289339089": 1791098097070,
-    "228325310095509": 1791097973076,
-    "6077932433485": 1790502677536,
-    "268659347968076": 1790458831120,
-    "191148240941077": 1791108398185,
-    "197337104285832": 1790803947297,
-    "12833848836164": 1790695700395,
-    "257986505240659": 1791097684825,
-    "202989516152919": 1791070720986,
-    "61912087834835": 1791105379452,
-    "246527599579212": 1790811021636,
-    "216862059180229": 1791124878505,
-    "82038975635529": 1791050930212,
-    "131469804621891": 1791116949855,
-    "32173935571092": 1790965281764,
-    "203805559922855": 1790966662698,
-    "96667701362773": 1791013135152,
-    "33814395015284": 1791030144600,
-    "205703818043642": 1791090676951,
-    "209900017819855": 1791108403086,
-    "1830293659829": 1791103577292,
-    "254348818939953": 1791103585446,
-    "187415662690523": 1791124939209
+    "167122076495986": 1790423987839,
+    "76755662573742": 1790482316208,
+    "1336405979283": 1789216392051,
+    "185225481064568": 1790456130685,
+    "26230086734016": 1790744942843,
+    "50444508364933": 1790431223595,
+    "280577831886948": 1790157631303,
+    "17704677306438": 1789576667972,
+    "39935075709000": 1789905081776,
+    "230605535064263": 1789851652878,
+    "203144101376178": 1789915725644,
+    "137903430754335": 1790494772502,
+    "244100892754111": 1790859939340,
+    "90022917202133": 1790788219523
   },
   "chainPermissions": [],
   "rouletteCooldown": {
-    "120363414055337881@g.us": 1789185685243,
-    "120363429233086206@g.us": 1789995810917,
-    "120363412416383659@g.us": 1791072514552
+    "120363414055337881@g.us": 1790434642020
   },
   "crystalCooldown": {
-    "120363414055337881@g.us": 1789186396074,
-    "120363429233086206@g.us": 1789997671054,
-    "120363429307505498@g.us": 1789805468638,
-    "120363428781928659@g.us": 1790204019274,
-    "120363412416383659@g.us": 1791126529498,
-    "120363430725714297@g.us": 1791120074542
+    "120363414055337881@g.us": 1790880114939,
+    "120363428503543158@g.us": 1789249302167,
+    "120363428795355362@g.us": 1789390942990,
+    "120363428430538684@g.us": 1790494266032
   },
   "crystalPlayerCooldown": {
     "93527811833871": 1788672865658,
-    "135215032877087": 1791047058213,
+    "135215032877087": 1789418786451,
     "6447081459892": 1788692194767,
-    "152665149419590": 1789152072173,
-    "45514288529589": 1789147319076,
+    "152665149419590": 1790267603189,
+    "45514288529589": 1790852726807,
     "9496877355053": 1788692720350,
-    "42366245314800": 1789165872932,
-    "1954763767962": 1791061468799,
-    "110591767273686": 1791030436342,
-    "81497742643328": 1789816978295,
-    "170386452938821": 1789162706506,
+    "42366245314800": 1789308078504,
+    "1954763767962": 1789668839327,
+    "110591767273686": 1790755395959,
+    "81497742643328": 1789162619460,
+    "170386452938821": 1790859024204,
     "225250163826809": 1788958489304,
-    "4046630957135": 1789141901105,
-    "85277280329876": 1789835412319,
-    "137851857572050": 1789146709562,
+    "4046630957135": 1790423524181,
+    "85277280329876": 1789385444467,
+    "137851857572050": 1789668959069,
     "82317980749931": 1788955896118,
-    "117583403593752": 1789150198939,
+    "117583403593752": 1789221289514,
     "163299673026700": 1789058522135,
-    "127097511100664": 1790204019274,
-    "39226741625052": 1789165952445,
-    "280577831886948": 1788979453677,
+    "127097511100664": 1790789060716,
+    "39226741625052": 1790447585908,
+    "280577831886948": 1789899633137,
     "73002230231238": 1789026551469,
-    "102667636445254": 1791032365876,
-    "167122076495986": 1789162739925,
-    "60460422435015": 1789164855534,
-    "89683883258064": 1789186353325,
-    "248937260818433": 1789147806385,
-    "29910940811361": 1789160431010,
-    "76755662573742": 1789166817830,
-    "47455630585913": 1789186396074,
-    "39939538464877": 1789670855346,
-    "66491126906886": 1791124901605,
-    "115758696812792": 1790434474028,
-    "17704677306438": 1791122940409,
-    "124507444482192": 1790974395566,
-    "10978573959213": 1790455041759,
-    "269660176015540": 1790891575939,
-    "5201289339089": 1791120074542,
-    "69832192045113": 1790424488150,
-    "27836303843385": 1791047824386,
-    "75330119311597": 1791111520454,
-    "71614871957622": 1790904268436,
-    "281415367282718": 1790512404501,
-    "91341807730726": 1790651027622,
-    "62187267743910": 1791038462873,
-    "197337104285832": 1791072532827,
-    "257986505240659": 1791125827800,
-    "191148240941077": 1791122648392,
-    "228325310095509": 1791118629808,
-    "6077932433485": 1790504312064,
-    "12833848836164": 1790696949046,
-    "61912087834835": 1791122259559,
-    "131469804621891": 1791125783631,
-    "202989516152919": 1791125940075,
-    "216862059180229": 1791124937127,
-    "246527599579212": 1790811107034,
-    "53270999519307": 1790783047137,
-    "173969881694378": 1791125739577,
-    "10076697935997": 1790887168519,
-    "82038975635529": 1791126494683,
-    "33814395015284": 1791036195782,
-    "203805559922855": 1791032408064,
-    "205703818043642": 1791096250734,
-    "254348818939953": 1791120425821,
-    "1830293659829": 1791126139676,
-    "209900017819855": 1791108831980,
-    "249005661548740": 1791110915909,
-    "187415662690523": 1791126529498,
-    "68071507132439": 1791126221259
+    "102667636445254": 1789063611557,
+    "167122076495986": 1790429723240,
+    "60460422435015": 1789762875789,
+    "89683883258064": 1790045680567,
+    "248937260818433": 1789249534977,
+    "29910940811361": 1789233866641,
+    "76755662573742": 1790513887131,
+    "47455630585913": 1789665890617,
+    "69832192045113": 1789530524508,
+    "1336405979283": 1789219378162,
+    "208066100355102": 1789245493525,
+    "50444508364933": 1790442990261,
+    "180346213630206": 1790880114939,
+    "17704677306438": 1789579375031,
+    "39935075709000": 1789932879782,
+    "10076697935997": 1789609414245,
+    "173969881694378": 1789735542920,
+    "160284270424266": 1790459115435,
+    "203144101376178": 1789929648965,
+    "65962896310518": 1789931783963,
+    "230605535064263": 1789855417361,
+    "55358420738155": 1790779625094,
+    "26230086734016": 1790744875833,
+    "137903430754335": 1790494832717,
+    "185225481064568": 1790117017868,
+    "153172089774297": 1790188450999,
+    "106288377790512": 1790232654073,
+    "173199505498130": 1790300454894,
+    "244100892754111": 1790877298348,
+    "271550079082606": 1790435171674,
+    "229961893998792": 1790767493981
   },
   "pendingSend": {},
   "mazadCreator": "127097511100664",
   "inventory": {
     "135215032877087": [
-      { "emoji": "🔪", "name": "سكين أثري", "description": "أداة قديمة ذات مقبض مزخرف، ويُعتقد أنها كانت من أدوات مطبخ قصر قديم.", "acquiredAt": 1788967972294 }
-    ],
-    "75330119311597": [
-      { "emoji": "🧰", "name": "صندوق أثري", "description": "صندوق خشبي صغير مزود بأجزاء معدنية، ويُعتقد أنه كان لحفظ أدوات ثمينة.", "acquiredAt": 1790433440357 }
+      {
+        "emoji": "🔪",
+        "name": "سكين أثري",
+        "description": "أداة قديمة ذات مقبض مزخرف، ويُعتقد أنها كانت من أدوات مطبخ قصر قديم.",
+        "acquiredAt": 1788967972294
+      }
     ]
   },
   "userPhotos": {
-    "110591767273686": { "nickname": "ايروين", "filePath": "/app/user_photos/110591767273686_1789513314618.jpg", "filename": "110591767273686_1789513314618.jpg", "fileLength": 73230, "fileSha256": "136,134,198,55,34,109,135,169,126,149,119,24,19,110,120,231,82,226,128,74,99,41,218,75,132,214,248,238,23,204,97,9", "mimetype": "image/jpeg", "savedAt": 1789513314618, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "203496053805270": { "nickname": "أرثر", "filePath": "/app/user_photos/203496053805270_1789585215612.jpg", "filename": "203496053805270_1789585215612.jpg", "fileLength": 63844, "fileSha256": "82,110,86,136,15,13,201,50,88,8,228,54,125,162,0,232,119,2,224,223,32,207,204,22,123,246,96,119,121,40,239,184", "mimetype": "image/jpeg", "savedAt": 1789585215613, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "66491126906886": { "nickname": "سوهو", "filePath": "/app/user_photos/66491126906886_1789598043912.jpg", "filename": "66491126906886_1789598043912.jpg", "fileLength": 102261, "fileSha256": "20,155,191,244,97,106,207,42,42,188,4,5,103,32,42,15,145,32,179,120,255,112,160,187,31,58,47,173,228,27,147,238", "mimetype": "image/jpeg", "savedAt": 1789598043912, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "230623201468567": { "nickname": "سوما", "filePath": "/app/user_photos/230623201468567_1789635526299.jpg", "filename": "230623201468567_1789635526299.jpg", "fileLength": 34024, "fileSha256": "184,180,145,146,136,129,213,249,55,221,74,202,111,128,235,47,34,125,3,109,169,98,46,79,227,12,87,225,52,234,38,82", "mimetype": "image/jpeg", "savedAt": 1789635526299, "savedBy": "110591767273686", "chatId": "120363429307505498@g.us" },
-    "77078288453880": { "nickname": "كيرا", "filePath": "/app/user_photos/77078288453880_1789635986870.jpg", "filename": "77078288453880_1789635986870.jpg", "fileLength": 9048, "fileSha256": "13,111,130,58,156,138,169,56,230,114,250,83,172,162,29,185,17,104,17,191,2,73,140,81,175,44,169,240,209,244,95,21", "mimetype": "image/jpeg", "savedAt": 1789635986870, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "83503458828370": { "nickname": "الريكس", "filePath": "/app/user_photos/83503458828370_1789637911700.jpg", "filename": "83503458828370_1789637911700.jpg", "fileLength": 50039, "fileSha256": "176,150,163,232,90,83,54,90,129,29,48,50,99,80,226,49,127,204,100,88,146,50,125,145,253,247,165,248,245,83,30,133", "mimetype": "image/jpeg", "savedAt": 1789637911700, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "124507444482192": { "nickname": "زينتسو", "filePath": "/app/user_photos/124507444482192_1789640096471.jpg", "filename": "124507444482192_1789640096471.jpg", "fileLength": 61061, "fileSha256": "13,132,77,117,225,7,248,71,112,92,188,104,114,157,71,125,39,85,253,32,93,3,133,2,7,195,29,150,54,207,9,21", "mimetype": "image/jpeg", "savedAt": 1789640096471, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "170038459899950": { "nickname": "لوكي", "filePath": "/app/user_photos/170038459899950_1789640950186.jpg", "filename": "170038459899950_1789640950186.jpg", "fileLength": 102002, "fileSha256": "95,206,210,164,109,111,90,246,177,195,215,246,113,30,65,164,30,233,73,4,105,136,26,25,1,91,235,81,186,98,242,197", "mimetype": "image/jpeg", "savedAt": 1789640950186, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "124640638845116": { "nickname": "ميتسوري", "filePath": "/app/user_photos/124640638845116_1789641136862.jpg", "filename": "124640638845116_1789641136862.jpg", "fileLength": 42478, "fileSha256": "59,251,159,148,135,19,54,17,209,213,249,110,89,17,69,244,62,66,83,42,228,111,8,83,78,85,86,87,188,182,89,78", "mimetype": "image/jpeg", "savedAt": 1789641136862, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "196667391377484": { "nickname": "كورومي", "filePath": "/app/user_photos/196667391377484_1789641686553.jpg", "filename": "196667391377484_1789641686553.jpg", "fileLength": 45415, "fileSha256": "141,213,166,69,247,85,32,233,129,103,16,16,120,196,152,100,192,175,118,73,127,157,28,100,238,243,207,242,156,80,233,249", "mimetype": "image/jpeg", "savedAt": 1789641686553, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "65962896310518": { "nickname": "جوكر", "filePath": "/app/user_photos/65962896310518_1789644298118.jpg", "filename": "65962896310518_1789644298118.jpg", "fileLength": 373610, "fileSha256": "63,185,90,140,30,50,154,144,201,73,219,175,108,204,206,71,95,57,246,159,130,21,207,166,227,90,250,173,209,38,140,124", "mimetype": "image/jpeg", "savedAt": 1789644298118, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "8672193310829": { "nickname": "لوفي", "filePath": "/app/user_photos/8672193310829_1789646238002.jpg", "filename": "8672193310829_1789646238002.jpg", "fileLength": 16046, "fileSha256": "1,234,118,106,20,48,219,176,252,134,21,47,60,135,124,101,163,212,191,62,218,173,203,78,124,168,123,136,191,120,239,104", "mimetype": "image/jpeg", "savedAt": 1789646238003, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "62187267743910": { "nickname": "ناغي", "filePath": "/app/user_photos/62187267743910_1789646472905.jpg", "filename": "62187267743910_1789646472905.jpg", "fileLength": 76885, "fileSha256": "94,129,80,91,216,50,43,73,154,193,159,217,31,252,14,16,77,67,69,147,109,234,50,171,201,172,230,170,68,214,84,188", "mimetype": "image/jpeg", "savedAt": 1789646472905, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "180174616309835": { "nickname": "سوكونا", "filePath": "/app/user_photos/180174616309835_1789646677508.jpg", "filename": "180174616309835_1789646677508.jpg", "fileLength": 144372, "fileSha256": "171,254,196,80,231,100,164,170,228,202,143,192,207,229,27,165,175,33,58,201,223,104,145,81,23,198,130,253,40,77,152,67", "mimetype": "image/jpeg", "savedAt": 1789646677509, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "186389417218180": { "nickname": "باتشيرا", "filePath": "/app/user_photos/186389417218180_1789646786638.jpg", "filename": "186389417218180_1789646786638.jpg", "fileLength": 128795, "fileSha256": "185,163,180,229,14,31,61,102,100,32,55,128,230,2,33,200,82,74,64,195,184,111,16,123,243,199,202,234,167,216,226,230", "mimetype": "image/jpeg", "savedAt": 1789646786639, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "144165560148097": { "nickname": "رايلي", "filePath": "/app/user_photos/144165560148097_1789647138108.jpg", "filename": "144165560148097_1789647138108.jpg", "fileLength": 6835, "fileSha256": "107,244,39,197,51,246,22,159,205,15,89,202,197,105,62,166,26,9,195,168,5,10,239,48,11,24,199,175,15,8,153,185", "mimetype": "image/jpeg", "savedAt": 1789647138108, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "39939538464877": { "nickname": "ايتاشي", "filePath": "/app/user_photos/39939538464877_1789670066210.jpg", "filename": "39939538464877_1789670066210.jpg", "fileLength": 41915, "fileSha256": "47,145,218,189,178,216,144,233,77,176,79,143,188,207,13,40,38,168,101,180,49,92,89,109,220,236,213,105,224,103,251,137", "mimetype": "image/jpeg", "savedAt": 1789670066210, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "132422700167262": { "nickname": "يونا", "filePath": "/app/user_photos/132422700167262_1789681515523.jpg", "filename": "132422700167262_1789681515523.jpg", "fileLength": 17429, "fileSha256": "182,183,113,85,0,45,58,20,90,224,49,128,229,214,118,155,40,213,146,9,86,155,99,183,83,160,221,3,157,135,230,52", "mimetype": "image/jpeg", "savedAt": 1789681515523, "savedBy": "94545752645830", "chatId": "120363429307505498@g.us" },
-    "267551397380275": { "nickname": "ناروتو", "filePath": "/app/user_photos/267551397380275_1789682202614.jpg", "filename": "267551397380275_1789682202614.jpg", "fileLength": 92104, "fileSha256": "132,125,102,156,206,179,44,204,152,230,64,34,187,146,171,94,187,25,22,244,168,242,72,58,93,166,153,80,166,192,146,38", "mimetype": "image/jpeg", "savedAt": 1789682202614, "savedBy": "127097511100664", "chatId": "120363429307505498@g.us" },
-    "88597256519929": { "nickname": "جوجو", "filePath": "/app/user_photos/88597256519929_1789717936588.jpg", "filename": "88597256519929_1789717936588.jpg", "fileLength": 118809, "fileSha256": "91,147,235,141,81,49,112,123,240,80,48,54,163,104,126,104,55,175,177,111,252,154,178,233,64,187,202,219,28,175,32,150", "mimetype": "image/jpeg", "savedAt": 1789717936588, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "115758696812792": { "nickname": "هيسوكا", "filePath": "/app/user_photos/115758696812792_1789732478712.jpg", "filename": "115758696812792_1789732478712.jpg", "fileLength": 40399, "fileSha256": "80,7,139,195,121,12,190,134,66,163,11,36,218,58,70,1,93,18,73,117,0,139,245,166,75,224,235,135,193,109,125,170", "mimetype": "image/jpeg", "savedAt": 1789732478712, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "277919381336187": { "nickname": "موزان", "filePath": "/app/user_photos/277919381336187_1789772205753.jpg", "filename": "277919381336187_1789772205753.jpg", "fileLength": 27125, "fileSha256": "37,54,223,130,38,49,18,216,169,84,158,226,188,115,186,182,238,22,17,86,220,212,224,64,77,240,179,87,150,173,172,85", "mimetype": "image/jpeg", "savedAt": 1789772205754, "savedBy": "135215032877087", "chatId": "120363429307505498@g.us" },
-    "163192198152378": { "nickname": "غوجو", "filePath": "/app/user_photos/163192198152378_1789825244308.jpg", "filename": "163192198152378_1789825244308.jpg", "fileLength": 52447, "fileSha256": "151,142,184,155,181,145,102,133,107,127,92,243,197,106,7,72,141,124,224,186,251,197,176,13,251,102,215,98,3,109,109,232", "mimetype": "image/jpeg", "savedAt": 1789825244308, "savedBy": "81497742643328", "chatId": "120363429307505498@g.us" },
-    "126577316757545": { "nickname": "نوريكو", "filePath": "/app/user_photos/126577316757545_1789845121645.jpg", "filename": "126577316757545_1789845121645.jpg", "fileLength": 69471, "fileSha256": "190,149,41,138,211,68,239,170,177,131,234,126,164,155,213,156,229,40,198,48,105,40,169,33,73,68,222,117,105,117,137,61", "mimetype": "image/jpeg", "savedAt": 1789845121645, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "7860427685892": { "nickname": "ريزي", "filePath": "/app/user_photos/7860427685892_1789850204662.jpg", "filename": "7860427685892_1789850204662.jpg", "fileLength": 105480, "fileSha256": "177,37,43,63,205,176,222,112,45,185,86,123,157,93,8,134,25,89,224,57,67,42,118,147,167,221,239,50,113,92,43,139", "mimetype": "image/jpeg", "savedAt": 1789850204662, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "176510908506164": { "nickname": "شينوبو", "filePath": "/app/user_photos/176510908506164_1789990434295.jpg", "filename": "176510908506164_1789990434295.jpg", "fileLength": 125884, "fileSha256": "117,192,65,22,246,99,86,158,182,1,37,73,29,153,252,29,64,31,46,127,76,182,99,35,172,157,234,236,0,79,234,246", "mimetype": "image/jpeg", "savedAt": 1789990434295, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "168866017718274": { "nickname": "لاك", "filePath": "/app/user_photos/168866017718274_1789990655815.jpg", "filename": "168866017718274_1789990655815.jpg", "fileLength": 54669, "fileSha256": "187,165,17,230,98,70,121,154,13,226,156,77,59,184,127,35,235,233,162,118,27,80,100,198,181,200,59,206,235,83,3,255", "mimetype": "image/jpeg", "savedAt": 1789990655819, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "238255408738386": { "nickname": "هيناتا", "filePath": "/app/user_photos/238255408738386_1789991135214.jpg", "filename": "238255408738386_1789991135214.jpg", "fileLength": 202636, "fileSha256": "181,98,195,9,26,177,73,222,161,61,238,232,111,214,120,122,179,94,132,112,33,226,199,253,47,236,53,102,233,77,206,27", "mimetype": "image/jpeg", "savedAt": 1789991135215, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "66804458213483": { "nickname": "كوكوشيبه", "filePath": "/app/user_photos/66804458213483_1789993807067.jpg", "filename": "66804458213483_1789993807067.jpg", "fileLength": 64060, "fileSha256": "119,81,178,44,150,191,2,126,89,156,237,67,28,218,23,50,102,84,19,145,40,10,210,113,206,36,240,134,222,58,255,107", "mimetype": "image/jpeg", "savedAt": 1789993807067, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "107885635887131": { "nickname": "سونيك", "filePath": "/app/user_photos/107885635887131_1789996132623.jpg", "filename": "107885635887131_1789996132623.jpg", "fileLength": 100182, "fileSha256": "249,23,122,199,251,195,112,99,137,63,21,40,131,101,196,236,54,52,18,173,132,31,224,13,182,252,10,59,133,89,135,230", "mimetype": "image/jpeg", "savedAt": 1789996132624, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "208787453521992": { "nickname": "سيبر", "filePath": "/app/user_photos/208787453521992_1789996972712.jpg", "filename": "208787453521992_1789996972712.jpg", "fileLength": 90034, "fileSha256": "29,191,79,248,123,200,97,121,33,239,13,84,113,134,207,101,122,201,4,14,51,192,93,100,254,125,162,129,247,242,250,146", "mimetype": "image/jpeg", "savedAt": 1789996972712, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "104226625708086": { "nickname": "هوري", "filePath": "/app/user_photos/104226625708086_1789997052994.jpg", "filename": "104226625708086_1789997052994.jpg", "fileLength": 54930, "fileSha256": "220,67,192,21,140,211,208,59,173,154,76,182,171,6,53,116,243,123,0,4,185,232,116,156,60,131,8,216,220,201,231,44", "mimetype": "image/jpeg", "savedAt": 1789997052994, "savedBy": "1954763767962", "chatId": "120363429307505498@g.us" },
-    "25349484216519": { "nickname": "زورو", "filePath": "/app/user_photos/25349484216519_1790429247361.jpg", "filename": "25349484216519_1790429247361.jpg", "fileLength": 417118, "fileSha256": "38,59,252,29,70,32,220,120,215,253,68,205,184,209,162,2,150,188,125,246,49,171,16,113,22,107,23,81,78,147,57,220", "mimetype": "image/jpeg", "savedAt": 1790429247361, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "91341807730726": { "nickname": "شادو", "filePath": "/app/user_photos/91341807730726_1790435809099.jpg", "filename": "91341807730726_1790435809099.jpg", "fileLength": 30543, "fileSha256": "212,185,0,149,254,14,138,217,16,98,140,25,192,199,114,46,76,95,180,168,219,250,227,170,219,37,133,222,43,112,104,24", "mimetype": "image/jpeg", "savedAt": 1790435809099, "savedBy": "201271931765", "chatId": "120363432781368382@g.us" },
-    "64060091580535": { "nickname": "سايتما", "filePath": "/app/user_photos/64060091580535_1790448166727.jpg", "filename": "64060091580535_1790448166727.jpg", "fileLength": 21754, "fileSha256": "185,0,38,98,127,109,3,11,126,203,25,37,152,219,24,184,234,108,208,167,4,52,242,137,164,179,4,210,223,226,135,24", "mimetype": "image/jpeg", "savedAt": 1790448166728, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "257986505240659": { "nickname": "توموكو", "filePath": "/app/user_photos/257986505240659_1790449620450.jpg", "filename": "257986505240659_1790449620450.jpg", "fileLength": 36557, "fileSha256": "252,25,142,87,73,18,26,10,15,179,198,33,145,163,62,48,23,2,178,129,94,5,67,223,16,123,71,47,175,109,194,203", "mimetype": "image/jpeg", "savedAt": 1790449620450, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "268659347968076": { "nickname": "غيـومي", "filePath": "/app/user_photos/268659347968076_1790451616751.jpg", "filename": "268659347968076_1790451616751.jpg", "fileLength": 61956, "fileSha256": "227,191,150,96,241,21,91,183,74,45,148,211,29,48,74,103,50,165,142,222,175,138,136,118,77,116,175,135,248,172,243,184", "mimetype": "image/jpeg", "savedAt": 1790451616751, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "191148240941077": { "nickname": "ميموكو", "filePath": "/app/user_photos/191148240941077_1790452514344.jpg", "filename": "191148240941077_1790452514344.jpg", "fileLength": 230317, "fileSha256": "130,93,37,225,143,132,183,240,152,237,88,53,136,84,190,74,122,77,196,50,169,18,119,112,160,186,134,100,14,69,73,89", "mimetype": "image/jpeg", "savedAt": 1790452514344, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "188953227472918": { "nickname": "ريومن سوكونا", "filePath": "/app/user_photos/188953227472918_1790455063655.jpg", "filename": "188953227472918_1790455063655.jpg", "fileLength": 66194, "fileSha256": "50,230,235,229,140,239,133,136,41,103,53,79,45,21,210,177,142,146,237,109,94,142,242,74,87,119,198,67,21,70,124,99", "mimetype": "image/jpeg", "savedAt": 1790455063656, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "6077932433485": { "nickname": "هوركا ساكورا", "filePath": "/app/user_photos/6077932433485_1790455376298.jpg", "filename": "6077932433485_1790455376298.jpg", "fileLength": 60346, "fileSha256": "216,65,10,127,171,6,40,173,37,105,119,2,138,196,85,203,7,206,128,102,54,61,238,63,36,236,207,28,11,164,247,3", "mimetype": "image/jpeg", "savedAt": 1790455376298, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "12189620543589": { "nickname": "دانيال", "filePath": "/app/user_photos/12189620543589_1790465250987.jpg", "filename": "12189620543589_1790465250987.jpg", "fileLength": 127051, "fileSha256": "43,59,107,59,154,164,131,99,47,170,127,129,76,62,115,184,223,41,201,149,153,168,128,98,60,18,201,5,130,103,220,68", "mimetype": "image/jpeg", "savedAt": 1790465250987, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "12833848836164": { "nickname": "مايكي", "filePath": "/app/user_photos/12833848836164_1790475474042.jpg", "filename": "12833848836164_1790475474042.jpg", "fileLength": 37985, "fileSha256": "230,251,149,93,30,186,18,248,43,244,133,122,224,210,216,66,2,249,240,173,26,68,39,112,141,141,202,35,13,181,141,65", "mimetype": "image/jpeg", "savedAt": 1790475474042, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "61912087834835": { "nickname": "سيتو كايبا", "filePath": "/app/user_photos/61912087834835_1790500061299.jpg", "filename": "61912087834835_1790500061299.jpg", "fileLength": 49270, "fileSha256": "151,133,76,37,161,10,240,224,180,140,149,97,123,90,96,89,207,0,238,34,52,6,137,204,77,146,162,185,140,88,165,130", "mimetype": "image/jpeg", "savedAt": 1790500061300, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "202989516152919": { "nickname": "فانغ", "filePath": "/app/user_photos/202989516152919_1790500145200.jpg", "filename": "202989516152919_1790500145200.jpg", "fileLength": 35162, "fileSha256": "187,34,56,171,124,14,202,27,159,79,139,249,166,76,95,225,66,56,93,224,113,248,214,243,137,91,233,223,104,218,98,75", "mimetype": "image/jpeg", "savedAt": 1790500145200, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "131469804621891": { "nickname": "هيسوكا", "filePath": "/app/user_photos/131469804621891_1790504450185.jpg", "filename": "131469804621891_1790504450185.jpg", "fileLength": 140605, "fileSha256": "146,119,147,209,241,27,222,153,155,31,225,185,65,191,167,93,219,34,222,251,52,191,100,121,140,58,201,169,137,67,214,5", "mimetype": "image/jpeg", "savedAt": 1790504450186, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "108109209018554": { "nickname": "لويد", "filePath": "/app/user_photos/108109209018554_1790513529559.jpg", "filename": "108109209018554_1790513529559.jpg", "fileLength": 63278, "fileSha256": "191,39,155,133,25,175,93,173,77,234,138,232,119,196,33,135,114,255,175,102,234,100,85,161,108,85,98,112,252,13,207,124", "mimetype": "image/jpeg", "savedAt": 1790513529560, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "136790950281428": { "nickname": "اوكامي", "filePath": "/app/user_photos/136790950281428_1790513675388.jpg", "filename": "136790950281428_1790513675388.jpg", "fileLength": 149283, "fileSha256": "211,87,135,75,97,177,174,149,231,113,152,84,30,238,159,150,228,153,195,138,71,85,103,231,248,228,217,16,177,216,45,76", "mimetype": "image/jpeg", "savedAt": 1790513675388, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "216862059180229": { "nickname": "اغريس", "filePath": "/app/user_photos/216862059180229_1790515593637.jpg", "filename": "216862059180229_1790515593637.jpg", "fileLength": 58260, "fileSha256": "19,217,214,190,120,35,173,102,255,39,133,203,84,139,50,85,157,128,100,112,28,69,217,73,244,83,19,238,27,14,93,192", "mimetype": "image/jpeg", "savedAt": 1790515593638, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "126582014357740": { "nickname": "كورابيكا", "filePath": "/app/user_photos/126582014357740_1790517063294.jpg", "filename": "126582014357740_1790517063294.jpg", "fileLength": 42222, "fileSha256": "71,25,172,77,241,10,37,229,24,14,238,223,248,48,32,189,62,40,108,19,255,216,167,66", "mimetype": "image/jpeg", "savedAt": 1790517063294, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-        "151767752945738": { "nickname": "اترن", "filePath": "/app/user_photos/151767752945738_1790518973520.jpg", "filename": "151767752945738_1790518973520.jpg", "fileLength": 115617, "fileSha256": "103,184,41,35,142,35,252,152,41,19,136,202,148,244,166,132,248,142,99,154,76,238,49,204,29,70,6,15,157,123,184,206", "mimetype": "image/jpeg", "savedAt": 1790518973521, "savedBy": "1954763767962", "chatId": "120363432781368382@g.us" },
-    "246527599579212": { "nickname": "غبيمارو", "filePath": "/app/user_photos/246527599579212_1790637622979.jpg", "filename": "246527599579212_1790637622979.jpg", "fileLength": 84901, "fileSha256": "89,235,177,6,29,106,176,103,22,208,193,245,148,40,102,37,6,104,163,58,237,67,232,191,172,41,239,143,206,169,34,36", "mimetype": "image/jpeg", "savedAt": 1790637622979, "savedBy": "1954763767962", "chatId": "120363430725714297@g.us" },
-    "75330119311597": { "nickname": "هيسوكا", "filePath": "/app/user_photos/75330119311597_1790691123690.jpg", "filename": "75330119311597_1790691123690.jpg", "fileLength": 39334, "fileSha256": "123,91,142,97,210,103,103,210,1,251,234,6,149,95,107,78,223,146,225,211,150,52,71,146,146,111,16,202,75,143,27,86", "mimetype": "image/jpeg", "savedAt": 1790691123690, "savedBy": "1954763767962", "chatId": "120363430725714297@g.us" },
-    "96667701362773": { "nickname": "نيزوكو", "filePath": "/app/user_photos/96667701362773_1790772270517.jpg", "filename": "96667701362773_1790772270517.jpg", "fileLength": 191576, "fileSha256": "208,252,100,28,195,197,92,240,90,92,251,124,104,77,54,60,190,64,231,149,74,88,243,81,137,38,232,193,52,61,191,165", "mimetype": "image/jpeg", "savedAt": 1790772270518, "savedBy": "1954763767962", "chatId": "120363430725714297@g.us" },
-    "275703144673510": { "nickname": "لوكي", "filePath": "/app/user_photos/275703144673510_1790807319352.jpg", "filename": "275703144673510_1790807319352.jpg", "fileLength": 31509, "fileSha256": "122,144,184,60,64,186,116,21,16,27,175,229,173,218,71,66,80,92,36,230,157,86,184,107,44,147,186,200,207,91,200,10", "mimetype": "image/jpeg", "savedAt": 1790807319354, "savedBy": "1954763767962", "chatId": "120363430725714297@g.us" },
-    "114787832881247": { "nickname": "عيون ميدو", "filePath": "/app/user_photos/114787832881247_1790833156123.jpg", "filename": "114787832881247_1790833156123.jpg", "fileLength": 23625, "fileSha256": "44,82,79,214,157,79,162,0,168,122,197,53,49,198,5,94,45,120,76,163,56,127,49,213,55,36,253,164,140,199,47,76", "mimetype": "image/jpeg", "savedAt": 1790833156124, "savedBy": "69832192045113", "chatId": "120363430725714297@g.us" },
-    "173969881694378": { "nickname": "شادو", "filePath": "/app/user_photos/173969881694378_1790847774306.jpg", "filename": "173969881694378_1790847774306.jpg", "fileLength": 27959, "fileSha256": "207,195,36,86,100,103,41,85,113,90,85,184,3,78,67,105,127,25,138,20,209,38,95,48,14,112,90,223,43,1,249,214", "mimetype": "image/jpeg", "savedAt": 1790847774306, "savedBy": "127097511100664", "chatId": "120363430725714297@g.us" },
-    "203805559922855": { "nickname": "كوروكو", "filePath": "/app/user_photos/203805559922855_1790890950426.jpg", "filename": "203805559922855_1790890950426.jpg", "fileLength": 39000, "fileSha256": "20,25,223,207,78,251,53,210,238,157,156,69,46,158,217,35,190,98,74,46,221,250,171,1,231,122,191,253,57,223,200,181", "mimetype": "image/jpeg", "savedAt": 1790890950427, "savedBy": "127097511100664", "chatId": "120363430725714297@g.us" },
-    "82038975635529": { "nickname": "سوبارو", "filePath": "/app/user_photos/82038975635529_1790892004625.jpg", "filename": "82038975635529_1790892004625.jpg", "fileLength": 20083, "fileSha256": "104,227,172,121,110,247,206,114,108,119,241,11,191,134,6,157,189,172,232,248,178,222,167,114,49,176,75,225,150,98,131,13", "mimetype": "image/jpeg", "savedAt": 1790892004625, "savedBy": "1954763767962", "chatId": "120363430725714297@g.us" },
-    "209900017819855": { "nickname": "سوكونا", "filePath": "/app/user_photos/209900017819855_1791001417727.jpg", "filename": "209900017819855_1791001417727.jpg", "fileLength": 80369, "fileSha256": "248,129,119,241,54,127,93,110,36,112,117,151,130,231,178,194,112,21,240,0,138,102,17,194,148,94,34,190,133,114,227,149", "mimetype": "image/jpeg", "savedAt": 1791001417728, "savedBy": "69832192045113", "chatId": "120363430725714297@g.us" },
-    "33814395015284": { "nickname": "ساسكي", "filePath": "/app/user_photos/33814395015284_1791024066261.jpg", "filename": "33814395015284_1791024066261.jpg", "fileLength": 42569, "fileSha256": "255,177,102,122,8,239,236,47,99,86,229,102,83,39,112,153,180,65,48,230,214,196,102,94,125,234,211,100,25,194,177,75", "mimetype": "image/jpeg", "savedAt": 1791024066261, "savedBy": "1954763767962", "chatId": "120363430725714297@g.us" },
-    "39969569697947": { "nickname": "اوباناي", "filePath": "/app/user_photos/39969569697947_1791029347223.jpg", "filename": "39969569697947_1791029347223.jpg", "fileLength": 46894, "fileSha256": "68,229,39,206,150,208,111,247,24,112,126,42,108,149,251,224,60,244,90,96,42,158,50,111,55,87,142,183,203,48,43,205", "mimetype": "image/jpeg", "savedAt": 1791029347224, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "209779641299046": { "nickname": "تنجن", "filePath": "/app/user_photos/209779641299046_1791030560861.jpg", "filename": "209779641299046_1791030560861.jpg", "fileLength": 92829, "fileSha256": "24,166,61,27,196,120,233,25,46,145,56,253,233,200,112,4,198,117,97,24,175,113,116,198,69,38,108,228,164,209,171,192", "mimetype": "image/jpeg", "savedAt": 1791030560862, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "205703818043642": { "nickname": "يوتا", "filePath": "/app/user_photos/205703818043642_1791037081905.jpg", "filename": "205703818043642_1791037081905.jpg", "fileLength": 23692, "fileSha256": "239,130,51,54,20,12,127,7,137,87,153,113,47,233,201,27,150,241,21,48,46,117,202,91,185,167,32,146,238,206,72,145", "mimetype": "image/jpeg", "savedAt": 1791037081906, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "157909371646134": { "nickname": "تودوروكي", "filePath": "/app/user_photos/157909371646134_1791051780037.jpg", "filename": "157909371646134_1791051780037.jpg", "fileLength": 87724, "fileSha256": "136,22,211,173,12,242,166,24,92,76,152,12,249,220,79,51,2,162,82,160,100,13,188,71,76,54,111,201,120,14,120,169", "mimetype": "image/jpeg", "savedAt": 1791051780038, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "1830293659829": { "nickname": "غون", "filePath": "/app/user_photos/1830293659829_1791053879936.jpg", "filename": "1830293659829_1791053879936.jpg", "fileLength": 283110, "fileSha256": "33,92,225,29,130,39,173,120,102,247,152,147,81,77,217,113,178,176,57,125,154,160,166,44,177,65,66,120,239,31,253,33", "mimetype": "image/jpeg", "savedAt": 1791053879936, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "223115648958529": { "nickname": "غوجو", "filePath": "/app/user_photos/223115648958529_1791059860813.jpg", "filename": "223115648958529_1791059860813.jpg", "fileLength": 58435, "fileSha256": "170,233,36,105,207,135,169,115,32,52,246,57,184,22,77,215,91,129,244,139,228,201,120,191,72,175,245,181,240,145,246,206", "mimetype": "image/jpeg", "savedAt": 1791059860813, "savedBy": "1954763767962", "chatId": "120363430725714297@g.us" },
-    "185813723791537": { "nickname": "ايزن", "filePath": "/app/user_photos/185813723791537_1791060310336.jpg", "filename": "185813723791537_1791060310336.jpg", "fileLength": 73467, "fileSha256": "88,81,205,180,115,63,40,211,29,134,28,88,242,208,69,62,53,79,142,198,89,220,21,80,87,194,56,58,147,136,27,242", "mimetype": "image/jpeg", "savedAt": 1791060310337, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "254348818939953": { "nickname": "نوبارا", "filePath": "/app/user_photos/254348818939953_1791096453181.jpg", "filename": "254348818939953_1791096453181.jpg", "fileLength": 83613, "fileSha256": "180,107,159,55,49,34,38,141,33,10,52,66,181,255,88,189,162,21,8,16,17,224,231,138,31,67,25,27,218,38,71,18", "mimetype": "image/jpeg", "savedAt": 1791096453182, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "159318305411250": { "nickname": "مادارا", "filePath": "/app/user_photos/159318305411250_1791100995644.jpg", "filename": "159318305411250_1791100995644.jpg", "fileLength": 36034, "fileSha256": "200,105,183,122,27,228,169,221,192,46,149,97,92,189,132,121,28,220,193,46,198,250,23,186,88,202,226,228,8,198,96,243", "mimetype": "image/jpeg", "savedAt": 1791100995644, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "249005661548740": { "nickname": "تنغن", "filePath": "/app/user_photos/249005661548740_1791107356327.jpg", "filename": "249005661548740_1791107356327.jpg", "fileLength": 74788, "fileSha256": "38,119,95,197,115,159,7,232,56,81,6,167,122,241,69,187,174,205,127,81,191,50,180,201,13,184,85,79,113,80,14,215", "mimetype": "image/jpeg", "savedAt": 1791107356327, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "68071507132439": { "nickname": "ايتاشي", "filePath": "/app/user_photos/68071507132439_1791113246561.jpg", "filename": "68071507132439_1791113246561.jpg", "fileLength": 79116, "fileSha256": "20,122,187,79,218,185,254,72,242,59,36,138,108,64,239,228,240,87,179,249,142,56,25,136,128,126,83,223,68,0,241,61", "mimetype": "image/jpeg", "savedAt": 1791113246562, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "93188509417677": { "nickname": "بوروتو", "filePath": "/app/user_photos/93188509417677_1791114858466.jpg", "filename": "93188509417677_1791114858466.jpg", "fileLength": 31687, "fileSha256": "190,32,23,108,17,74,141,63,83,36,115,96,175,9,76,74,121,35,168,52,254,140,253,196,178,232,19,162,91,144,80,226", "mimetype": "image/jpeg", "savedAt": 1791114858467, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "170966206394552": { "nickname": "لوفي", "filePath": "/app/user_photos/170966206394552_1791118527536.jpg", "filename": "170966206394552_1791118527536.jpg", "fileLength": 207547, "fileSha256": "9,235,61,65,237,20,134,67,84,35,154,137,232,73,220,141,118,57,250,201,66,94,163,12,181,18,56,37,219,165,119,4", "mimetype": "image/jpeg", "savedAt": 1791118527537, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" },
-    "187415662690523": { "nickname": "كويوكي", "filePath": "/app/user_photos/187415662690523_1791122522173.jpg", "filename": "187415662690523_1791122522173.jpg", "fileLength": 50361, "fileSha256": "28,180,216,208,131,12,216,102,120,88,189,247,90,8,199,39,222,182,161,163,31,66,125,123,137,218,197,104,46,86,24,16", "mimetype": "image/jpeg", "savedAt": 1791122522173, "savedBy": "5201289339089", "chatId": "120363430725714297@g.us" }
+    "4046630957135": {
+      "nickname": "جوهان",
+      "filePath": "/app/user_photos/4046630957135_1789552744356.jpg",
+      "filename": "4046630957135_1789552744356.jpg",
+      "fileLength": 94557,
+      "fileSha256": "169,159,105,241,75,39,241,5,239,226,23,154,233,131,245,130,231,148,159,220,193,105,47,35,245,35,176,161,197,183,129,78",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789552744358,
+      "savedBy": "127097511100664",
+      "chatId": "120363428795355362@g.us"
+    },
+    "233445078892552": {
+      "nickname": "جورنو",
+      "filePath": "/app/user_photos/233445078892552_1789556253123.jpg",
+      "filename": "233445078892552_1789556253123.jpg",
+      "fileLength": 160115,
+      "fileSha256": "212,216,216,193,113,101,149,192,50,75,225,84,70,141,248,41,234,118,59,106,154,134,176,41,37,18,132,14,22,54,223,171",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789556253124,
+      "savedBy": "127097511100664",
+      "chatId": "120363428795355362@g.us"
+    },
+    "162483646009372": {
+      "nickname": "سومي",
+      "filePath": "/app/user_photos/162483646009372_1789561669920.jpg",
+      "filename": "162483646009372_1789561669920.jpg",
+      "fileLength": 79093,
+      "fileSha256": "129,34,77,244,192,69,113,247,251,184,234,202,132,163,156,162,244,134,142,154,89,211,18,240,10,47,162,33,136,7,54,22",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789561669921,
+      "savedBy": "110591767273686",
+      "chatId": "120363428795355362@g.us"
+    },
+    "241794361069634": {
+      "nickname": "يوهابخ",
+      "filePath": "/app/user_photos/241794361069634_1789592061251.jpg",
+      "filename": "241794361069634_1789592061251.jpg",
+      "fileLength": 43900,
+      "fileSha256": "103,147,42,130,172,218,250,0,229,133,49,191,17,202,55,103,138,241,75,239,59,101,159,151,31,116,138,176,158,61,221,233",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789592061252,
+      "savedBy": "127097511100664",
+      "chatId": "120363428795355362@g.us"
+    },
+    "39935075709000": {
+      "nickname": "سونغ جين",
+      "filePath": "/app/user_photos/39935075709000_1789593338884.jpg",
+      "filename": "39935075709000_1789593338884.jpg",
+      "fileLength": 105267,
+      "fileSha256": "175,183,126,249,255,202,43,54,178,194,188,135,47,156,20,166,8,35,243,251,239,92,206,105,180,171,53,186,39,192,190,84",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789593338884,
+      "savedBy": "127097511100664",
+      "chatId": "120363428795355362@g.us"
+    },
+    "10076697935997": {
+      "nickname": "توجي",
+      "filePath": "/app/user_photos/10076697935997_1789596215222.jpg",
+      "filename": "10076697935997_1789596215222.jpg",
+      "fileLength": 44962,
+      "fileSha256": "67,223,184,88,105,250,129,28,166,200,186,152,134,250,221,118,17,48,20,109,57,97,31,42,172,174,84,105,30,205,132,107",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789596215223,
+      "savedBy": "127097511100664",
+      "chatId": "120363428795355362@g.us"
+    },
+    "137903430754335": {
+      "nickname": "ناغي",
+      "filePath": "/app/user_photos/137903430754335_1789598688827.jpg",
+      "filename": "137903430754335_1789598688827.jpg",
+      "fileLength": 35316,
+      "fileSha256": "137,186,235,249,206,3,208,5,149,91,133,3,225,98,220,190,71,110,17,91,188,5,136,238,38,44,154,20,164,4,73,165",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789598688828,
+      "savedBy": "137851857572050",
+      "chatId": "120363428795355362@g.us"
+    },
+    "32032621121751": {
+      "nickname": "كاين",
+      "filePath": "/app/user_photos/32032621121751_1789625678592.jpg",
+      "filename": "32032621121751_1789625678592.jpg",
+      "fileLength": 70694,
+      "fileSha256": "134,176,39,46,198,200,24,124,110,142,3,112,141,138,103,85,27,190,28,4,90,15,144,79,59,98,99,178,126,91,59,153",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789625678593,
+      "savedBy": "4046630957135",
+      "chatId": "120363428795355362@g.us"
+    },
+    "26573583433833": {
+      "nickname": "نيزوكو",
+      "filePath": "/app/user_photos/26573583433833_1789625797070.jpg",
+      "filename": "26573583433833_1789625797070.jpg",
+      "fileLength": 96963,
+      "fileSha256": "139,253,94,218,78,204,1,196,164,37,71,195,254,191,187,108,65,252,234,46,186,121,195,25,247,49,206,23,222,33,236,238",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789625797070,
+      "savedBy": "4046630957135",
+      "chatId": "120363428795355362@g.us"
+    },
+    "230605535064263": {
+      "nickname": "ليفاي",
+      "filePath": "/app/user_photos/230605535064263_1789851363246.jpg",
+      "filename": "230605535064263_1789851363246.jpg",
+      "fileLength": 41225,
+      "fileSha256": "138,25,8,204,58,160,185,42,101,229,50,253,191,203,210,147,180,62,110,121,224,226,138,233,252,199,131,38,20,46,68,222",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789851363250,
+      "savedBy": "127097511100664",
+      "chatId": "120363428430538684@g.us"
+    },
+    "1954763767962": {
+      "nickname": "كاكاشي",
+      "filePath": "/app/user_photos/1954763767962_1789913119867.jpg",
+      "filename": "1954763767962_1789913119867.jpg",
+      "fileLength": 38561,
+      "fileSha256": "226,159,152,222,62,67,77,78,236,111,18,35,203,117,248,61,96,96,205,3,167,206,56,244,178,7,43,29,129,158,245,0",
+      "mimetype": "image/jpeg",
+      "savedAt": 1789913119867,
+      "savedBy": "110591767273686",
+      "chatId": "120363428430538684@g.us"
+    },
+    "153172089774297": {
+      "nickname": "سونغ جين وو",
+      "filePath": "/app/user_photos/153172089774297_1790187848546.jpg",
+      "filename": "153172089774297_1790187848546.jpg",
+      "fileLength": 103824,
+      "fileSha256": "64,27,158,216,79,166,2,180,128,222,185,94,10,27,241,219,156,141,42,249,152,112,215,191,219,23,85,219,209,92,107,22",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790187848551,
+      "savedBy": "127097511100664",
+      "chatId": "120363428430538684@g.us"
+    },
+    "92888012746909": {
+      "nickname": "زورو",
+      "filePath": "/app/user_photos/92888012746909_1790406000691.jpg",
+      "filename": "92888012746909_1790406000691.jpg",
+      "fileLength": 72792,
+      "fileSha256": "212,97,87,202,115,170,64,202,11,138,130,254,180,47,87,241,80,3,163,25,72,155,146,63,85,86,185,117,247,204,173,167",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790406000691,
+      "savedBy": "110591767273686",
+      "chatId": "120363428430538684@g.us"
+    },
+    "229661279825920": {
+      "nickname": "داي",
+      "filePath": "/app/user_photos/229661279825920_1790406961477.jpg",
+      "filename": "229661279825920_1790406961477.jpg",
+      "fileLength": 61442,
+      "fileSha256": "175,168,36,76,132,53,187,14,253,230,176,9,252,201,62,92,196,88,68,152,238,171,227,238,172,92,116,166,119,197,63,173",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790406961477,
+      "savedBy": "110591767273686",
+      "chatId": "120363428430538684@g.us"
+    },
+    "244100892754111": {
+      "nickname": "ميغومي",
+      "filePath": "/app/user_photos/244100892754111_1790431410961.jpg",
+      "filename": "244100892754111_1790431410961.jpg",
+      "fileLength": 293202,
+      "fileSha256": "58,185,75,48,242,202,28,51,134,207,36,40,48,42,3,239,90,239,145,110,84,192,184,53,32,146,112,97,174,0,230,231",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790431410961,
+      "savedBy": "127097511100664",
+      "chatId": "120363428430538684@g.us"
+    },
+    "271550079082606": {
+      "nickname": "توجي",
+      "filePath": "/app/user_photos/271550079082606_1790432433102.jpg",
+      "filename": "271550079082606_1790432433102.jpg",
+      "fileLength": 45609,
+      "fileSha256": "32,74,108,253,154,135,150,105,124,80,91,97,83,111,207,115,52,15,55,226,24,13,119,128,151,169,102,97,2,197,210,196",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790432433102,
+      "savedBy": "244100892754111",
+      "chatId": "120363428430538684@g.us"
+    },
+    "81497742643328": {
+      "nickname": "لاك",
+      "filePath": "/app/user_photos/81497742643328_1790432992888.jpg",
+      "filename": "81497742643328_1790432992888.jpg",
+      "fileLength": 56243,
+      "fileSha256": "155,37,1,119,183,69,235,71,160,1,43,25,130,53,248,146,168,211,149,200,235,188,73,10,35,244,2,254,66,73,6,107",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790432992888,
+      "savedBy": "81497742643328",
+      "chatId": "120363428430538684@g.us"
+    },
+    "5201289339089": {
+      "nickname": "ايتادوري",
+      "filePath": "/app/user_photos/5201289339089_1790504794569.jpg",
+      "filename": "5201289339089_1790504794569.jpg",
+      "fileLength": 54787,
+      "fileSha256": "73,78,232,130,125,133,147,231,134,230,87,80,23,94,46,154,177,47,139,136,211,239,159,175,65,184,230,107,171,125,219,178",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790504794570,
+      "savedBy": "244100892754111",
+      "chatId": "120363428430538684@g.us"
+    },
+    "140029154300093": {
+      "nickname": "غوكو",
+      "filePath": "/app/user_photos/140029154300093_1790788799922.jpg",
+      "filename": "140029154300093_1790788799922.jpg",
+      "fileLength": 22465,
+      "fileSha256": "90,1,110,77,234,236,248,100,92,64,254,79,243,50,166,115,111,179,78,62,110,197,26,14,7,132,72,222,221,182,53,211",
+      "mimetype": "image/jpeg",
+      "savedAt": 1790788799923,
+      "savedBy": "244100892754111",
+      "chatId": "120363428430538684@g.us"
+    }
   },
   "emperors": {
     "127097511100664": true,
@@ -614,21 +1498,17 @@
     "link2": "https://chat.whatsapp.com/CgRH7C6R0uCCgbTnkx4Jfh?s=cl&p=a&mlu=4&ilr=4"
   },
   "protectCards": {
-    "120363429453389753@g.us": true,
-    "120363413346295248@g.us": true,
-    "120363430725714297@g.us": true,
-    "120363412416383659@g.us": true,
+    "120363414055337881@g.us": true,
+    "120363428430538684@g.us": true,
+    "120363430517477323@g.us": true,
     "120363428503543158@g.us": true
   },
   "reactEnabled": {
-    "120363429453389753@g.us": true,
+    "120363414055337881@g.us": true,
     "120363428503543158@g.us": true
   },
   "hisbaEnabled": {
-    "120363429453389753@g.us": true,
-    "120363429233086206@g.us": true,
-    "120363428781928659@g.us": true,
-    "120363412416383659@g.us": true
+    "120363414055337881@g.us": true
   },
   "typoEnabled": {},
   "resultsData": {},
@@ -636,613 +1516,1494 @@
     "120363414055337881@g.us": true
   },
   "ahaEnabled": {
-    "120363414055337881@g.us": true,
-    "120363428781928659@g.us": true
+    "120363414055337881@g.us": true
   },
   "quietEnabled": {},
   "organizedGroups": {
-    "120363414055337881@g.us": true,
-    "120363429233086206@g.us": true,
-    "120363428781928659@g.us": true,
-    "120363412416383659@g.us": true
+    "120363414055337881@g.us": true
   },
   "autoSaveEnabled": true,
   "autoSaveGroupJid": "120363428593920575@g.us",
   "jidMap": {
-    "0": "0@s.whatsapp.net",
-    "1954763767962": "1954763767962@lid",
-    "230670127374543": "230670127374543@lid",
-    "201090578040": "230670127374543@lid",
-    "110591767273686": "110591767273686@lid",
-    "212781075479": "110591767273686@lid",
-    "69832192045113": "69832192045113@lid",
-    "135215032877087": "135215032877087@lid",
-    "967737107993": "135215032877087@lid",
-    "131469804621891": "131469804621891@lid",
-    "212700902601": "131469804621891@lid",
-    "18301610672370": "18301610672370@lid",
-    "218935062933": "18301610672370@lid",
     "127097511100664": "127097511100664@lid",
     "963994381836": "127097511100664@lid",
-    "191148240941077": "191148240941077@lid",
-    "212719057381": "191148240941077@lid",
-    "75330119311597": "75330119311597@lid",
-    "201559059658": "75330119311597@lid",
-    "202989516152919": "202989516152919@lid",
-    "212777954482": "202989516152919@lid",
-    "17704677306438": "17704677306438@lid",
-    "967734191731": "17704677306438@lid",
-    "108109209018554": "108109209018554@lid",
-    "201289601784": "108109209018554@lid",
-    "225232782622952": "225232782622952@lid",
-    "218919619578": "225232782622952@lid",
-    "27836303843385": "27836303843385@lid",
-    "201114518418": "27836303843385@lid",
-    "228325310095509": "228325310095509@lid",
-    "201044231038": "228325310095509@lid",
-    "246527599579212": "246527599579212@lid",
-    "967736894367": "246527599579212@lid",
-    "71614871957622": "71614871957622@lid",
-    "10076697935997": "10076697935997@lid",
-    "967733406413": "10076697935997@lid",
-    "257986505240659": "257986505240659@lid",
-    "201011629739": "257986505240659@lid",
-    "151767752945738": "151767752945738@lid",
-    "967711057361": "151767752945738@lid",
-    "61912087834835": "61912087834835@lid",
-    "966562805949": "61912087834835@lid",
-    "242511754879037": "242511754879037@lid",
-    "201039883276": "242511754879037@lid",
-    "269660176015540": "269660176015540@lid",
-    "212784326629": "269660176015540@lid",
-    "34863038116008": "34863038116008@lid",
-    "48699551143": "34863038116008@lid",
-    "53270999519307": "53270999519307@lid",
-    "201016825656": "53270999519307@lid",
-    "197337104285832": "197337104285832@lid",
-    "963981816540": "197337104285832@lid",
-    "85908724420719": "85908724420719@lid",
-    "201553993659": "85908724420719@lid",
-    "88627220635828": "88627220635828@lid",
-    "962780807770": "88627220635828@lid",
-    "124507444482192": "124507444482192@lid",
-    "201017094649": "124507444482192@lid",
-    "25349484216519": "25349484216519@lid",
-    "963951925303": "25349484216519@lid",
-    "132817887441116": "132817887441116@lid",
-    "201271931765": "132817887441116@lid",
-    "71322965151807": "71322965151807@lid",
-    "48459194702": "71322965151807@lid",
-    "5201289339089": "5201289339089@lid",
-    "966571758056": "5201289339089@lid",
-    "62187267743910": "62187267743910@lid",
-    "966575522874": "62187267743910@lid",
-    "216862059180229": "216862059180229@lid",
-    "212705112719": "216862059180229@lid",
-    "69403148329086": "69403148329086@lid",
-    "201220894590": "69403148329086@lid",
-    "64060091580535": "64060091580535@lid",
-    "201024667995": "64060091580535@lid",
-    "173199505498130": "173199505498130@lid",
-    "212636553039": "173199505498130@lid",
-    "66491126906886": "66491126906886@lid",
-    "201066920929": "66491126906886@lid",
-    "67851943694444": "67851943694444@lid",
-    "201157544409": "67851943694444@lid",
     "41030460129474": "41030460129474@lid",
     "48699554086": "41030460129474@lid",
+    "65962896310518": "65962896310518@lid",
+    "48699541670": "65962896310518@lid",
     "231357791907855": "231357791907855@lid",
     "48459074937": "231357791907855@lid",
+    "110591767273686": "110591767273686@lid",
+    "212781075479": "110591767273686@lid",
+    "1954763767962": "1954763767962@lid",
+    "132817887441116": "132817887441116@lid",
+    "201271931765": "132817887441116@lid",
+    "69403148329086": "69403148329086@lid",
+    "201220894590": "69403148329086@lid",
+    "69832192045113": "69832192045113@lid",
+    "71322965151807": "71322965151807@lid",
+    "48459194702": "71322965151807@lid",
     "138195471728731": "138195471728731@lid",
     "48450414717": "138195471728731@lid",
-    "126577316757545": "126577316757545@s.whatsapp.net",
-    "85277280329876": "85277280329876@s.whatsapp.net",
-    "230623201468567": "230623201468567@s.whatsapp.net",
-    "39939538464877": "39939538464877@s.whatsapp.net",
-    "83503458828370": "83503458828370@s.whatsapp.net",
-    "65962896310518": "65962896310518@lid",
-    "267551397380275": "267551397380275@s.whatsapp.net",
-    "88597256519929": "88597256519929@s.whatsapp.net",
-    "94545752645830": "94545752645830@lid",
-    "277919381336187": "277919381336187@s.whatsapp.net",
-    "163192198152378": "163192198152378@s.whatsapp.net",
-    "7860427685892": "7860427685892@s.whatsapp.net",
-    "110612738744540": "110612738744540@s.whatsapp.net",
-    "152076822798511": "152076822798511@s.whatsapp.net",
-    "176510908506164": "176510908506164@s.whatsapp.net",
-    "168866017718274": "168866017718274@s.whatsapp.net",
-    "238255408738386": "238255408738386@s.whatsapp.net",
-    "66804458213483": "66804458213483@s.whatsapp.net",
-    "10978573959213": "10978573959213@s.whatsapp.net",
-    "107885635887131": "107885635887131@s.whatsapp.net",
-    "268659347968076": "268659347968076@s.whatsapp.net",
-    "188953227472918": "188953227472918@s.whatsapp.net",
-    "126582014357740": "126582014357740@s.whatsapp.net",
-    "244100892754111": "244100892754111@lid",
-    "48699541670": "65962896310518@lid",
-    "92282439074019": "92282439074019@lid",
-    "972599671630": "92282439074019@lid",
-    "48450464303": "94545752645830@lid",
+    "148022474322076": "148022474322076@lid",
+    "249112309237": "148022474322076@lid",
+    "254314241089717": "254314241089717@lid",
+    "963993464038": "254314241089717@lid",
     "180346213630206": "180346213630206@lid",
     "22238489727": "180346213630206@lid",
-    "201278438834": "244100892754111@lid",
-    "50444508364933": "50444508364933@lid",
+    "26230086734016": "26230086734016@lid",
+    "135215032877087": "135215032877087@lid",
+    "967737107993": "135215032877087@lid",
+    "170386452938821": "170386452938821@lid",
+    "201104013325": "170386452938821@lid",
+    "23988130549861": "23988130549861@lid",
+    "201156731065": "23988130549861@lid",
+    "106288377790512": "106288377790512@lid",
+    "201557275014": "106288377790512@lid",
+    "213713864937638": "213713864937638@lid",
+    "201065123979": "213713864937638@lid",
+    "180354954567746": "180354954567746@lid",
+    "967780094121": "180354954567746@lid",
     "229961893998792": "229961893998792@lid",
     "201143599489": "229961893998792@lid",
-    "234256928379123": "234256928379123@lid",
-    "6285169623886": "234256928379123@lid",
+    "205566311956527": "205566311956527@lid",
+    "963981899367": "205566311956527@lid",
+    "17704677306438": "17704677306438@lid",
+    "967734191731": "17704677306438@lid",
+    "50535071793351": "50535071793351@lid",
+    "201158032810": "50535071793351@lid",
+    "154499251454159": "154499251454159@lid",
+    "249998910727": "154499251454159@lid",
+    "4046630957135": "4046630957135@lid",
+    "201107339306": "4046630957135@lid",
+    "244100892754111": "244100892754111@lid",
+    "201278438834": "244100892754111@lid",
+    "76103213416476": "76103213416476@lid",
+    "249112066443": "76103213416476@lid",
+    "204475474120734": "204475474120734@lid",
+    "963991098300": "204475474120734@lid",
+    "55358420738155": "55358420738155@lid",
+    "201044169576": "55358420738155@lid",
+    "209564792279159": "209564792279159@lid",
+    "201550760098": "209564792279159@lid",
+    "185225481064568": "185225481064568@lid",
+    "963992472932": "185225481064568@lid",
+    "109144480678094": "109144480678094@lid",
+    "212694764381": "109144480678094@lid",
+    "45514288529589": "45514288529589@lid",
+    "212720930556": "45514288529589@lid",
+    "34863038116008": "34863038116008@lid",
+    "48699551143": "34863038116008@lid",
+    "95194192019637": "95194192019637@lid",
+    "201040568566": "95194192019637@lid",
+    "15926208499811": "15926208499811@lid",
+    "201013744631": "15926208499811@lid",
     "90022917202133": "90022917202133@lid",
+    "84362759891": "90022917202133@lid",
+    "137851857572050": "137851857572050@lid",
+    "249909300846": "137851857572050@lid",
+    "105158717481064": "105158717481064@lid",
+    "213551534695": "105158717481064@lid",
+    "100790769344629": "100790769344629@lid",
+    "9647883210229": "100790769344629@lid",
+    "66091795664976": "66091795664976@lid",
+    "249904817398": "66091795664976@lid",
+    "29910940811361": "29910940811361@lid",
+    "970567585285": "29910940811361@lid",
+    "37620356763893": "37620356763893@lid",
+    "201285363836": "37620356763893@lid",
+    "129003956486233": "129003956486233@lid",
+    "96899320725": "129003956486233@lid",
+    "241794361069634": "241794361069634@lid",
+    "23568168955": "241794361069634@lid",
+    "39226741625052": "39226741625052@lid",
+    "212632951869": "39226741625052@lid",
+    "241523878813736": "241523878813736@lid",
+    "185667711696927": "185667711696927@lid",
+    "201069526227": "185667711696927@lid",
+    "173199505498130": "173199505498130@lid",
+    "212636553039": "173199505498130@lid",
+    "237143012159682": "237143012159682@lid",
+    "201044437513": "237143012159682@lid",
+    "229661279825920": "229661279825920@lid",
+    "967784614192": "229661279825920@lid",
+    "50444508364933": "50444508364933@lid",
+    "185809596624902": "185809596624902@lid",
+    "92282439074019": "92282439074019@lid",
+    "972599671630": "92282439074019@lid",
+    "5201289339089": "5201289339089@lid",
+    "966571758056": "5201289339089@lid",
+    "197337104285832": "197337104285832@lid",
+    "963981816540": "197337104285832@lid",
+    "94545752645830": "94545752645830@lid",
+    "48450464303": "94545752645830@lid",
+    "269660176015540": "269660176015540@lid",
+    "212784326629": "269660176015540@lid",
+    "27836303843385": "27836303843385@lid",
+    "201114518418": "27836303843385@lid",
+    "124507444482192": "124507444482192@lid",
+    "201017094649": "124507444482192@lid",
+    "47627630543003": "47627630543003@lid",
+    "120363412665030650": "120363412665030650@newsletter",
+    "120363411179282381": "120363411179282381@newsletter",
+    "120363429061777148": "120363429061777148@newsletter",
+    "120363427601556213": "120363427601556213@newsletter",
+    "120363430075527469": "120363430075527469@newsletter",
+    "120363428626263712": "120363428626263712@newsletter",
+    "50685563412661": "50685563412661@lid",
+    "40888625565880": "40888625565880@lid",
     "108895339024520": "108895339024520@lid",
     "6283830065887": "108895339024520@lid",
-    "233616659476668": "233616659476668@s.whatsapp.net",
-    "011338687707": "011338687707@s.whatsapp.net",
-    "36022645747924": "36022645747924@s.whatsapp.net",
-    "271077666201642": "271077666201642@s.whatsapp.net",
-    "11532641517762": "11532641517762@s.whatsapp.net",
-    "119014298792181": "119014298792181@s.whatsapp.net",
-    "263840193331296": "263840193331296@s.whatsapp.net",
-    "208289455440025": "208289455440025@s.whatsapp.net",
-    "259176378962080": "259176378962080@s.whatsapp.net",
+    "120363429296427525": "120363429296427525@newsletter",
+    "120363423093315680": "120363423093315680@newsletter",
+    "87038216933505": "87038216933505@lid",
+    "153799037550672": "153799037550672@lid",
+    "259558396141797": "259558396141797@lid",
     "96667701362773": "96667701362773@lid",
-    "212678093542": "96667701362773@lid",
-    "106855011459202": "106855011459202@lid",
-    "102946574475405": "102946574475405@lid",
-    "967773522013": "102946574475405@lid",
-    "86552667512956": "86552667512956@lid",
-    "967774143248": "86552667512956@lid",
-    "87858320801801": "87858320801801@lid",
-    "967770949075": "87858320801801@lid",
-    "247519552520309": "247519552520309@lid",
-    "967783960690": "247519552520309@lid",
-    "27359277240468": "27359277240468@lid",
-    "967770537208": "27359277240468@lid",
-    "223150025490481": "223150025490481@lid",
-    "201108598912": "223150025490481@lid",
-    "263870526554293": "263870526554293@lid",
-    "967778857563": "263870526554293@lid",
-    "37951186706668": "37951186706668@lid",
-    "967735459599": "37951186706668@lid",
-    "171060729249908": "171060729249908@lid",
-    "201559851639": "171060729249908@lid",
-    "176498023600297": "176498023600297@lid",
-    "201007103751": "176498023600297@lid",
-    "198642858237987": "198642858237987@lid",
-    "967712392340": "198642858237987@lid",
-    "208718918627561": "208718918627561@lid",
-    "967778175128": "208718918627561@lid",
-    "178942027804900": "178942027804900@lid",
-    "201228021653": "178942027804900@lid",
-    "169364166836314": "169364166836314@lid",
-    "967739176018": "169364166836314@lid",
-    "33376929091617": "33376929091617@lid",
-    "994409674433": "33376929091617@lid",
-    "171223199801358": "171223199801358@lid",
-    "79282019282": "171223199801358@lid",
-    "256981382254728": "256981382254728@lid",
-    "45660468449432": "45660468449432@lid",
-    "972524299781": "45660468449432@lid",
-    "28497846267955": "28497846267955@lid",
-    "201207783254": "28497846267955@lid",
-    "45213154283630": "45213154283630@lid",
-    "201026404598": "45213154283630@lid",
-    "116351184154660": "116351184154660@lid",
-    "967738290739": "116351184154660@lid",
-    "9565613629573": "9565613629573@lid",
-    "967715781341": "9565613629573@lid",
-    "159631569629296": "159631569629296@lid",
-    "967777748318": "159631569629296@lid",
-    "236846206460146": "236846206460146@lid",
-    "167964057858098": "167964057858098@lid",
-    "201207749851": "167964057858098@lid",
-    "16059503530092": "16059503530092@lid",
-    "967782289587": "16059503530092@lid",
-    "269191923933260": "269191923933260@lid",
-    "201008321798": "269191923933260@lid",
-    "69566289956983": "69566289956983@lid",
-    "22242142822": "69566289956983@lid",
-    "104552892231819": "104552892231819@lid",
-    "967782600862": "104552892231819@lid",
-    "51377086681281": "51377086681281@lid",
-    "967700227624": "51377086681281@lid",
-    "112867881787439": "112867881787439@lid",
-    "201070914136": "112867881787439@lid",
-    "9385107533989": "9385107533989@lid",
-    "967784218791": "9385107533989@lid",
-    "255778573271131": "255778573271131@lid",
-    "967782239316": "255778573271131@lid",
-    "82932211392625": "82932211392625@lid",
-    "967739379318": "82932211392625@lid",
-    "9170426323188": "9170426323188@lid",
-    "201034076832": "9170426323188@lid",
-    "71473205121123": "71473205121123@lid",
-    "967714073394": "71473205121123@lid",
-    "34974539460730": "34974539460730@lid",
-    "967775228923": "34974539460730@lid",
-    "108921192747162": "108921192747162@lid",
-    "967781504247": "108921192747162@lid",
-    "48314909245471": "48314909245471@lid",
-    "201224962390": "48314909245471@lid",
-    "267285109407756": "267285109407756@lid",
-    "967770118365": "267285109407756@lid",
-    "145393602019422": "145393602019422@lid",
-    "967715948564": "145393602019422@lid",
-    "274165781295192": "274165781295192@lid",
-    "967785580268": "274165781295192@lid",
-    "249521175036142": "249521175036142@lid",
-    "967775105037": "249521175036142@lid",
-    "92978139926650": "92978139926650@lid",
-    "173959865749712": "173959865749712@lid",
-    "201221046493": "173959865749712@lid",
-    "230692004855860": "230692004855860@lid",
-    "201098582660": "230692004855860@lid",
-    "130936943460547": "130936943460547@lid",
-    "201150674920": "130936943460547@lid",
-    "32182928150595": "32182928150595@lid",
-    "201214660379": "32182928150595@lid",
-    "27595835985964": "27595835985964@lid",
-    "201013215648": "27595835985964@lid",
-    "232877958688936": "232877958688936@lid",
-    "201002342798": "232877958688936@lid",
-    "144517411897373": "144517411897373@lid",
-    "967771527349": "144517411897373@lid",
-    "47850918559825": "47850918559825@lid",
-    "201274575976": "47850918559825@lid",
-    "265742729646220": "265742729646220@lid",
-    "96567612175": "265742729646220@lid",
-    "123180249309348": "123180249309348@lid",
-    "201149892233": "123180249309348@lid",
-    "184147461075172": "184147461075172@lid",
-    "201064491017": "184147461075172@lid",
+    "260425996345448": "260425996345448@lid",
+    "178903020732625": "178903020732625@lid",
+    "212717457920": "178903020732625@lid",
+    "96478437609595": "96478437609595@lid",
+    "212699503382": "96478437609595@lid",
+    "137224641347609": "137224641347609@lid",
+    "212620781514": "137224641347609@lid",
+    "66018613448930": "66018613448930@lid",
+    "249116731124": "66018613448930@lid",
+    "149929339174971": "149929339174971@lid",
+    "212695610779": "149929339174971@lid",
+    "182321764417751": "182321764417751@lid",
+    "201116880068": "182321764417751@lid",
+    "255521143668801": "255521143668801@lid",
+    "212655532755": "255521143668801@lid",
+    "89662257418389": "89662257418389@lid",
+    "212603653125": "89662257418389@lid",
+    "103655160197233": "103655160197233@lid",
+    "212714700670": "103655160197233@lid",
+    "172478135537828": "172478135537828@lid",
+    "212651918684": "172478135537828@lid",
+    "214911791681718": "214911791681718@lid",
+    "212644859516": "214911791681718@lid",
+    "157591644721353": "157591644721353@lid",
+    "212659100586": "157591644721353@lid",
+    "116921995403361": "116921995403361@lid",
+    "212679926705": "116921995403361@lid",
+    "30116696592532": "30116696592532@lid",
+    "972548059404": "30116696592532@lid",
+    "149031858790599": "149031858790599@lid",
+    "212719400539": "149031858790599@lid",
+    "269363672256593": "269363672256593@lid",
+    "212631922480": "269363672256593@lid",
+    "91702551425251": "91702551425251@lid",
+    "201143622557": "91702551425251@lid",
+    "32058072154122": "32058072154122@lid",
+    "212722312697": "32058072154122@lid",
+    "153451195584648": "153451195584648@lid",
+    "967770942539": "153451195584648@lid",
+    "82472113058042": "82472113058042@lid",
+    "201149396122": "82472113058042@lid",
+    "201194236588240": "201194236588240@lid",
+    "213669368605": "201194236588240@lid",
+    "247407983993016": "247407983993016@lid",
+    "249124619642": "247407983993016@lid",
+    "173830815355110": "173830815355110@lid",
+    "963939524091": "173830815355110@lid",
+    "35610295324883": "35610295324883@lid",
+    "212784067615": "35610295324883@lid",
+    "117729432440979": "117729432440979@lid",
+    "967774622520": "117729432440979@lid",
+    "134055056162902": "134055056162902@lid",
+    "237769657987076": "237769657987076@lid",
+    "212639319505": "237769657987076@lid",
+    "121449377493112": "121449377493112@lid",
+    "212655608924": "121449377493112@lid",
+    "105489329348648": "105489329348648@lid",
+    "212760301226": "105489329348648@lid",
+    "116952597033027": "116952597033027@lid",
+    "212602537694": "116952597033027@lid",
+    "2521900802135": "2521900802135@lid",
+    "212627014612": "2521900802135@lid",
+    "99729794945200": "99729794945200@lid",
+    "212615154160": "99729794945200@lid",
+    "110698822635616": "110698822635616@lid",
+    "212672403757": "110698822635616@lid",
+    "258007678095478": "258007678095478@lid",
+    "212702457233": "258007678095478@lid",
+    "216703095013382": "216703095013382@lid",
+    "249128749239": "216703095013382@lid",
+    "154194191364212": "154194191364212@lid",
+    "212648753294": "154194191364212@lid",
+    "39471319933152": "39471319933152@lid",
+    "212774196228": "39471319933152@lid",
+    "242030701740102": "242030701740102@lid",
+    "212681305065": "242030701740102@lid",
+    "150603212796152": "150603212796152@lid",
+    "212673506139": "150603212796152@lid",
+    "72602412441616": "72602412441616@lid",
+    "201008756439": "72602412441616@lid",
+    "71095197634673": "71095197634673@lid",
+    "967778877954": "71095197634673@lid",
+    "165768675229748": "165768675229748@lid",
+    "212702723970": "165768675229748@lid",
+    "202263146578063": "202263146578063@lid",
+    "96899821331": "202263146578063@lid",
+    "7881298563219": "7881298563219@lid",
+    "201066039142": "7881298563219@lid",
+    "186758146867244": "186758146867244@lid",
+    "230636136739041": "230636136739041@lid",
+    "963994874276": "230636136739041@lid",
+    "164557980962841": "164557980962841@lid",
+    "212717506474": "164557980962841@lid",
+    "238160785215580": "238160785215580@lid",
+    "212701810216": "238160785215580@lid",
+    "251110212300988": "251110212300988@lid",
+    "447403410047": "251110212300988@lid",
+    "9870455664686": "9870455664686@lid",
+    "923145556690": "9870455664686@lid",
+    "54906895491171": "54906895491171@lid",
+    "212672261688": "54906895491171@lid",
+    "181553082704058": "181553082704058@lid",
+    "212693809923": "181553082704058@lid",
+    "158725465763998": "158725465763998@lid",
+    "212654785391": "158725465763998@lid",
+    "159279516540964": "159279516540964@lid",
+    "195735182139525": "195735182139525@lid",
+    "967774220364": "195735182139525@lid",
+    "268723688612062": "268723688612062@lid",
+    "273590054318093": "273590054318093@lid",
+    "201141295606": "273590054318093@lid",
+    "223338332999813": "223338332999813@lid",
+    "212714293557": "223338332999813@lid",
+    "180415067369660": "180415067369660@lid",
+    "249113740962": "180415067369660@lid",
+    "208581496422476": "208581496422476@lid",
+    "6285188349341": "208581496422476@lid",
+    "92608604975107": "92608604975107@lid",
+    "212702677942": "92608604975107@lid",
+    "51415674294503": "51415674294503@lid",
+    "967782510810": "51415674294503@lid",
+    "65803848294433": "65803848294433@lid",
+    "212699935613": "65803848294433@lid",
+    "230898045820992": "230898045820992@lid",
+    "212694264298": "230898045820992@lid",
+    "62157488173228": "62157488173228@lid",
+    "212691413572": "62157488173228@lid",
+    "80496696549594": "80496696549594@lid",
+    "212689698450": "80496696549594@lid",
+    "5352250691729": "5352250691729@lid",
+    "201130256294": "5352250691729@lid",
+    "18610177224789": "18610177224789@lid",
+    "212777422832": "18610177224789@lid",
+    "162410547662927": "162410547662927@lid",
+    "218934041553": "162410547662927@lid",
+    "69342918094916": "69342918094916@lid",
+    "249905981094": "69342918094916@lid",
+    "13173218369664": "13173218369664@lid",
+    "191697879355572": "191697879355572@lid",
+    "9677282783275": "9677282783275@lid",
+    "201060908527": "9677282783275@lid",
+    "18026749509721": "18026749509721@lid",
+    "212600749403": "18026749509721@lid",
+    "99631094583517": "99631094583517@lid",
+    "212604896110": "99631094583517@lid",
+    "28910079242296": "28910079242296@lid",
+    "212601706056": "28910079242296@lid",
+    "176180162466033": "176180162466033@lid",
+    "255663028584575": "255663028584575@lid",
+    "212703259517": "255663028584575@lid",
+    "226147761651769": "226147761651769@lid",
+    "212750710904": "226147761651769@lid",
+    "7233077248222": "7233077248222@lid",
+    "212718367117": "7233077248222@lid",
+    "181991152562371": "181991152562371@lid",
+    "271768954613983": "271768954613983@lid",
+    "212694995247": "271768954613983@lid",
+    "261125656551615": "261125656551615@lid",
+    "225615370281208": "225615370281208@lid",
+    "212614548304": "225615370281208@lid",
+    "195133937037565": "195133937037565@lid",
+    "212626286401": "195133937037565@lid",
+    "169011794968697": "169011794968697@lid",
+    "212716153352": "169011794968697@lid",
+    "257363734966404": "257363734966404@lid",
+    "212754065851": "257363734966404@lid",
+    "227466534727878": "227466534727878@lid",
+    "216832262799416": "216832262799416@lid",
+    "212634409496": "216832262799416@lid",
+    "188025615159447": "188025615159447@lid",
+    "38788503965855": "38788503965855@lid",
+    "212619213805": "38788503965855@lid",
+    "176824541798535": "176824541798535@lid",
+    "212657170176": "176824541798535@lid",
+    "114672170758328": "114672170758328@lid",
+    "249913534853": "114672170758328@lid",
+    "3861846696081": "3861846696081@lid",
+    "102302497149019": "102302497149019@lid",
+    "212726615791": "102302497149019@lid",
+    "253970593366118": "253970593366118@lid",
+    "249117099626": "253970593366118@lid",
+    "254597725741117": "254597725741117@lid",
+    "967771749555": "254597725741117@lid",
+    "181110919159815": "181110919159815@lid",
+    "212669668316": "181110919159815@lid",
+    "203174048731380": "203174048731380@lid",
+    "967716986548": "203174048731380@lid",
+    "107172419662048": "107172419662048@lid",
+    "179461618147513": "179461618147513@lid",
+    "212785898547": "179461618147513@lid",
+    "180084254179463": "180084254179463@lid",
+    "212645313873": "180084254179463@lid",
+    "76180623487010": "76180623487010@lid",
+    "967779613641": "76180623487010@lid",
+    "241171020415085": "241171020415085@lid",
+    "212618949823": "241171020415085@lid",
+    "220719174668386": "220719174668386@lid",
+    "212772909578": "220719174668386@lid",
+    "75317267951639": "75317267951639@lid",
+    "380985436094": "75317267951639@lid",
+    "232156622282928": "232156622282928@lid",
+    "212649841917": "232156622282928@lid",
+    "193132515831916": "193132515831916@lid",
+    "212719036384": "193132515831916@lid",
+    "5171140624559": "5171140624559@lid",
+    "14787891171472": "14787891171472@lid",
+    "212649734344": "14787891171472@lid",
+    "194627147690237": "194627147690237@lid",
+    "212633866807": "194627147690237@lid",
+    "152841444401359": "152841444401359@lid",
+    "212764099370": "152841444401359@lid",
+    "257032754036740": "257032754036740@lid",
+    "212708100053": "257032754036740@lid",
+    "9140428636338": "9140428636338@lid",
+    "212724690931": "9140428636338@lid",
+    "243563954741388": "243563954741388@lid",
+    "31723349913829": "31723349913829@lid",
+    "212630504649": "31723349913829@lid",
+    "118288197673036": "118288197673036@lid",
+    "967774139468": "118288197673036@lid",
+    "35859319550156": "35859319550156@lid",
+    "212724211574": "35859319550156@lid",
+    "129541230055631": "129541230055631@lid",
+    "967781645867": "129541230055631@lid",
+    "97865410035910": "97865410035910@lid",
+    "212629843237": "97865410035910@lid",
+    "245574049779940": "245574049779940@lid",
+    "967717606509": "245574049779940@lid",
+    "279792020680758": "279792020680758@lid",
+    "17875922333863": "17875922333863@lid",
+    "212643606553": "17875922333863@lid",
+    "180827384193093": "180827384193093@lid",
+    "212698442666": "180827384193093@lid",
+    "195812390883393": "195812390883393@lid",
+    "212770495956": "195812390883393@lid",
+    "22471822585951": "22471822585951@lid",
+    "212705797509": "22471822585951@lid",
+    "259176378962080": "259176378962080@s.whatsapp.net",
+    "60460422435015": "60460422435015@lid",
+    "201092239149": "60460422435015@lid",
     "140029154300093": "140029154300093@lid",
-    "201104772814": "201104772814@s.whatsapp.net",
+    "21952064405596": "21952064405596@lid",
+    "249965610989": "21952064405596@lid",
+    "201021267292": "140029154300093@lid",
+    "98157971148804": "98157971148804@lid",
+    "226473810120903": "226473810120903@lid",
+    "257986505240659": "257986505240659@lid",
+    "249969223165": "85599436431502@lid",
+    "963940078344": "63295620948138@lid",
+    "249996667572": "4467554549901@lid",
+    "15440944336912": "15440944336912@lid",
+    "220379771617396": "220379771617396@lid",
+    "41580350144674": "41580350144674@lid",
     "1336405979283": "1336405979283@s.whatsapp.net",
-    "256745142264063": "256745142264063@lid",
-    "201010784816": "256745142264063@lid",
-    "168513813643319": "168513813643319@lid",
-    "201002460951": "168513813643319@lid",
     "275703144673510": "275703144673510@lid",
-    "201055459315": "275703144673510@lid",
-    "159318305411250": "159318305411250@lid",
-    "213655602484": "159318305411250@lid",
-    "114787832881247": "114787832881247@lid",
+    "120363424332765515": "120363424332765515@newsletter",
     "102667636445254": "102667636445254@lid",
     "2347018977002": "102667636445254@lid",
-    "173969881694378": "173969881694378@lid",
-    "967780309066": "173969881694378@lid",
-    "203805559922855": "203805559922855@lid",
-    "201104798596": "203805559922855@lid",
-    "82038975635529": "82038975635529@lid",
-    "212673945826": "82038975635529@lid",
     "135042982502527": "135042982502527@lid",
     "2348084831319": "135042982502527@lid",
-    "32173935571092": "32173935571092@lid",
-    "966575128330": "32173935571092@lid",
-    "157909371646134": "157909371646134@lid",
-    "201551449580": "157909371646134@lid",
-    "39969569697947": "39969569697947@lid",
-    "201145344873": "39969569697947@lid",
-    "224021970997318": "224021970997318@s.whatsapp.net",
-    "201104956162": "201104956162@s.whatsapp.net",
-    "963981873087": "963981873087@s.whatsapp.net",
-    "963949302320": "963949302320@s.whatsapp.net",
-    "201037223997": "201037223997@s.whatsapp.net",
-    "201093320780": "201093320780@s.whatsapp.net",
-    "963980245068": "963980245068@s.whatsapp.net",
-    "963993825873": "963993825873@s.whatsapp.net",
-    "9647760760103": "9647760760103@s.whatsapp.net",
-    "22242222255": "22242222255@s.whatsapp.net",
-    "6601851334739": "6601851334739@s.whatsapp.net",
-    "209900017819855": "209900017819855@lid",
-    "212626638478": "209900017819855@lid",
-    "209779641299046": "209779641299046@lid",
-    "201155186468": "209779641299046@lid",
-    "33814395015284": "33814395015284@lid",
-    "201271360815": "33814395015284@lid",
-    "205703818043642": "205703818043642@lid",
-    "249116366227": "205703818043642@lid",
-    "1830293659829": "1830293659829@lid",
-    "212638361610": "1830293659829@lid",
-    "254348818939953": "254348818939953@lid",
-    "212619960067": "254348818939953@lid",
-    "197852701716670": "197852701716670@lid",
-    "223115648958529": "223115648958529@lid",
-    "212710198964": "223115648958529@lid",
-    "185813723791537": "185813723791537@lid",
-    "201123001307": "185813723791537@lid",
-    "68071507132439": "68071507132439@lid",
-    "201011907203": "201011907203@s.whatsapp.net",
-    "133853092008183": "133853092008183@lid",
-    "235923124031598": "235923124031598@lid",
-    "201276559450": "235923124031598@lid",
-    "97334060160": "97334060160@s.whatsapp.net",
-    "249005661548740": "249005661548740@lid",
-    "963935855012": "249005661548740@lid",
-    "170966206394552": "170966206394552@lid",
-    "212694723710": "170966206394552@lid",
-    "9647703270534": "9647703270534@s.whatsapp.net",
-    "12013141024882": "12013141024882@lid",
-    "967735134138": "967735134138@s.whatsapp.net",
-    "9647817377323": "9647817377323@s.whatsapp.net",
-    "963930712605": "963930712605@s.whatsapp.net",
-    "201500748662": "201500748662@s.whatsapp.net",
-    "9647846068301": "9647846068301@s.whatsapp.net",
-    "249122831206": "249122831206@s.whatsapp.net",
-    "963952550964": "963952550964@s.whatsapp.net",
-    "0770257774": "0770257774@s.whatsapp.net",
-    "0622774445": "0622774445@s.whatsapp.net",
-    "93188509417677": "93188509417677@lid",
-    "201067026950": "93188509417677@lid",
-    "212720930556": "212720930556@s.whatsapp.net",
-    "963993464038": "963993464038@s.whatsapp.net",
-    "164510803472580": "164510803472580@lid",
-    "159185111089339": "159185111089339@lid",
-    "195812290224313": "195812290224313@lid",
-    "166486572285975": "166486572285975@lid",
-    "210505524375741": "210505524375741@lid",
-    "147554239041627": "147554239041627@lid",
-    "124133664911403": "124133664911403@lid",
-    "187415662690523": "187415662690523@lid",
-    "212724019501": "187415662690523@lid",
-    "227114364207229": "227114364207229@lid",
-    "212724713393": "227114364207229@lid"
+    "128334478479393": "128334478479393@lid",
+    "201011629739": "257986505240659@lid",
+    "120363413386420911": "120363413386420911@newsletter",
+    "25396812730385": "25396812730385@lid",
+    "212714312789": "25396812730385@lid",
+    "85599436431502": "85599436431502@lid",
+    "83559243116733": "83559243116733@lid",
+    "4467554549901": "4467554549901@lid",
+    "202989516152919": "202989516152919@lid",
+    "212777954482": "202989516152919@lid"
   },
   "numAliases": {
-    "230670127374543": ["201090578040"],
-    "201090578040": ["230670127374543"],
-    "110591767273686": ["212781075479"],
-    "212781075479": ["110591767273686"],
-    "135215032877087": ["967737107993"],
-    "967737107993": ["135215032877087"],
-    "131469804621891": ["212700902601"],
-    "212700902601": ["131469804621891"],
-    "18301610672370": ["218935062933"],
-    "218935062933": ["18301610672370"],
-    "127097511100664": ["963994381836"],
-    "963994381836": ["127097511100664"],
-    "191148240941077": ["212719057381"],
-    "212719057381": ["191148240941077"],
-    "75330119311597": ["201559059658"],
-    "201559059658": ["75330119311597"],
-    "202989516152919": ["212777954482"],
-    "212777954482": ["202989516152919"],
-    "17704677306438": ["967734191731"],
-    "967734191731": ["17704677306438"],
-    "108109209018554": ["201289601784"],
-    "201289601784": ["108109209018554"],
-    "225232782622952": ["218919619578"],
-    "218919619578": ["225232782622952"],
-    "27836303843385": ["201114518418"],
-    "201114518418": ["27836303843385"],
-    "228325310095509": ["201044231038"],
-    "201044231038": ["228325310095509"],
-    "246527599579212": ["967736894367"],
-    "967736894367": ["246527599579212"],
-    "10076697935997": ["967733406413"],
-    "967733406413": ["10076697935997"],
-    "257986505240659": ["201011629739"],
-    "201011629739": ["257986505240659"],
-    "151767752945738": ["967711057361"],
-    "967711057361": ["151767752945738"],
-    "61912087834835": ["966562805949"],
-    "966562805949": ["61912087834835"],
-    "242511754879037": ["201039883276"],
-    "201039883276": ["242511754879037"],
-    "269660176015540": ["212784326629"],
-    "212784326629": ["269660176015540"],
-    "34863038116008": ["48699551143"],
-    "48699551143": ["34863038116008"],
-    "53270999519307": ["201016825656"],
-    "201016825656": ["53270999519307"],
-    "197337104285832": ["963981816540"],
-    "963981816540": ["197337104285832"],
-    "85908724420719": ["201553993659"],
-    "201553993659": ["85908724420719"],
-    "88627220635828": ["962780807770"],
-    "962780807770": ["88627220635828"],
-    "124507444482192": ["201017094649"],
-    "201017094649": ["124507444482192"],
-    "25349484216519": ["963951925303"],
-    "963951925303": ["25349484216519"],
-    "132817887441116": ["201271931765"],
-    "201271931765": ["132817887441116"],
-    "71322965151807": ["48459194702"],
-    "48459194702": ["71322965151807"],
-    "5201289339089": ["966571758056"],
-    "966571758056": ["5201289339089"],
-    "62187267743910": ["966575522874"],
-    "966575522874": ["62187267743910"],
-    "216862059180229": ["212705112719"],
-    "212705112719": ["216862059180229"],
-    "69403148329086": ["201220894590"],
-    "201220894590": ["69403148329086"],
-    "64060091580535": ["201024667995"],
-    "201024667995": ["64060091580535"],
-    "173199505498130": ["212636553039"],
-    "212636553039": ["173199505498130"],
-    "66491126906886": ["201066920929"],
-    "201066920929": ["66491126906886"],
-    "67851943694444": ["201157544409"],
-    "201157544409": ["67851943694444"],
-    "41030460129474": ["48699554086"],
-    "48699554086": ["41030460129474"],
-    "231357791907855": ["48459074937"],
-    "48459074937": ["231357791907855"],
-    "138195471728731": ["48450414717"],
-    "48450414717": ["138195471728731"],
-    "65962896310518": ["48699541670"],
-    "48699541670": ["65962896310518"],
-    "92282439074019": ["972599671630"],
-    "972599671630": ["92282439074019"],
-    "94545752645830": ["48450464303"],
-    "48450464303": ["94545752645830"],
-    "180346213630206": ["22238489727"],
-    "22238489727": ["180346213630206"],
-    "244100892754111": ["201278438834"],
-    "201278438834": ["244100892754111"],
-    "229961893998792": ["201143599489"],
-    "201143599489": ["229961893998792"],
-    "234256928379123": ["6285169623886"],
-    "6285169623886": ["234256928379123"],
-    "108895339024520": ["6283830065887"],
-    "6283830065887": ["108895339024520"],
-    "96667701362773": ["212678093542"],
-    "212678093542": ["96667701362773"],
-    "102946574475405": ["967773522013"],
-    "967773522013": ["102946574475405"],
-    "86552667512956": ["967774143248"],
-    "967774143248": ["86552667512956"],
-    "87858320801801": ["967770949075"],
-    "967770949075": ["87858320801801"],
-    "247519552520309": ["967783960690"],
-    "967783960690": ["247519552520309"],
-    "27359277240468": ["967770537208"],
-    "967770537208": ["27359277240468"],
-    "223150025490481": ["201108598912"],
-    "201108598912": ["223150025490481"],
-    "263870526554293": ["967778857563"],
-    "967778857563": ["263870526554293"],
-    "37951186706668": ["967735459599"],
-    "967735459599": ["37951186706668"],
-    "171060729249908": ["201559851639"],
-    "201559851639": ["171060729249908"],
-    "176498023600297": ["201007103751"],
-    "201007103751": ["176498023600297"],
-    "198642858237987": ["967712392340"],
-    "967712392340": ["198642858237987"],
-    "208718918627561": ["967778175128"],
-    "967778175128": ["208718918627561"],
-    "178942027804900": ["201228021653"],
-    "201228021653": ["178942027804900"],
-    "169364166836314": ["967739176018"],
-    "967739176018": ["169364166836314"],
-    "33376929091617": ["994409674433"],
-    "994409674433": ["33376929091617"],
-    "171223199801358": ["79282019282"],
-    "79282019282": ["171223199801358"],
-    "45660468449432": ["972524299781"],
-    "972524299781": ["45660468449432"],
-    "28497846267955": ["201207783254"],
-    "201207783254": ["28497846267955"],
-    "45213154283630": ["201026404598"],
-    "201026404598": ["45213154283630"],
-    "116351184154660": ["967738290739"],
-    "967738290739": ["116351184154660"],
-    "9565613629573": ["967715781341"],
-    "967715781341": ["9565613629573"],
-    "159631569629296": ["967777748318"],
-    "967777748318": ["159631569629296"],
-    "167964057858098": ["201207749851"],
-    "201207749851": ["167964057858098"],
-    "16059503530092": ["967782289587"],
-    "967782289587": ["16059503530092"],
-    "269191923933260": ["201008321798"],
-    "201008321798": ["269191923933260"],
-    "69566289956983": ["22242142822"],
-    "22242142822": ["69566289956983"],
-    "104552892231819": ["967782600862"],
-    "967782600862": ["104552892231819"],
-    "51377086681281": ["967700227624"],
-    "967700227624": ["51377086681281"],
-    "112867881787439": ["201070914136"],
-    "201070914136": ["112867881787439"],
-    "9385107533989": ["967784218791"],
-    "967784218791": ["9385107533989"],
-    "255778573271131": ["967782239316"],
-    "967782239316": ["255778573271131"],
-    "82932211392625": ["967739379318"],
-    "967739379318": ["82932211392625"],
-    "9170426323188": ["201034076832"],
-    "201034076832": ["9170426323188"],
-    "71473205121123": ["967714073394"],
-    "967714073394": ["71473205121123"],
-    "34974539460730": ["967775228923"],
-    "967775228923": ["34974539460730"],
-    "108921192747162": ["967781504247"],
-    "967781504247": ["108921192747162"],
-    "48314909245471": ["201224962390"],
-    "201224962390": ["48314909245471"],
-    "267285109407756": ["967770118365"],
-    "967770118365": ["267285109407756"],
-    "145393602019422": ["967715948564"],
-    "967715948564": ["145393602019422"],
-    "274165781295192": ["967785580268"],
-    "967785580268": ["274165781295192"],
-    "249521175036142": ["967775105037"],
-    "967775105037": ["249521175036142"],
-    "173959865749712": ["201221046493"],
-    "201221046493": ["173959865749712"],
-    "230692004855860": ["201098582660"],
-    "201098582660": ["230692004855860"],
-    "130936943460547": ["201150674920"],
-    "201150674920": ["130936943460547"],
-    "32182928150595": ["201214660379"],
-    "201214660379": ["32182928150595"],
-    "27595835985964": ["201013215648"],
-    "201013215648": ["27595835985964"],
-    "232877958688936": ["201002342798"],
-    "201002342798": ["232877958688936"],
-    "144517411897373": ["967771527349"],
-    "967771527349": ["144517411897373"],
-    "47850918559825": ["201274575976"],
-    "201274575976": ["47850918559825"],
-    "265742729646220": ["96567612175"],
-    "96567612175": ["265742729646220"],
-    "123180249309348": ["201149892233"],
-    "201149892233": ["123180249309348"],
-    "184147461075172": ["201064491017"],
-    "201064491017": ["184147461075172"],
-    "256745142264063": ["201010784816"],
-    "201010784816": ["256745142264063"],
-    "168513813643319": ["201002460951"],
-    "201002460951": ["168513813643319"],
-    "275703144673510": ["201055459315"],
-    "201055459315": ["275703144673510"],
-    "159318305411250": ["213655602484"],
-    "213655602484": ["159318305411250"],
-    "102667636445254": ["2347018977002"],
-    "2347018977002": ["102667636445254"],
-    "173969881694378": ["967780309066"],
-    "967780309066": ["173969881694378"],
-    "203805559922855": ["201104798596"],
-    "201104798596": ["203805559922855"],
-    "82038975635529": ["212673945826"],
-    "212673945826": ["82038975635529"],
-    "135042982502527": ["2348084831319"],
-    "2348084831319": ["135042982502527"],
-    "32173935571092": ["966575128330"],
-    "966575128330": ["32173935571092"],
-    "157909371646134": ["201551449580"],
-    "201551449580": ["157909371646134"],
-    "39969569697947": ["201145344873"],
-    "201145344873": ["39969569697947"],
-    "209900017819855": ["212626638478"],
-    "212626638478": ["209900017819855"],
-    "209779641299046": ["201155186468"],
-    "201155186468": ["209779641299046"],
-    "33814395015284": ["201271360815"],
-    "201271360815": ["33814395015284"],
-    "205703818043642": ["249116366227"],
-    "249116366227": ["205703818043642"],
-    "1830293659829": ["212638361610"],
-    "212638361610": ["1830293659829"],
-    "254348818939953": ["212619960067"],
-    "212619960067": ["254348818939953"],
-    "223115648958529": ["212710198964"],
-    "212710198964": ["223115648958529"],
-    "185813723791537": ["201123001307"],
-    "201123001307": ["185813723791537"],
-    "235923124031598": ["201276559450"],
-    "201276559450": ["235923124031598"],
-    "249005661548740": ["963935855012"],
-    "963935855012": ["249005661548740"],
-    "170966206394552": ["212694723710"],
-    "212694723710": ["170966206394552"],
-    "93188509417677": ["201067026950"],
-    "201067026950": ["93188509417677"],
-    "187415662690523": ["212724019501"],
-    "212724019501": ["187415662690523"],
-    "227114364207229": ["212724713393"],
-    "212724713393": ["227114364207229"]
+    "127097511100664": [
+      "963994381836"
+    ],
+    "963994381836": [
+      "127097511100664"
+    ],
+    "41030460129474": [
+      "48699554086"
+    ],
+    "48699554086": [
+      "41030460129474"
+    ],
+    "65962896310518": [
+      "48699541670"
+    ],
+    "48699541670": [
+      "65962896310518"
+    ],
+    "231357791907855": [
+      "48459074937"
+    ],
+    "48459074937": [
+      "231357791907855"
+    ],
+    "110591767273686": [
+      "212781075479"
+    ],
+    "212781075479": [
+      "110591767273686"
+    ],
+    "132817887441116": [
+      "201271931765"
+    ],
+    "201271931765": [
+      "132817887441116"
+    ],
+    "69403148329086": [
+      "201220894590"
+    ],
+    "201220894590": [
+      "69403148329086"
+    ],
+    "71322965151807": [
+      "48459194702"
+    ],
+    "48459194702": [
+      "71322965151807"
+    ],
+    "138195471728731": [
+      "48450414717"
+    ],
+    "48450414717": [
+      "138195471728731"
+    ],
+    "148022474322076": [
+      "249112309237"
+    ],
+    "249112309237": [
+      "148022474322076"
+    ],
+    "254314241089717": [
+      "963993464038"
+    ],
+    "963993464038": [
+      "254314241089717"
+    ],
+    "180346213630206": [
+      "22238489727"
+    ],
+    "22238489727": [
+      "180346213630206"
+    ],
+    "135215032877087": [
+      "967737107993"
+    ],
+    "967737107993": [
+      "135215032877087"
+    ],
+    "170386452938821": [
+      "201104013325"
+    ],
+    "201104013325": [
+      "170386452938821"
+    ],
+    "23988130549861": [
+      "201156731065"
+    ],
+    "201156731065": [
+      "23988130549861"
+    ],
+    "106288377790512": [
+      "106288377790512",
+      "201557275014"
+    ],
+    "201557275014": [
+      "106288377790512"
+    ],
+    "213713864937638": [
+      "201065123979"
+    ],
+    "201065123979": [
+      "213713864937638"
+    ],
+    "180354954567746": [
+      "967780094121"
+    ],
+    "967780094121": [
+      "180354954567746"
+    ],
+    "229961893998792": [
+      "201143599489"
+    ],
+    "201143599489": [
+      "229961893998792"
+    ],
+    "205566311956527": [
+      "963981899367"
+    ],
+    "963981899367": [
+      "205566311956527"
+    ],
+    "17704677306438": [
+      "967734191731"
+    ],
+    "967734191731": [
+      "17704677306438"
+    ],
+    "50535071793351": [
+      "201158032810"
+    ],
+    "201158032810": [
+      "50535071793351"
+    ],
+    "154499251454159": [
+      "249998910727"
+    ],
+    "249998910727": [
+      "154499251454159"
+    ],
+    "4046630957135": [
+      "201107339306"
+    ],
+    "201107339306": [
+      "4046630957135"
+    ],
+    "244100892754111": [
+      "201278438834"
+    ],
+    "201278438834": [
+      "244100892754111"
+    ],
+    "76103213416476": [
+      "249112066443"
+    ],
+    "249112066443": [
+      "76103213416476"
+    ],
+    "204475474120734": [
+      "963991098300"
+    ],
+    "963991098300": [
+      "204475474120734"
+    ],
+    "55358420738155": [
+      "201044169576"
+    ],
+    "201044169576": [
+      "55358420738155"
+    ],
+    "209564792279159": [
+      "201550760098"
+    ],
+    "201550760098": [
+      "209564792279159"
+    ],
+    "185225481064568": [
+      "963992472932"
+    ],
+    "963992472932": [
+      "185225481064568"
+    ],
+    "109144480678094": [
+      "212694764381"
+    ],
+    "212694764381": [
+      "109144480678094"
+    ],
+    "212720930556": [
+      "45514288529589"
+    ],
+    "45514288529589": [
+      "212720930556"
+    ],
+    "34863038116008": [
+      "48699551143"
+    ],
+    "48699551143": [
+      "34863038116008"
+    ],
+    "95194192019637": [
+      "201040568566"
+    ],
+    "201040568566": [
+      "95194192019637"
+    ],
+    "15926208499811": [
+      "201013744631"
+    ],
+    "201013744631": [
+      "15926208499811"
+    ],
+    "90022917202133": [
+      "84362759891"
+    ],
+    "84362759891": [
+      "90022917202133"
+    ],
+    "137851857572050": [
+      "249909300846"
+    ],
+    "249909300846": [
+      "137851857572050"
+    ],
+    "105158717481064": [
+      "213551534695"
+    ],
+    "213551534695": [
+      "105158717481064"
+    ],
+    "100790769344629": [
+      "9647883210229"
+    ],
+    "9647883210229": [
+      "100790769344629"
+    ],
+    "66091795664976": [
+      "249904817398"
+    ],
+    "249904817398": [
+      "66091795664976"
+    ],
+    "29910940811361": [
+      "970567585285"
+    ],
+    "970567585285": [
+      "29910940811361"
+    ],
+    "37620356763893": [
+      "201285363836"
+    ],
+    "201285363836": [
+      "37620356763893"
+    ],
+    "129003956486233": [
+      "96899320725"
+    ],
+    "96899320725": [
+      "129003956486233"
+    ],
+    "241794361069634": [
+      "23568168955"
+    ],
+    "23568168955": [
+      "241794361069634"
+    ],
+    "39226741625052": [
+      "212632951869"
+    ],
+    "212632951869": [
+      "39226741625052"
+    ],
+    "185667711696927": [
+      "201069526227"
+    ],
+    "201069526227": [
+      "185667711696927"
+    ],
+    "173199505498130": [
+      "212636553039"
+    ],
+    "212636553039": [
+      "173199505498130"
+    ],
+    "237143012159682": [
+      "201044437513"
+    ],
+    "201044437513": [
+      "237143012159682"
+    ],
+    "229661279825920": [
+      "967784614192"
+    ],
+    "967784614192": [
+      "229661279825920"
+    ],
+    "92282439074019": [
+      "972599671630"
+    ],
+    "972599671630": [
+      "92282439074019"
+    ],
+    "5201289339089": [
+      "966571758056"
+    ],
+    "966571758056": [
+      "5201289339089"
+    ],
+    "197337104285832": [
+      "963981816540"
+    ],
+    "963981816540": [
+      "197337104285832"
+    ],
+    "94545752645830": [
+      "48450464303"
+    ],
+    "48450464303": [
+      "94545752645830"
+    ],
+    "269660176015540": [
+      "212784326629"
+    ],
+    "212784326629": [
+      "269660176015540"
+    ],
+    "27836303843385": [
+      "201114518418"
+    ],
+    "201114518418": [
+      "27836303843385"
+    ],
+    "124507444482192": [
+      "201017094649"
+    ],
+    "201017094649": [
+      "124507444482192"
+    ],
+    "108895339024520": [
+      "6283830065887"
+    ],
+    "6283830065887": [
+      "108895339024520"
+    ],
+    "178903020732625": [
+      "212717457920"
+    ],
+    "212717457920": [
+      "178903020732625"
+    ],
+    "96478437609595": [
+      "212699503382"
+    ],
+    "212699503382": [
+      "96478437609595"
+    ],
+    "137224641347609": [
+      "212620781514"
+    ],
+    "212620781514": [
+      "137224641347609"
+    ],
+    "66018613448930": [
+      "249116731124"
+    ],
+    "249116731124": [
+      "66018613448930"
+    ],
+    "149929339174971": [
+      "212695610779"
+    ],
+    "212695610779": [
+      "149929339174971"
+    ],
+    "182321764417751": [
+      "201116880068"
+    ],
+    "201116880068": [
+      "182321764417751"
+    ],
+    "255521143668801": [
+      "212655532755"
+    ],
+    "212655532755": [
+      "255521143668801"
+    ],
+    "89662257418389": [
+      "212603653125"
+    ],
+    "212603653125": [
+      "89662257418389"
+    ],
+    "103655160197233": [
+      "212714700670"
+    ],
+    "212714700670": [
+      "103655160197233"
+    ],
+    "172478135537828": [
+      "212651918684"
+    ],
+    "212651918684": [
+      "172478135537828"
+    ],
+    "214911791681718": [
+      "212644859516"
+    ],
+    "212644859516": [
+      "214911791681718"
+    ],
+    "157591644721353": [
+      "212659100586"
+    ],
+    "212659100586": [
+      "157591644721353"
+    ],
+    "116921995403361": [
+      "212679926705"
+    ],
+    "212679926705": [
+      "116921995403361"
+    ],
+    "30116696592532": [
+      "972548059404"
+    ],
+    "972548059404": [
+      "30116696592532"
+    ],
+    "149031858790599": [
+      "212719400539"
+    ],
+    "212719400539": [
+      "149031858790599"
+    ],
+    "269363672256593": [
+      "212631922480"
+    ],
+    "212631922480": [
+      "269363672256593"
+    ],
+    "91702551425251": [
+      "201143622557"
+    ],
+    "201143622557": [
+      "91702551425251"
+    ],
+    "32058072154122": [
+      "212722312697"
+    ],
+    "212722312697": [
+      "32058072154122"
+    ],
+    "153451195584648": [
+      "967770942539"
+    ],
+    "967770942539": [
+      "153451195584648"
+    ],
+    "82472113058042": [
+      "201149396122"
+    ],
+    "201149396122": [
+      "82472113058042"
+    ],
+    "201194236588240": [
+      "213669368605"
+    ],
+    "213669368605": [
+      "201194236588240"
+    ],
+    "247407983993016": [
+      "249124619642"
+    ],
+    "249124619642": [
+      "247407983993016"
+    ],
+    "173830815355110": [
+      "963939524091"
+    ],
+    "963939524091": [
+      "173830815355110"
+    ],
+    "35610295324883": [
+      "212784067615"
+    ],
+    "212784067615": [
+      "35610295324883"
+    ],
+    "117729432440979": [
+      "967774622520"
+    ],
+    "967774622520": [
+      "117729432440979"
+    ],
+    "212724972849": [
+      "134055056162902"
+    ],
+    "237769657987076": [
+      "212639319505"
+    ],
+    "212639319505": [
+      "237769657987076"
+    ],
+    "121449377493112": [
+      "212655608924"
+    ],
+    "212655608924": [
+      "121449377493112"
+    ],
+    "105489329348648": [
+      "212760301226"
+    ],
+    "212760301226": [
+      "105489329348648"
+    ],
+    "116952597033027": [
+      "212602537694"
+    ],
+    "212602537694": [
+      "116952597033027"
+    ],
+    "2521900802135": [
+      "212627014612"
+    ],
+    "212627014612": [
+      "2521900802135"
+    ],
+    "99729794945200": [
+      "212615154160"
+    ],
+    "212615154160": [
+      "99729794945200"
+    ],
+    "110698822635616": [
+      "212672403757"
+    ],
+    "212672403757": [
+      "110698822635616"
+    ],
+    "258007678095478": [
+      "212702457233"
+    ],
+    "212702457233": [
+      "258007678095478"
+    ],
+    "216703095013382": [
+      "249128749239"
+    ],
+    "249128749239": [
+      "216703095013382"
+    ],
+    "154194191364212": [
+      "212648753294"
+    ],
+    "212648753294": [
+      "154194191364212"
+    ],
+    "39471319933152": [
+      "212774196228"
+    ],
+    "212774196228": [
+      "39471319933152"
+    ],
+    "242030701740102": [
+      "212681305065"
+    ],
+    "212681305065": [
+      "242030701740102"
+    ],
+    "150603212796152": [
+      "212673506139"
+    ],
+    "212673506139": [
+      "150603212796152"
+    ],
+    "72602412441616": [
+      "201008756439"
+    ],
+    "201008756439": [
+      "72602412441616"
+    ],
+    "71095197634673": [
+      "967778877954"
+    ],
+    "967778877954": [
+      "71095197634673"
+    ],
+    "165768675229748": [
+      "212702723970"
+    ],
+    "212702723970": [
+      "165768675229748"
+    ],
+    "202263146578063": [
+      "96899821331"
+    ],
+    "96899821331": [
+      "202263146578063"
+    ],
+    "7881298563219": [
+      "201066039142"
+    ],
+    "201066039142": [
+      "7881298563219"
+    ],
+    "230636136739041": [
+      "963994874276"
+    ],
+    "963994874276": [
+      "230636136739041"
+    ],
+    "164557980962841": [
+      "212717506474"
+    ],
+    "212717506474": [
+      "164557980962841"
+    ],
+    "238160785215580": [
+      "212701810216"
+    ],
+    "212701810216": [
+      "238160785215580"
+    ],
+    "251110212300988": [
+      "447403410047"
+    ],
+    "447403410047": [
+      "251110212300988"
+    ],
+    "9870455664686": [
+      "923145556690"
+    ],
+    "923145556690": [
+      "9870455664686"
+    ],
+    "54906895491171": [
+      "212672261688"
+    ],
+    "212672261688": [
+      "54906895491171"
+    ],
+    "181553082704058": [
+      "212693809923"
+    ],
+    "212693809923": [
+      "181553082704058"
+    ],
+    "158725465763998": [
+      "212654785391"
+    ],
+    "212654785391": [
+      "158725465763998"
+    ],
+    "195735182139525": [
+      "967774220364"
+    ],
+    "967774220364": [
+      "195735182139525"
+    ],
+    "273590054318093": [
+      "201141295606"
+    ],
+    "201141295606": [
+      "273590054318093"
+    ],
+    "223338332999813": [
+      "212714293557"
+    ],
+    "212714293557": [
+      "223338332999813"
+    ],
+    "180415067369660": [
+      "249113740962"
+    ],
+    "249113740962": [
+      "180415067369660"
+    ],
+    "208581496422476": [
+      "6285188349341"
+    ],
+    "6285188349341": [
+      "208581496422476"
+    ],
+    "92608604975107": [
+      "212702677942"
+    ],
+    "212702677942": [
+      "92608604975107"
+    ],
+    "51415674294503": [
+      "967782510810"
+    ],
+    "967782510810": [
+      "51415674294503"
+    ],
+    "65803848294433": [
+      "212699935613"
+    ],
+    "212699935613": [
+      "65803848294433"
+    ],
+    "230898045820992": [
+      "212694264298"
+    ],
+    "212694264298": [
+      "230898045820992"
+    ],
+    "62157488173228": [
+      "212691413572"
+    ],
+    "212691413572": [
+      "62157488173228"
+    ],
+    "80496696549594": [
+      "212689698450"
+    ],
+    "212689698450": [
+      "80496696549594"
+    ],
+    "5352250691729": [
+      "201130256294"
+    ],
+    "201130256294": [
+      "5352250691729"
+    ],
+    "18610177224789": [
+      "212777422832"
+    ],
+    "212777422832": [
+      "18610177224789"
+    ],
+    "162410547662927": [
+      "218934041553"
+    ],
+    "218934041553": [
+      "162410547662927"
+    ],
+    "69342918094916": [
+      "249905981094"
+    ],
+    "249905981094": [
+      "69342918094916"
+    ],
+    "9677282783275": [
+      "201060908527"
+    ],
+    "201060908527": [
+      "9677282783275"
+    ],
+    "18026749509721": [
+      "212600749403"
+    ],
+    "212600749403": [
+      "18026749509721"
+    ],
+    "99631094583517": [
+      "212604896110"
+    ],
+    "212604896110": [
+      "99631094583517"
+    ],
+    "28910079242296": [
+      "212601706056"
+    ],
+    "212601706056": [
+      "28910079242296"
+    ],
+    "255663028584575": [
+      "212703259517"
+    ],
+    "212703259517": [
+      "255663028584575"
+    ],
+    "226147761651769": [
+      "212750710904"
+    ],
+    "212750710904": [
+      "226147761651769"
+    ],
+    "7233077248222": [
+      "212718367117"
+    ],
+    "212718367117": [
+      "7233077248222"
+    ],
+    "271768954613983": [
+      "212694995247"
+    ],
+    "212694995247": [
+      "271768954613983"
+    ],
+    "225615370281208": [
+      "212614548304"
+    ],
+    "212614548304": [
+      "225615370281208"
+    ],
+    "195133937037565": [
+      "212626286401"
+    ],
+    "212626286401": [
+      "195133937037565"
+    ],
+    "169011794968697": [
+      "212716153352"
+    ],
+    "212716153352": [
+      "169011794968697"
+    ],
+    "257363734966404": [
+      "212754065851"
+    ],
+    "212754065851": [
+      "257363734966404"
+    ],
+    "216832262799416": [
+      "212634409496"
+    ],
+    "212634409496": [
+      "216832262799416"
+    ],
+    "38788503965855": [
+      "212619213805"
+    ],
+    "212619213805": [
+      "38788503965855"
+    ],
+    "176824541798535": [
+      "212657170176"
+    ],
+    "212657170176": [
+      "176824541798535"
+    ],
+    "114672170758328": [
+      "249913534853"
+    ],
+    "249913534853": [
+      "114672170758328"
+    ],
+    "102302497149019": [
+      "212726615791"
+    ],
+    "212726615791": [
+      "102302497149019"
+    ],
+    "253970593366118": [
+      "249117099626"
+    ],
+    "249117099626": [
+      "253970593366118"
+    ],
+    "254597725741117": [
+      "967771749555"
+    ],
+    "967771749555": [
+      "254597725741117"
+    ],
+    "181110919159815": [
+      "212669668316"
+    ],
+    "212669668316": [
+      "181110919159815"
+    ],
+    "203174048731380": [
+      "967716986548"
+    ],
+    "967716986548": [
+      "203174048731380"
+    ],
+    "179461618147513": [
+      "212785898547"
+    ],
+    "212785898547": [
+      "179461618147513"
+    ],
+    "180084254179463": [
+      "212645313873"
+    ],
+    "212645313873": [
+      "180084254179463"
+    ],
+    "76180623487010": [
+      "967779613641"
+    ],
+    "967779613641": [
+      "76180623487010"
+    ],
+    "241171020415085": [
+      "212618949823"
+    ],
+    "212618949823": [
+      "241171020415085"
+    ],
+    "220719174668386": [
+      "212772909578"
+    ],
+    "212772909578": [
+      "220719174668386"
+    ],
+    "75317267951639": [
+      "380985436094"
+    ],
+    "380985436094": [
+      "75317267951639"
+    ],
+    "232156622282928": [
+      "212649841917"
+    ],
+    "212649841917": [
+      "232156622282928"
+    ],
+    "193132515831916": [
+      "212719036384"
+    ],
+    "212719036384": [
+      "193132515831916"
+    ],
+    "14787891171472": [
+      "212649734344"
+    ],
+    "212649734344": [
+      "14787891171472"
+    ],
+    "194627147690237": [
+      "212633866807"
+    ],
+    "212633866807": [
+      "194627147690237"
+    ],
+    "152841444401359": [
+      "212764099370"
+    ],
+    "212764099370": [
+      "152841444401359"
+    ],
+    "257032754036740": [
+      "212708100053"
+    ],
+    "212708100053": [
+      "257032754036740"
+    ],
+    "9140428636338": [
+      "212724690931"
+    ],
+    "212724690931": [
+      "9140428636338"
+    ],
+    "31723349913829": [
+      "212630504649"
+    ],
+    "212630504649": [
+      "31723349913829"
+    ],
+    "118288197673036": [
+      "967774139468"
+    ],
+    "967774139468": [
+      "118288197673036"
+    ],
+    "35859319550156": [
+      "212724211574"
+    ],
+    "212724211574": [
+      "35859319550156"
+    ],
+    "129541230055631": [
+      "967781645867"
+    ],
+    "967781645867": [
+      "129541230055631"
+    ],
+    "97865410035910": [
+      "212629843237"
+    ],
+    "212629843237": [
+      "97865410035910"
+    ],
+    "245574049779940": [
+      "967717606509"
+    ],
+    "967717606509": [
+      "245574049779940"
+    ],
+    "17875922333863": [
+      "212643606553"
+    ],
+    "212643606553": [
+      "17875922333863"
+    ],
+    "180827384193093": [
+      "212698442666"
+    ],
+    "212698442666": [
+      "180827384193093"
+    ],
+    "195812390883393": [
+      "212770495956"
+    ],
+    "212770495956": [
+      "195812390883393"
+    ],
+    "22471822585951": [
+      "212705797509"
+    ],
+    "212705797509": [
+      "22471822585951"
+    ],
+    "60460422435015": [
+      "201092239149"
+    ],
+    "201092239149": [
+      "60460422435015"
+    ],
+    "21952064405596": [
+      "249965610989"
+    ],
+    "249965610989": [
+      "21952064405596"
+    ],
+    "140029154300093": [
+      "201021267292"
+    ],
+    "201021267292": [
+      "140029154300093"
+    ],
+    "85599436431502": [
+      "249969223165"
+    ],
+    "249969223165": [
+      "85599436431502"
+    ],
+    "63295620948138": [
+      "963940078344"
+    ],
+    "963940078344": [
+      "63295620948138"
+    ],
+    "4467554549901": [
+      "249996667572"
+    ],
+    "249996667572": [
+      "4467554549901"
+    ],
+    "102667636445254": [
+      "2347018977002"
+    ],
+    "2347018977002": [
+      "102667636445254"
+    ],
+    "135042982502527": [
+      "2348084831319"
+    ],
+    "2348084831319": [
+      "135042982502527"
+    ],
+    "257986505240659": [
+      "201011629739"
+    ],
+    "201011629739": [
+      "257986505240659"
+    ],
+    "25396812730385": [
+      "212714312789"
+    ],
+    "212714312789": [
+      "25396812730385"
+    ],
+    "202989516152919": [
+      "212777954482"
+    ],
+    "212777954482": [
+      "202989516152919"
+    ]
   },
   "bans": {},
   "orderGroups": {
@@ -1254,77 +3015,211 @@
     "48699551143": true
   },
   "violationSeen": [
-    "3EB060473F336BFAB4C58CCBDA65051F70063464",
-    "3EB08CB657B92B76FCD1E24F7993964AE906B8D5",
-    "3EB07D1715A1F8823F07CCAC912B06090971C982",
-    "3EB08392CEF4280BE808388035EF50EEB2A64725",
-    "3EB05B3D1DDF860C1B5EFDD078A755DFB3855D03",
-    "3EB08043F991C392D3988E659B75817D6BD3E8DE",
-    "3EB0DB8E6654604BBC954A82B9274ABB561096AB",
-    "3EB079CBB968F2825BD0E8A47877F078737DE089",
-    "3EB0AE0E4C9D2A8E28F476975C84E87A23B669C1",
-    "3EB0F866C354E42603C9392DB85681F654BF1B87",
-    "3EB031E745F6B51ABDAF22C78B2E6AE1812E2FD8"
+    "3EB0C70A1680C1531BFC41",
+    "3EB01675409AD0E3E3BF68",
+    "3EB0BFEE901F17C3698F8C",
+    "3EB04B90FD74C0528688D4",
+    "3EB0C99270C0880BBFDF7DA6347CD0F02C8C65E6"
   ],
   "adsResults": {
-    "تيا": { "wins": 1, "losses": 3, "profit": 1150, "loss": 1500 },
-    "فانغ": { "wins": 34, "losses": 23, "profit": 29339, "loss": 9664 },
-    "كيرا💤": { "wins": 9, "losses": 2, "profit": 1490, "loss": 510 },
-    "تانجيرو": { "wins": 48, "losses": 41, "profit": 8871, "loss": 3588 },
-    "جيرايا": { "wins": 12, "losses": 15, "profit": 5979, "loss": 4043 },
-    "كلينتون": { "wins": 27, "losses": 29, "profit": 2431, "loss": 1490 },
-    "توموكو": { "wins": 44, "losses": 31, "profit": 24266, "loss": 8623 },
-    "ايروين": { "wins": 5, "losses": 3, "profit": 5430, "loss": 1500 },
-    "ميغومي": { "wins": 14, "losses": 8, "profit": 11885, "loss": 3201 },
-    "الحمايه": { "wins": 1, "losses": 0, "profit": 180, "loss": 0 },
-    "هيسوكا": { "wins": 8, "losses": 12, "profit": 2033, "loss": 2439 },
-    "سونغ": { "wins": 0, "losses": 2, "profit": 0, "loss": 300 },
-    "سوبارو": { "wins": 11, "losses": 16, "profit": 8630, "loss": 5500 },
-    "كيرا": { "wins": 3, "losses": 0, "profit": 360, "loss": 0 },
-    "الجيسي": { "wins": 4, "losses": 0, "profit": 1010, "loss": 0 },
-    "سيتو كايبا": { "wins": 8, "losses": 11, "profit": 1659, "loss": 1480 },
-    "ثورفين": { "wins": 1, "losses": 0, "profit": 260, "loss": 0 },
-    "هوتارو": { "wins": 6, "losses": 1, "profit": 1125, "loss": 40 },
-    "ناغي": { "wins": 1, "losses": 2, "profit": 65, "loss": 125 },
-    "ناروتو": { "wins": 1, "losses": 1, "profit": 30, "loss": 50 },
-    "ايتادوري": { "wins": 14, "losses": 8, "profit": 2343, "loss": 371 },
-    "الجيس亗ي": { "wins": 1, "losses": 0, "profit": 650, "loss": 0 },
-    "ايتاشي": { "wins": 10, "losses": 14, "profit": 1440, "loss": 765 },
-    "ميموكو": { "wins": 13, "losses": 8, "profit": 3125, "loss": 420 },
-    "سوهو": { "wins": 6, "losses": 3, "profit": 560, "loss": 150 },
-    "غوير": { "wins": 2, "losses": 0, "profit": 150, "loss": 0 },
-    "كاكاشي": { "wins": 10, "losses": 4, "profit": 8190, "loss": 2000 },
-    "غبيمارو": { "wins": 0, "losses": 1, "profit": 0, "loss": 100 },
-    "شادو": { "wins": 17, "losses": 13, "profit": 9892, "loss": 5000 },
-    "كيلوا": { "wins": 0, "losses": 1, "profit": 0, "loss": 12 },
-    "مومو": { "wins": 1, "losses": 0, "profit": 250, "loss": 0 },
-    "10076697935997": { "wins": 1, "losses": 0, "profit": 30, "loss": 0 },
-    "توجي": { "wins": 1, "losses": 0, "profit": 30, "loss": 0 },
-    "اغريس": { "wins": 2, "losses": 1, "profit": 365, "loss": 50 },
-    "ايرين": { "wins": 4, "losses": 1, "profit": 4952, "loss": 500 },
-    "زينتسو": { "wins": 1, "losses": 1, "profit": 650, "loss": 500 },
-    "نيزوكو": { "wins": 1, "losses": 0, "profit": 30, "loss": 0 },
-    "ميكو": { "wins": 7, "losses": 10, "profit": 1291, "loss": 680 },
-    "ساسكي": { "wins": 6, "losses": 4, "profit": 169, "loss": 67 },
-    "كوروكو": { "wins": 0, "losses": 1, "profit": 0, "loss": 10 },
-    "يوتا": { "wins": 3, "losses": 7, "profit": 267, "loss": 280 },
-    "نوبارا": { "wins": 5, "losses": 2, "profit": 2672, "loss": 532 },
-    "غون": { "wins": 11, "losses": 12, "profit": 1822, "loss": 1300 },
-    "سوكونا": { "wins": 0, "losses": 2, "profit": 0, "loss": 130 },
-    "تنغن": { "wins": 1, "losses": 1, "profit": 150, "loss": 50 },
-    "ايتاتشي": { "wins": 3, "losses": 2, "profit": 741, "loss": 250 },
-    "غوجو": { "wins": 5, "losses": 2, "profit": 760, "loss": 100 },
-    "يوريتشي": { "wins": 2, "losses": 1, "profit": 3400, "loss": 100 },
-    "الملك": { "wins": 0, "losses": 1, "profit": 0, "loss": 500 },
-    "كويوكي": { "wins": 4, "losses": 0, "profit": 157, "loss": 0 }
+    "تيا": {
+      "wins": 1,
+      "losses": 3,
+      "profit": 1150,
+      "loss": 1500
+    },
+    "فانغ": {
+      "wins": 6,
+      "losses": 4,
+      "profit": 1029,
+      "loss": 1014
+    },
+    "كيرا💤": {
+      "wins": 4,
+      "losses": 0,
+      "profit": 1340,
+      "loss": 0
+    },
+    "تانجيرو": {
+      "wins": 41,
+      "losses": 37,
+      "profit": 5711,
+      "loss": 2171
+    },
+    "جيرايا": {
+      "wins": 11,
+      "losses": 10,
+      "profit": 4829,
+      "loss": 2150
+    },
+    "كلينتون": {
+      "wins": 12,
+      "losses": 12,
+      "profit": 921,
+      "loss": 490
+    },
+    "توموكو": {
+      "wins": 8,
+      "losses": 8,
+      "profit": 691,
+      "loss": 900
+    },
+    "ايروين": {
+      "wins": 2,
+      "losses": 3,
+      "profit": 2150,
+      "loss": 1500
+    },
+    "ميغومي": {
+      "wins": 13,
+      "losses": 4,
+      "profit": 10885,
+      "loss": 2000
+    },
+    "الحمايه": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 180,
+      "loss": 0
+    },
+    "هيسوكا": {
+      "wins": 2,
+      "losses": 3,
+      "profit": 225,
+      "loss": 300
+    },
+    "سونغ": {
+      "wins": 0,
+      "losses": 2,
+      "profit": 0,
+      "loss": 300
+    },
+    "سوبارو": {
+      "wins": 4,
+      "losses": 4,
+      "profit": 1959,
+      "loss": 1350
+    },
+    "كيرا": {
+      "wins": 2,
+      "losses": 0,
+      "profit": 330,
+      "loss": 0
+    },
+    "الجيسي": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 50,
+      "loss": 0
+    },
+    "سيتو كايبا": {
+      "wins": 0,
+      "losses": 1,
+      "profit": 0,
+      "loss": 30
+    },
+    "ثورفين": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 260,
+      "loss": 0
+    },
+    "هوتارو": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 90,
+      "loss": 0
+    },
+    "ناغي": {
+      "wins": 0,
+      "losses": 1,
+      "profit": 0,
+      "loss": 100
+    },
+    "ناروتو": {
+      "wins": 1,
+      "losses": 1,
+      "profit": 30,
+      "loss": 50
+    },
+    "ايتادوري": {
+      "wins": 3,
+      "losses": 3,
+      "profit": 74,
+      "loss": 31
+    },
+    "الجيس亗ي": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 650,
+      "loss": 0
+    },
+    "ايتاشي": {
+      "wins": 1,
+      "losses": 1,
+      "profit": 148,
+      "loss": 70
+    },
+    "ميموكو": {
+      "wins": 10,
+      "losses": 3,
+      "profit": 2840,
+      "loss": 180
+    },
+    "سوهو": {
+      "wins": 3,
+      "losses": 2,
+      "profit": 280,
+      "loss": 100
+    },
+    "غوير": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 90,
+      "loss": 0
+    },
+    "كاكاشي": {
+      "wins": 5,
+      "losses": 3,
+      "profit": 3670,
+      "loss": 1500
+    },
+    "غبيمارو": {
+      "wins": 0,
+      "losses": 1,
+      "profit": 0,
+      "loss": 100
+    },
+    "كيلوا": {
+      "wins": 0,
+      "losses": 1,
+      "profit": 0,
+      "loss": 12
+    },
+    "شادو": {
+      "wins": 5,
+      "losses": 2,
+      "profit": 1870,
+      "loss": 900
+    },
+    "مومو": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 250,
+      "loss": 0
+    },
+    "كويوكي": {
+      "wins": 1,
+      "losses": 0,
+      "profit": 33,
+      "loss": 0
+    }
   },
   "guildNames": {
     "🩸": "نوفا",
-    "❄": "@⁨~بوت فورتكس⁩ 𝑽𝑶𝑹𝑻𝑿 ❄",
-    "☘": "@⁨🍀◆━─⊱𝑩𝑶𝑻⊰─━◆🍀⁩ سولار ☘️",
-    "@⁨~بوت نوفا⁩": "🩸𝑵𝑶𝑽𝑨🩸",
-    "@⁨~بوت فورتكس⁩": "❄𝑽𝑶𝑹𝑻𝑿❄",
-    "@⁨🍀◆━─⊱𝑩𝑶𝑻⊰─━◆🍀⁩": "☘️𝑺𝑶𝑳𝑨𝑹☘️"
+    "❄": "فورتكس",
+    "☘": "@⁨🍀⌬─⟐─⊱𝔹𝕆𝕋⊰─⟐━⌬🍀⁩ سولار ☘️",
+    "@231357791907855": "☘️𝑺𝑶𝑳𝑨𝑹☘️"
   },
   "guildBots": {},
   "guildSelf": null,
@@ -1333,48 +3228,15 @@
   },
   "guildMembers": {},
   "lifeBan": {
-    "1336405979283": { "at": 1790797061647, "by": "34863038116008", "nickname": "عرصا وعاهره وفاشل" },
-    "33814395015284": { "at": 1791036768684, "by": "127097511100664", "nickname": "ساسكي" }
+    "1336405979283": {
+      "at": 1790797061642,
+      "by": "34863038116008",
+      "nickname": "عرصا وعاهره وفاشل"
+    }
   },
   "welcomeGift": {
-    "96667701362773": 1790772507675,
-    "212678093542": 1790772507675,
-    "275703144673510": 1790807435287,
-    "201055459315": 1790807435287,
-    "114787832881247": 1790833256891,
-    "173969881694378": 1790847885293,
-    "967780309066": 1790847885293,
-    "203805559922855": 1790891066824,
-    "201104798596": 1790891066824,
-    "82038975635529": 1790892071560,
-    "212673945826": 1790892071560,
-    "209900017819855": 1791001612042,
-    "212626638478": 1791001612042,
-    "33814395015284": 1791024185885,
-    "201271360815": 1791024185885,
-    "39969569697947": 1791029784729,
-    "201145344873": 1791029784729,
-    "209779641299046": 1791030670526,
-    "201155186468": 1791030670526,
-    "205703818043642": 1791037184745,
-    "249116366227": 1791037184745,
-    "157909371646134": 1791052013143,
-    "201551449580": 1791052013143,
-    "1830293659829": 1791054592579,
-    "212638361610": 1791054592579,
-    "223115648958529": 1791059930512,
-    "212710198964": 1791059930512,
-    "185813723791537": 1791060578826,
-    "201123001307": 1791060578826,
-    "254348818939953": 1791100655699,
-    "212619960067": 1791100655699,
-    "249005661548740": 1791109060249,
-    "963935855012": 1791109060249,
-    "93188509417677": 1791116553321,
-    "201067026950": 1791116553321,
-    "68071507132439": 1791116559890,
-    "187415662690523": 1791122871024,
-    "212724019501": 1791122871024
+    "140029154300093": 1790788979741,
+    "201021267292": 1790788979741
   },
   "mazadLocked": false,
   "mazadAllowed": {},
@@ -1399,9 +3261,176 @@
     }
   },
   "ahaCooldown": {
-    "120363414055337881@g.us": 1789184578055
+    "120363414055337881@g.us": 1790878730996
   },
   "adsSeen": [
+    "3EB0ED4D9E67E21F4C067F",
+    "3EB0B959935205A2F520EC",
+    "3EB0D1473E7CF0525EA339",
+    "3EB0CE9446C9C8B5D2C663",
+    "3EB025C661768A38763834",
+    "3EB02327118791DAAC485B",
+    "3EB01959CBA640BD7DFA0C",
+    "3EB0219C6EF074A01F63C4",
+    "3EB00FBBD7557A66390DD6",
+    "3EB0847678E526EEA863C6",
+    "3EB0DCD618CC659B700D6B",
+    "3EB01BC77983F43B6ABC5E",
+    "3EB09EC5A83FCCBA24307C",
+    "3EB0A29EE1813C8225E5D7",
+    "3EB0D0C9616009F6B34C48",
+    "3EB0F8C2653203F0C4EA53",
+    "3EB0C5D5123C4F1A2ECCC4",
+    "3EB0D157F2E231869B04CE",
+    "3EB09BAE62D702028B3E7C",
+    "3EB0BE7E3C3E8DFD02B2DA",
+    "3EB04F1A82115AB695B093",
+    "3EB01D93641276992AE5CB",
+    "3EB0439FB708C2F59E6DF5",
+    "3EB04D0B152C409872FE42",
+    "3EB0177F6C3407B12A7F58",
+    "3EB0B204F2552B75ED79CC",
+    "3EB0A48194DE7FF9D62A56",
+    "3EB0C60E894C39DD994200",
+    "3EB06087F8D9AD5C71DF5C",
+    "3EB00ECA394677675561F4",
+    "3EB06F7F506E88C9D79B68",
+    "3EB0BD8281DC19FF5AE0AB",
+    "3EB0C8D2A9B286016CC813",
+    "3EB06BA1F596214C3A56B6",
+    "3EB0EE0CA25B5FA74CA7AF",
+    "3EB0AC975ADDBDD082F62B",
+    "3EB0A2BF2D9EDA0BE59020",
+    "3EB094821ADCFAC4CCAC75",
+    "3EB08319B33C45B6D6D2D9",
+    "3EB08866B048D27220CF5F",
+    "3EB0A3FD4D313BC9B264B3",
+    "3EB0CCF2BF8B7E180CF820",
+    "3EB0BC23761DA011DC8C9A",
+    "3EB041BD0617CDDB10A328",
+    "3EB09B8A02BAAF8B6189B1",
+    "3EB066CA513D0466E53381",
+    "3EB0019C136724BB218E7F",
+    "3EB0C8B4964074F9687403",
+    "3EB03D1C6409F34B838C0E",
+    "3EB0A484B2FDDE47693BFF",
+    "3EB0A538E687BE57790B44",
+    "3EB01AF0C44103F9E9134A",
+    "3EB0CBF086CCB724873D83",
+    "3EB0B5A4E523BCFAE0E955",
+    "3EB07939717CFED5AA345E",
+    "3EB0BBAC028768E6DAD425",
+    "3EB0D8C05CC799ED0CD3EB",
+    "3EB0232E076D8CB2D38D62",
+    "3EB02342BE9733851CC0C5",
+    "3EB0F9DF660508BF7D29F3",
+    "3EB03DD2212FAFF8512577",
+    "3EB063C66F8E8BDFC31AF4",
+    "3EB0251BDF301D74AF5076",
+    "3EB0974F5AE32802190A2F",
+    "3EB0B1B74318A817422460",
+    "3EB0E38B27F9A2D7D1D2D4",
+    "3EB0676A13EAD0EAD25544",
+    "3EB090385BA9D30A0FD965",
+    "3EB0F7826673CD4475E443",
+    "3EB0B8496B4F48CF79DA50",
+    "3EB04F4AB580B943B209AB",
+    "3EB00DF72126C112132676",
+    "3EB0416ABEC572303F6CDE",
+    "3EB036FEC9893178665F57",
+    "3EB07841954E9E80A757FD",
+    "3EB037AEC0160A74FC6FDA",
+    "3EB096A193C508677BFF07",
+    "3EB01D88250D5EF1C08D9E",
+    "3EB0D5D3593B50564CC33F",
+    "3EB00EB7878BF1AA109E8C",
+    "3EB01D9A4F9F99A80B2B05",
+    "3EB0106410E541BEE1AB37",
+    "3EB0A33A52ECF823CC5F65",
+    "3EB0FE9C791B399A217CC8",
+    "3EB0DDCFAEEA45061850BD",
+    "3EB0257BF2D213E98D9943",
+    "3EB0306DCF00298ACCB0F5",
+    "3EB023B4243F45AB1AEE27",
+    "3EB0245266F1173EC5DDCE",
+    "3EB068475A0C7C2B393692",
+    "3EB018EFAE670E2C1660BD",
+    "3EB04EBA43458F5FE0B1D0",
+    "3EB0C758F91E2A5467B712",
+    "3EB0CAA031BE0455FA6BB4",
+    "3EB019AC2A16B8C0BE9EE1",
+    "3EB017D74DC17D16078B67",
+    "3EB024E474EECDF9481F54",
+    "3EB0ED0112089F334C6D41",
+    "3EB0C7F4B117EB8206BD81",
+    "3EB025E020ACE4C8129B36",
+    "3EB093EF6C9501A008E2F4",
+    "3EB0A6A544943A882FF635",
+    "3EB0BD2AACA6D49975B988",
+    "3EB0DE9176AA9D8E7026FC",
+    "3EB0E0B738FDC32A68D7AE",
+    "3EB09E8008EBFC242514FF",
+    "3EB0A29822F73B8E50FBBD",
+    "3EB03DDFEB024BF4302955",
+    "3EB0796B8389AEEA8078FC",
+    "3EB06BB68DA158BD80BF30",
+    "3EB0BE2C7829D1FE6AFAD0",
+    "3EB060B39BF47D07D02BFF",
+    "3EB0DF9EF8FA973E5D81CF",
+    "3EB01B4D50EF2BA305B27B",
+    "3EB05C0EAA36A132C49353",
+    "3EB093CD1B039214D261CC",
+    "3EB0EE14D879CA719F1756",
+    "3EB0BBEDA97A7766076743",
+    "3EB0C7A2D8A4B91BE19485",
+    "3EB0A9F68169FAECCAF894",
+    "3EB0D0618072838F89D1F4",
+    "3EB0436DB09114EAD02974",
+    "3EB0996E185ADEC7CD5218",
+    "3EB00B4C984F0F7DC954D5",
+    "3EB05364D25D93561C3185",
+    "3EB0CF57C3C708DD37B46B",
+    "3EB0D847C277BF8A6DF336",
+    "3EB02124EA072F3C92287C",
+    "3EB0B7BD25925DD543556C",
+    "3EB023B9625AD35D04857C",
+    "3EB0740FFBDCF1E58B08FE",
+    "3EB0D967593F55DDB84B92",
+    "3EB05BDA030CF3AEAD97D3",
+    "3EB09165AE01CA71F19D02",
+    "3EB039D3E8A759F3D23725",
+    "3EB0E6C7AA0B52B618C840",
+    "3EB0C01F65DEAB64025BD2",
+    "3EB05FC208E2CE209D3927",
+    "3EB01741851ADFC1927392",
+    "3EB000D9648929BE1F869C",
+    "3EB0D411B1966A1BB1680B",
+    "3EB001825AB89EFAF99789",
+    "3EB0772EBDFBBBF56CAFF0",
+    "3EB0F576890DE99899F092",
+    "3EB07B8FBFDB1E5CB1A3A2",
+    "3EB0909EF7C54B7274BAD8",
+    "3EB06E670C7CE31C00E46E",
+    "3EB07BA5882061AF0A6400",
+    "3EB067F54ED8177ED4D92A",
+    "3EB0B595A0E332D4262ED4",
+    "3EB06B0E3278FAF2948A62",
+    "3EB0C5F44DD89826588BCC",
+    "3EB076BD6E77E542A3A1B0",
+    "3EB0568BCB47CCA3AE6B90",
+    "3EB0C1BDE70A0AC0960E54",
+    "3EB0775EF45DDD3B5C8998",
+    "3EB093D392F1260699178A",
+    "3EB0F4F48C56A8F2E84823",
+    "3EB0ACF4615BDBA0F5F07B",
+    "3EB007DA52EE7E56BFB8D4",
+    "3EB09A404F31895ACC0E9C",
+    "3EB072C650F66D7C644412",
+    "3EB039C23FF69D03425C8D",
+    "3EB063C6F13323EC82846D",
+    "3EB0A8D3992ADCA778F7AE",
+    "3EB0928D087F9DDE5DE45F",
+    "3EB0F5654DB55B06B0289F",
     "3EB0FB9A8EEB61372020BE",
     "3EB0785037041C15523CE8",
     "3EB0B6828C577CF2709298",
@@ -1575,331 +3604,6 @@
     "3EB03E5C63991ED861C52B",
     "3EB0D7AF8239BE2352E2B7",
     "3EB0599A703AB15F32FF8B",
-    "3EB0DDDE62EF2A7165D514",
-    "3EB020BD7D2D08E5777CFB",
-    "3EB040BD7239F196ADF0FA",
-    "3EB0099B7C253B6AF31C67",
-    "3EB059EE9B25B271CBAF97",
-    "3EB01E33205006FABAB59B",
-    "3EB03541D76720FC4B6444",
-    "3EB04EFA0710B1A49F51D4",
-    "3EB0DDCAE213A79492B358",
-    "3EB01132FF02760B399F41",
-    "3EB0B4827A9DD2E849D92F",
-    "3EB0B06C91BF9B42407786",
-    "3EB0891EF57AB17AEC30EC",
-    "3EB08D12B094795D81C67B",
-    "3EB0350080558BBB38F634",
-    "3EB0703084223EFB79C108",
-    "3EB0234ED703737667B535",
-    "3EB03D008EA5752AC297B2",
-    "3EB0A6ADE0D01C96D8853A",
-    "3EB05EE1E3738404161617",
-    "3EB0D2E33B521480636600",
-    "3EB0830E48C89FBC41A32E",
-    "3EB05F3C51433076AF5476",
-    "3EB0B837D28CF48D2B98EA",
-    "3EB07BF3AB0518BCFA3C07",
-    "3EB09A72FC3426DD90DA7B",
-    "3EB08153B59BFC52813793",
-    "3EB06230932FAF69E879F8",
-    "3EB03996BDBBE0071CC4F3",
-    "3EB06EE6AE967D31B53073",
-    "3EB0AA6DE47FDB65E569CE",
-    "3EB0AD9B26ABE2B4C4B67F",
-    "3EB0BCA314FB1FE33991FE",
-    "3EB09B957E5D1006D0DE6B",
-    "3EB0A9632348700F47D1CF",
-    "3EB0BE9005E32AE7F3B459",
-    "3EB042978016200C3A7D23",
-    "3EB01B88B48E4DB30C11B5",
-    "3EB066A9D0D07EFCD034D6",
-    "3EB03A4AF0EE93E9DBF879",
-    "3EB0371F046080D453DC21",
-    "3EB09B638DFD13A2828D28",
-    "3EB0C542C4C0971EF933C7",
-    "3EB0C344BE2E26885E568A",
-    "3EB09533E140572A6ABC32",
-    "3EB04787BD0F6762BBDB1A",
-    "3EB08B6589E5223C3BF947",
-    "3EB094970555B2E6953FCC",
-    "3EB04BA3EA3711BB69B2FA",
-    "3EB055A3AA3EB47D333117",
-    "3EB080DEA06C9BB144229B",
-    "3EB06D888BCCCD4805EBF1",
-    "3EB090FF7F9FDEB5D570E5",
-    "3EB05CAF76F7542A3A2294",
-    "3EB030B0A13FB625EA8603",
-    "3EB0C60B2ACD153C5333F3",
-    "3EB0E48CD51C643D288D4D",
-    "3EB01E04DFD234257732FC",
-    "3EB05602BD5F1C847B5F97",
-    "3EB0EB9AF3D6CCC5817CB8",
-    "3EB0E723D1718FE10F4D16",
-    "3EB0A73803B1A7B7D788A5",
-    "3EB08C4D5E30AC5E265D33",
-    "3EB0241B419658BB3ABE2B",
-    "3EB04ED7FA5D2CCC602AA9",
-    "3EB003B2D36CC11B8DDEDD",
-    "3EB010FBDC6BAFAF0829AF",
-    "3EB02B5EFD974111B6B467",
-    "3EB01F17B7C64AC83FAE7F",
-    "3EB0D7F05448494FBD9765",
-    "3EB008F86388A6A9B647D7",
-    "3EB0629669636034F15FB6",
-    "3EB0DB271C0682AD3EE8D6",
-    "3EB0F08959792563A3E65A",
-    "3EB0775FAD996773E46438",
-    "3EB0DA2228A87398774A5B",
-    "3EB041A3DACBDC56B2375A",
-    "3EB095A85F237E46918EB4",
-    "3EB08856DED45340E60001",
-    "3EB003720320939728CA06",
-    "3EB0C2F58304CCF23F98CD",
-    "3EB0674DFFACAC030CD490",
-    "3EB05BACAADAEE95E332F2",
-    "3EB03437F020E421E59EB1",
-    "3EB090203C074BD2E417B0",
-    "3EB0E14D99E1D370093943",
-    "3EB073AAAB81FC48182EB0",
-    "3EB0A47AB0C6A7C589CC1B",
-    "3EB08BDF8878AB38663848",
-    "3EB05B4A3FEB89848898FC",
-    "3EB04971E471EF27A07515",
-    "3EB0F82BE4646BCBD32F5B",
-    "3EB089CFAE0DAD61CCBD75",
-    "3EB0515D394530D748E278",
-    "3EB07DD310D5F6D6311538",
-    "3EB09EDB10565085870574",
-    "3EB0EF542BCA94C8F7C37A",
-    "3EB0D8B7E0B83722855314",
-    "3EB0AF091DF5F8FFF2792C",
-    "3EB0F6C82D803CDB9E880F",
-    "3EB0A2C274D58CF1DA8F45",
-    "3EB02A3E08090EF2F99EC6",
-    "3EB080857DC7797391A283",
-    "3EB0444FA292CF056E442F",
-    "3EB0746ED00CC71DEF926D",
-    "3EB077D7D78B1C85E1B4F2",
-    "3EB0594F72EB96E5836101",
-    "3EB0A37A7FDCDBD95840C4",
-    "3EB060A42CB358DF0EA87E",
-    "3EB0D346EF55987AAE5016",
-    "3EB0E6DF796D0F08480B11",
-    "3EB00AD4D1BCE16993D682",
-    "3EB017E246280B9E9A67DB",
-    "3EB04DE298BBB1E75F161F",
-    "3EB06126E33FB8434E69F4",
-    "3EB098163C4DF7D30EF3B2",
-    "3EB08775F8C837320601CB",
-    "3EB0C59D15414E871C5181",
-    "3EB095BDDB39B2EFC56824",
-    "3EB06EB7172A5AEB8CB933",
-    "3EB00D0CD0017BD4E78CA0",
-    "3EB0BBF9348B09261FFE19",
-    "3EB011BEC037254880BF40",
-    "3EB0E52DD41A4DD1AB332B",
-    "3EB015045F941E94DAE86F",
-    "3EB00C45EAF564C85B4B46",
-    "3EB0425FEFACB2D87CC07B",
-    "3EB00CFDC006737507C5E3",
-    "3EB09617C8649AC848DDDD",
-    "3EB0F64F4CDC907BBDEBF4",
-    "3EB08806F18633363EF072",
-    "3EB0E1219C3371CC7E7E41",
-    "3EB0A171FAF57CB5BAAA41",
-    "3EB0647691B97C902B3427",
-    "3EB025534BB394686A51D7",
-    "3EB03B4260D97021BD7C8E",
-    "3EB0DBA105B080027E42C6",
-    "3EB040792379EA90F273EC",
-    "3EB054A28480E205FF5031",
-    "3EB0A0B9BC15261811DF3D",
-    "3EB0BE9416B7EFC05EED30",
-    "3EB0AD6EF0B25056BA797A",
-    "3EB046B735F57B6A28A545",
-    "3EB04312E1B75483D37B65",
-    "3EB0D4A84BDA4D80CAA704",
-    "3EB0523E72BBA62EC5FBB6",
-    "3EB02228265AAD0AE1B6F8",
-    "3EB0DEDDFD186D98067181",
-    "3EB0364DF77A582E227259",
-    "3EB02C0E9346317B4A8B19",
-    "3EB0489059B0D384D076CB",
-    "3EB0365228DBAFB3581DFA",
-    "3EB001A20024B54EE4CAED",
-    "3EB086F0C4F5F95EC9C1B5",
-    "3EB0A6E91D53C3E105DA96",
-    "3EB0E76683AB056CA607B4",
-    "3EB0D666E4FDB7E2C0A6C0",
-    "3EB08838C075E48DE89199",
-    "3EB0AFC6288B448C9D2EEF",
-    "3EB043CE03564DF63D750B",
-    "3EB03703D10C6F8DE10B81",
-    "3EB0BC6D73C12CDF1BF4B5",
-    "3EB0E9A4D0D2D496C09A9B",
-    "3EB06848FBAEC43C7F61CF",
-    "3EB0D6FE7E3B28CCDC0810",
-    "3EB0D605266D7644BFF925",
-    "3EB0BA9A440413E7D18C5E",
-    "3EB03394F7EE8F8C6574A1",
-    "3EB0519B2E8EF9135B6E06",
-    "3EB0F0F0FBAF904ACDBE05",
-    "3EB028A73AFEC3462A99F7",
-    "3EB0FE471241B007E4B1FF",
-    "3EB04937F384798D2178C7",
-    "3EB039F930FEA72D089A1D",
-    "3EB03C1ED60CA5246125C2",
-    "3EB0D94B4C36EFDA97CB89",
-    "3EB08F5DD79BFC04BF254A",
-    "3EB01FF7C83B895E61B135",
-    "3EB07F389B795659B61F8B",
-    "3EB05CDA04FAC65A46ADC0",
-    "3EB0E18926C844388571E7",
-    "3EB0FE294CE3A5F31EC89E",
-    "3EB041ED6C7BFFBE50F64A",
-    "3EB024BE730E619B50724D",
-    "3EB03466A7C2FAD13D489D",
-    "3EB03B07B05A7B567728F3",
-    "3EB0A6049F5FFFE65BEA4E",
-    "3EB0154C945B73BE4A2E14",
-    "3EB003F041A58F69D4FC22",
-    "3EB0590A21931962738ADA",
-    "3EB088361D3EEEEC95D083",
-    "3EB0FE771DAABE91E99F17",
-    "3EB0338D315F379E188750",
-    "3EB0EEBB0B08031A1352A6",
-    "3EB08678E871208E3F6C08",
-    "3EB01F45DB7744A5A56C84",
-    "3EB02A89E4B4D51F2028F0",
-    "3EB00B16BD02236EF160CA",
-    "3EB0CA6617E51E3F417582",
-    "3EB023C1700F5B7BEC4D66",
-    "3EB0C833263A42661B5421",
-    "3EB0BBC9AE628EB9A2B99A",
-    "3EB0F42D49C4D71B61D7E0",
-    "3EB0763B9F58B6B3B47782",
-    "3EB057B8F980EB2524B7C3",
-    "3EB0EAA94D2ED42EF2778E",
-    "3EB0926FA081681CA918C7",
-    "3EB0C47D621B2D55EB0E86",
-    "3EB01024FBBB307D3908EF",
-    "3EB0894018489D2DC35EA4",
-    "3EB0AC13DB6FB1A525EDB5",
-    "3EB0B4842C00EA3D6F2212",
-    "3EB004E0395C82AEA78417",
-    "3EB0E67E0969402A85C3A0",
-    "3EB0949103114FEB3FF6DB",
-    "3EB09E3099FAE1164A611A",
-    "3EB05C81DD3A7322904DA3",
-    "3EB027A64D02DDFBE84BBD",
-    "3EB0662C2707EF0274B027",
-    "3EB0E54D5747F3D1C94B56",
-    "3EB0E9894122FCE66D05E6",
-    "3EB018CF5391B43FFFDCC4",
-    "3EB030D8317CB391FC98B1",
-    "3EB0F681C3FB9184BFCCC3",
-    "3EB041FFA80276578750AD",
-    "3EB03CE15793DEE87F7ED7",
-    "3EB0E47906B4A7314F829F",
-    "3EB0871C6FDA8765974561",
-    "3EB0A3B285A625DB27D388",
-    "3EB043B58238AF742CF3B2",
-    "3EB0773FACC99007D82519",
-    "3EB07CD0965FF4F988B6D3",
-    "3EB0EBCB348707CE83676B",
-    "3EB0B294A80814F344E3B5",
-    "3EB01A2AEFF9D6880A9837",
-    "3EB01649BED19802B07E1B",
-    "3EB016F8BA42ED624C8C98",
-    "3EB0DA68AEEDB0C51A338A",
-    "3EB0BA043C00C19E9A9273",
-    "3EB0C4E5E928F1F49B98D2",
-    "3EB029372BA8E6B8B1B3AA",
-    "3EB0511A757BD4AEC81EDD",
-    "3EB0A280D99DD6FB1C5401",
-    "3EB06049E14B6CB362BD22",
-    "3EB0B929A1D45D44F3151D",
-    "3EB02DB0F031E99039D7B0",
-    "3EB003DB58C4E9D84BE384",
-    "3EB0F869BF694E04F663D8",
-    "3EB0A75607AA3DD566375B",
-    "3EB0E8790698E13E9A51A2",
-    "3EB0DA216C8C999C18807B",
-    "3EB0D386E6DF4EE8BCA56C",
-    "3EB0DAEB18CB7EC7F54FED",
-    "3EB08CCF801DC1577C236E",
-    "3EB0394935562FA433D6FF",
-    "3EB0F34EDEFC44BD54C1EA",
-    "3EB07EA0F1FE9815EF5D35",
-    "3EB0FF890284478563D8D2",
-    "3EB08CDCF6C50AD15AB87D",
-    "3EB0262CDB31F6CA08DB8D",
-    "3EB0FB839BDE87182E8AF2",
-    "3EB08D61D139FDD42FF9B8",
-    "3EB00BA9849222B03DAC64",
-    "3EB0D4E3BC8A90A994B305",
-    "3EB06AF555E99B3B77B99D",
-    "3EB0241A62898DAB072EAC",
-    "3EB0914D2A39555A27E098",
-    "3EB05C4611B8ED29E6163F",
-    "3EB05CED0A98A092A135E4",
-    "3EB04586DB85F2B5029049",
-    "3EB011723B13BC42DD165A",
-    "3EB0008567FBD08E2056B8",
-    "3EB0B03C928F5989861A00",
-    "3EB0A83582E55BD9750A15",
-    "3EB0BBB985B90BE30D6784",
-    "3EB0207FF612A63E7846AE",
-    "3EB0DA24A6ED6C54C9BA60",
-    "3EB0C5F60F6A8AAB0ADA94",
-    "3EB0E14707490B565D842F",
-    "3EB0FF0CFCD613BCBA48AF",
-    "3EB02CDC8A3981286D47BF",
-    "3EB0CD894B74028446F740",
-    "3EB0E2A2E281F2FEB32093",
-    "3EB0A68EF430917E3430C7",
-    "3EB07A9ACEBA0938280174",
-    "3EB0566AA9681F9AD8AF9A",
-    "3EB0BEC146EC6F0A0AD403",
-    "3EB0BFCD62A15A67D2712E",
-    "3EB087F6A32A749FB1658C",
-    "3EB0637F20E9A837268BA0",
-    "3EB0C18FD2288FA005295D",
-    "3EB0C172FDFC22E0CEFE36",
-    "3EB03EFFF0848306D476FA",
-    "3EB0949B1D9034CBA1653A",
-    "3EB0BA68C4C53908D9DA19",
-    "3EB041ACE9ACF55F665133",
-    "3EB0F60555F9B11FE41CDA",
-    "3EB01C8254026EF4EDFDA2",
-    "3EB00C908D7CF693C321C8",
-    "3EB0BB4FEF190F88673D46",
-    "3EB046B77F9DAA9116545B",
-    "3EB05B3AF4A834E759674B",
-    "3EB05CE0A299F03CC90981",
-    "3EB0F0A41908DF22994458",
-    "3EB0A59D298AD20814E4A8",
-    "3EB03562AACAD12FBBD630",
-    "3EB083F77D10A5AE3320F1",
-    "3EB028CE53B90C4F52E5BF",
-    "3EB01645C6A26DED0A8FAD",
-    "3EB0DD700A65060B74E37A",
-    "3EB0CBC3AE1687C13BD880",
-    "3EB02B9A7FD8B86F0DD0E7",
-    "3EB01CF0470D3108A71AFF",
-    "3EB0946D3F7EEE79159D23",
-    "3EB0995941A1539E713C56",
-    "3EB02E872C369C3B52C88F",
-    "3EB05BCAB37ABCEE875A39",
-    "3EB09E8F44A27AFBCA2602",
-    "3EB0AEA10EB667BDB7F7B7",
-    "3EB0D530EBF1376420191606608",
-    "3EB0E6797C0B6BDD3DE181",
-    "3EB0BDDC8424E95863D717",
-    "3EB068321E744F4DA5A887",
-    "3EB03A6F73CA76C09E80E1",
-    "3EB0D42A18927F5C2BB953",
     "3EB06AB17F0E677416BEA8"
   ]
-  }
+    }
