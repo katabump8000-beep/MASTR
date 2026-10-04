@@ -174,14 +174,19 @@ function decodeHtml(s) {
 // الصلاحيات
 // ============================================================
 
-/** هل العضو يستطيع استعمال الذكاء الاصطناعي؟ (صلاحية 5 أو الإمبراطور/المالك) */
+/**
+ * هل العضو يستطيع استعمال الذكاء الاصطناعي (.احضر)؟
+ * المالك/الإمبراطور، أو أي عضو معه صلاحية .سجل (أي .سماح 2)، أو صلاحية كل الأوامر (.سماح 5).
+ */
 function canUse(db, cleanSender, owner) {
     if (owner) return true;
     try {
-        const list = db && db.permissions && db.permissions["5"];
-        if (!Array.isArray(list) || !list.length) return false;
+        const perms = (db && db.permissions) || {};
         const candidates = jf ? jf.aliasesOf(cleanSender) : [String(cleanSender)];
-        return candidates.some(n => list.includes(n));
+        return ["2", "5"].some(level => {
+            const list = perms[level];
+            return Array.isArray(list) && candidates.some(n => list.includes(n));
+        });
     } catch (_) {
         return false;
     }
