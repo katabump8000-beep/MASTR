@@ -315,7 +315,11 @@ function saveDbNow() {
         ensureDatabaseShape();
 
         const tempFile = `${DB_FILE}.tmp`;
-        const json = JSON.stringify(db, null, 2);
+        // ⚠️ وضع الهدوء يضع مؤقّتاً (setInterval) داخل db.quietTimer وهو يسبب "circular structure" ويوقف الحفظ كلياً → نتجاهل المؤقتات
+        const json = JSON.stringify(db, (k, v) => {
+            if (v && typeof v === "object" && (v.constructor?.name === "Timeout" || v.constructor?.name === "Immediate")) return undefined;
+            return v;
+        }, 2);
 
         // نسخة احتياطية للملف السليم الحالي كل 10 دقائق
         const now = Date.now();

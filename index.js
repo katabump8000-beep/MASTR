@@ -61,7 +61,8 @@ const {
     jidToNumber,
     isGroupJid,
     isOwner,
-    cleanNumber
+    cleanNumber,
+    getOwnerNumbers
 } = require("./bot");
 
 const { handleCommand, buildMyDetailsText } = require("./commands");
@@ -101,6 +102,7 @@ let resultsModule = null;
 let commandsListModule = null;
 let typoModule = null;
 let aiModule = null;
+let registerModule = null;
 
 try { photosModule = require("./photos"); } catch (e) { _originalWarn("⚠️ photos.js غير محمّل بعد"); }
 try { welcomeModule = require("./welcome"); } catch (e) { _originalWarn("⚠️ welcome.js غير محمّل بعد"); }
@@ -109,6 +111,11 @@ try { resultsModule = require("./results"); } catch (e) { _originalWarn("⚠️ 
 try { commandsListModule = require("./commands_list"); } catch (e) { _originalWarn("⚠️ commands_list.js غير محمّل بعد"); }
 try { typoModule = require("./typo"); } catch (e) { _originalWarn("⚠️ typo.js غير محمّل بعد"); }
 try { aiModule = require("./Ai"); } catch (e) { _originalWarn("⚠️ Ai.js غير محمّل: " + (e && e.message)); }
+try {
+    registerModule = require("./register");
+    // خادم صفحة التسجيل (.جديد) — يعمل من بداية التشغيل حتى لو لم يكتمل ربط واتساب
+    registerModule.init({ getDb, saveDb, getOwnerNumbers });
+} catch (e) { _originalWarn("⚠️ register.js غير محمّل: " + (e && e.message)); }
 
 // ============================================================
 // Runtime
@@ -153,6 +160,51 @@ function isFlooding(sender) {
         for (const [k, v] of floodMap) if (now > v.until && !v.times.length) floodMap.delete(k);
     }
     return false;
+}
+
+// ============================================================
+// 🛡️ حارس التزامن: حد أقصى للرسائل المعالَجة معاً + مهلة لكل رسالة
+// (عملية عالقة لا تحجز المسار أكثر من 90 ثانية، والطابور الزائد يُهمل بدل أن يستنزف الذاكرة)
+// ============================================================
+
+const MAX_PARALLEL_MESSAGES = 8;
+const MAX_QUEUED_MESSAGES = 150;
+const MESSAGE_SLOT_TIMEOUT_MS = 90 * 1000;
+let activeSlots = 0;
+const slotWaiters = [];
+let droppedMessages = 0;
+
+async function runWithSlot(work) {
+    if (activeSlots >= MAX_PARALLEL_MESSAGES) {
+        if (slotWaiters.length >= MAX_QUEUED_MESSAGES) {
+            droppedMessages++;
+            if (droppedMessages % 25 === 1) _originalWarn(`⚠️ ضغط شديد: تم إهمال ${droppedMessages} دفعة رسائل`);
+            return;
+        }
+        await new Promise(resolve => slotWaiters.push(resolve));
+    } else {
+        activeSlots++;
+    }
+
+    let released = false;
+    const release = () => {
+        if (released) return;
+        released = true;
+        const next = slotWaiters.shift();
+        if (next) next();           // نمرّر المسار للتالي (activeSlots كما هو)
+        else activeSlots = Math.max(0, activeSlots - 1);
+    };
+    const timer = setTimeout(() => {
+        _originalWarn("⚠️ معالجة رسالة تجاوزت 90 ثانية — تم تحرير المسار لمنع تعليق البوت");
+        release();
+    }, MESSAGE_SLOT_TIMEOUT_MS);
+
+    try {
+        await work();
+    } finally {
+        clearTimeout(timer);
+        release();
+    }
 }
 
 const pendingGamesMenu = Object.create(null);
@@ -948,7 +1000,7 @@ async function handleMainGroupJoin(sock, groupJid, participant, db, saveDb) {
 // ============================================================
 
 function createHandlers() {
-    return {
+    const handlers = {
         onConnectionOpen: async (sock) => {
             trackSentMessages(sock);
             setupAdminMonitoring(sock);
@@ -1152,6 +1204,15 @@ function createHandlers() {
                             }
                         }
 
+                        // 🆕 رمز تأكيد صفحة التسجيل (5 أرقام يرسلها العضو في القروب)
+                        if (isGroup && registerModule && typeof registerModule.handleMessageHook === "function") {
+                            try {
+                                if (await registerModule.handleMessageHook(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
+                            } catch (e) {
+                                _originalError("register hook error:", e?.message);
+                            }
+                        }
+
                         if (!text.startsWith(".")) {
                             // محاولة تصحيح الأخطاء
                             if (typoModule && typeof typoModule.handleTypo === "function") {
@@ -1185,6 +1246,15 @@ function createHandlers() {
                                 }
                             } catch (e) {
                                 _originalError("Ai dispatch error:", e?.message);
+                            }
+                        }
+
+                        // 🆕 .جديد @  /  .تصفير @  /  .رابط اساسي <رابط>
+                        if (registerModule && typeof registerModule.handleCommand === "function") {
+                            try {
+                                if (await registerModule.handleCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
+                            } catch (e) {
+                                _originalError("register command error:", e?.message);
                             }
                         }
 
@@ -1572,6 +1642,11 @@ function createHandlers() {
             }
         }
     };
+
+    // كل دفعة رسائل تمرّ عبر حارس التزامن
+    const rawOnMessage = handlers.onMessage;
+    handlers.onMessage = (sock, event, context) => runWithSlot(() => rawOnMessage(sock, event, context));
+    return handlers;
 }
 
 // ============================================================
