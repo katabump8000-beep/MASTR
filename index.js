@@ -111,11 +111,22 @@ try { resultsModule = require("./results"); } catch (e) { _originalWarn("⚠️ 
 try { commandsListModule = require("./commands_list"); } catch (e) { _originalWarn("⚠️ commands_list.js غير محمّل بعد"); }
 try { typoModule = require("./typo"); } catch (e) { _originalWarn("⚠️ typo.js غير محمّل بعد"); }
 try { aiModule = require("./Ai"); } catch (e) { _originalWarn("⚠️ Ai.js غير محمّل: " + (e && e.message)); }
+// 🆕 نظام التسجيل التفاعلي الجديد (.جديد / .تصفير / .رابط اساسي) — Sessions + أزرار/Flow native
+let flowRegModule = null;
 try {
-    registerModule = require("./register");
-    // خادم صفحة التسجيل (.جديد) — يعمل من بداية التشغيل حتى لو لم يكتمل ربط واتساب
-    registerModule.init({ getDb, saveDb, getOwnerNumbers });
-} catch (e) { _originalWarn("⚠️ register.js غير محمّل: " + (e && e.message)); }
+    flowRegModule = require("./flowreg");
+    flowRegModule.init({ getDb, saveDb });
+} catch (e) { _originalWarn("⚠️ flowreg.js غير محمّل: " + (e && e.message)); }
+
+// register.js القديم (صفحة ويب): معطّل افتراضياً حتى لا يتعارض مع .جديد الجديد.
+// لإعادة تشغيله ضع Variable: LEGACY_REGISTER=true
+if (String(process.env.LEGACY_REGISTER || "").toLowerCase() === "true") {
+    try {
+        registerModule = require("./register");
+        // خادم صفحة التسجيل (.جديد) — يعمل من بداية التشغيل حتى لو لم يكتمل ربط واتساب
+        registerModule.init({ getDb, saveDb, getOwnerNumbers });
+    } catch (e) { _originalWarn("⚠️ register.js غير محمّل: " + (e && e.message)); }
+}
 
 // ============================================================
 // Runtime
@@ -1192,6 +1203,15 @@ function createHandlers() {
                             }
                         }
 
+                        // 🆕 ضغطات أزرار / Submit الـFlow الخاصة بنظام التسجيل (حدث مستقل، لا انتظار)
+                        if (flowRegModule && msg.message && (msg.message.interactiveResponseMessage || msg.message.buttonsResponseMessage || msg.message.templateButtonReplyMessage)) {
+                            try {
+                                if (await flowRegModule.handleInteractive(sock, jid, msg, db, saveDb, cleanSender, owner)) continue;
+                            } catch (e) {
+                                _originalError("flowreg interactive error:", e?.message);
+                            }
+                        }
+
                         const text = getMessageTextFromMsg(msg);
                         if (!text) continue;
 
@@ -1204,7 +1224,16 @@ function createHandlers() {
                             }
                         }
 
-                        // 🆕 رمز تأكيد صفحة التسجيل (5 أرقام يرسلها العضو في القروب)
+                        // 🆕 إدخال العضو (لقب/طرف/عمر) أثناء جلسة التسجيل — يُستهلك فقط إذا كان من العضو المستهدف
+                        if (flowRegModule) {
+                            try {
+                                if (await flowRegModule.handleMessageHook(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
+                            } catch (e) {
+                                _originalError("flowreg hook error:", e?.message);
+                            }
+                        }
+
+                        // 🆕 رمز تأكيد صفحة التسجيل القديمة (LEGACY_REGISTER=true فقط)
                         if (isGroup && registerModule && typeof registerModule.handleMessageHook === "function") {
                             try {
                                 if (await registerModule.handleMessageHook(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
@@ -1249,7 +1278,16 @@ function createHandlers() {
                             }
                         }
 
-                        // 🆕 .جديد @  /  .تصفير @  /  .رابط اساسي <رابط>
+                        // 🆕 .جديد @  /  .تصفير @  /  .رابط اساسي <رابط>  (النظام الجديد)
+                        if (flowRegModule) {
+                            try {
+                                if (await flowRegModule.handleCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
+                            } catch (e) {
+                                _originalError("flowreg command error:", e?.message);
+                            }
+                        }
+
+                        // (القديم — يعمل فقط مع LEGACY_REGISTER=true)
                         if (registerModule && typeof registerModule.handleCommand === "function") {
                             try {
                                 if (await registerModule.handleCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;

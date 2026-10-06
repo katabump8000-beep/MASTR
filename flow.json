@@ -1,0 +1,89 @@
+{
+  "version": "6.2",
+  "screens": [
+    {
+      "id": "REGISTER",
+      "title": "🔥 F.I.R",
+      "terminal": true,
+      "success": true,
+      "data": {
+        "token": { "type": "string", "__example__": "reg.a1b2c3d4.0123456789abcdef01234567" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "🔥 𝑭. 𝑰. 𝑹 🔥" },
+          { "type": "TextSubheading", "text": "🔥 نورت مملكة النار الخاصة بالجيسي 🔥" },
+          { "type": "TextBody", "text": "رجاءً املأ هذه البيانات:" },
+          {
+            "type": "Form",
+            "name": "form",
+            "children": [
+              {
+                "type": "TextInput",
+                "name": "nickname",
+                "label": "لقبك أو اسم شخصية أنمي تفضل أن نناديك فيه",
+                "input-type": "text",
+                "required": true
+              },
+              {
+                "type": "TextInput",
+                "name": "referrer",
+                "label": "من طرف مين دخلت؟",
+                "input-type": "text",
+                "required": true
+              },
+              {
+                "type": "Dropdown",
+                "name": "gender",
+                "label": "ما جنسك؟ ذكر / أنثى / مخصص؟",
+                "required": true,
+                "data-source": [
+                  { "id": "male", "title": "ذكر" },
+                  { "id": "female", "title": "أنثى" },
+                  { "id": "custom", "title": "مخصص" }
+                ]
+              },
+              {
+                "type": "TextInput",
+                "name": "age",
+                "label": "عمرك؟",
+                "helper-text": "الإجابة اختيارية",
+                "input-type": "number",
+                "required": false
+              },
+              {
+                "type": "CheckboxGroup",
+                "name": "ack",
+                "label": "☑ ملاحظة مهمة",
+                "required": true,
+                "data-source": [
+                  {
+                    "id": "ack",
+                    "title": "أقرّ بالملاحظة أدناه",
+                    "description": "عندما تدخل بياناتك بشكل خاطئ أو مزيف لن تتمكن من تعديلها لاحقًا!"
+                  }
+                ]
+              },
+              {
+                "type": "Footer",
+                "label": "التالي ←",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "nickname": "${form.nickname}",
+                    "referrer": "${form.referrer}",
+                    "gender": "${form.gender}",
+                    "age": "${form.age}",
+                    "ack": "${form.ack}",
+                    "token": "${data.token}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
