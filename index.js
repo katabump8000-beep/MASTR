@@ -5,6 +5,7 @@
 // + Photos + Welcome + Tahmin + Results + CommandsList + Typo
 // + JidFix + Ban + Shop + Guilds + Hads (اتبع حدسك)
 // + Ai (إنشاء/إحضار الصور) + المؤبدين + أوامر رقم البوت نفسه
+// + 🆕 Flow Registration (نظام التسجيل التفاعلي)
 // ============================================================
 
 "use strict";
@@ -111,19 +112,30 @@ try { resultsModule = require("./results"); } catch (e) { _originalWarn("⚠️ 
 try { commandsListModule = require("./commands_list"); } catch (e) { _originalWarn("⚠️ commands_list.js غير محمّل بعد"); }
 try { typoModule = require("./typo"); } catch (e) { _originalWarn("⚠️ typo.js غير محمّل بعد"); }
 try { aiModule = require("./Ai"); } catch (e) { _originalWarn("⚠️ Ai.js غير محمّل: " + (e && e.message)); }
-// 🆕 نظام التسجيل التفاعلي الجديد (.جديد / .تصفير / .رابط اساسي) — Sessions + أزرار/Flow native
+
+// 🆕 نظام التسجيل التفاعلي القديم (flowreg) — يُبقى للحفاظ على التوافق
 let flowRegModule = null;
 try {
     flowRegModule = require("./flowreg");
     flowRegModule.init({ getDb, saveDb });
 } catch (e) { _originalWarn("⚠️ flowreg.js غير محمّل: " + (e && e.message)); }
 
-// register.js القديم (صفحة ويب): معطّل افتراضياً حتى لا يتعارض مع .جديد الجديد.
-// لإعادة تشغيله ضع Variable: LEGACY_REGISTER=true
+// 🆕 نظام التسجيل التفاعلي الجديد (flow-commands + flow-server)
+// يعتمد على موقع GitHub Pages ويعمل عبر WebView
+let flowCommands = null;
+let flowServer = null;
+try {
+    flowCommands = require("./flow-commands");
+    flowServer = require("./flow-server");
+    _originalLog("✅ تم تحميل نظام التسجيل التفاعلي الجديد (flow-commands + flow-server)");
+} catch (e) {
+    _originalWarn("⚠️ flow-commands/flow-server غير محمّل: " + (e && e.message));
+}
+
+// register.js القديم (صفحة ويب): معطّل افتراضياً
 if (String(process.env.LEGACY_REGISTER || "").toLowerCase() === "true") {
     try {
         registerModule = require("./register");
-        // خادم صفحة التسجيل (.جديد) — يعمل من بداية التشغيل حتى لو لم يكتمل ربط واتساب
         registerModule.init({ getDb, saveDb, getOwnerNumbers });
     } catch (e) { _originalWarn("⚠️ register.js غير محمّل: " + (e && e.message)); }
 }
@@ -150,12 +162,7 @@ const MAX_IDLE_CHECKS = 15;
 const MAX_GAME_COUNT = 8;
 
 // ============================================================
-// قائمة انتظار اختيار الفعالية
-// ============================================================
-
-// ============================================================
-// 🛡️ حارس الإغراق: عضو (غير المالك) يرسل أكثر من 8 أوامر خلال 10 ثوانٍ يُتجاهل 30 ثانية
-// (يمنع تعليق البوت وحظر واتساب بسبب سبام الأوامر)
+// 🛡️ حارس الإغراق
 // ============================================================
 
 const floodMap = new Map();
@@ -174,8 +181,7 @@ function isFlooding(sender) {
 }
 
 // ============================================================
-// 🛡️ حارس التزامن: حد أقصى للرسائل المعالَجة معاً + مهلة لكل رسالة
-// (عملية عالقة لا تحجز المسار أكثر من 90 ثانية، والطابور الزائد يُهمل بدل أن يستنزف الذاكرة)
+// 🛡️ حارس التزامن
 // ============================================================
 
 const MAX_PARALLEL_MESSAGES = 8;
@@ -202,7 +208,7 @@ async function runWithSlot(work) {
         if (released) return;
         released = true;
         const next = slotWaiters.shift();
-        if (next) next();           // نمرّر المسار للتالي (activeSlots كما هو)
+        if (next) next();
         else activeSlots = Math.max(0, activeSlots - 1);
     };
     const timer = setTimeout(() => {
@@ -318,7 +324,6 @@ function shouldIgnoreMessage(msg) {
 
 const _sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-// رسائل أرسلها البوت نفسه عبر الكود (حتى لا يعالج صداها كأنها أمر من صاحب الرقم)
 const botSentIds = new Map();
 const ownHandledIds = new Map();
 
@@ -359,7 +364,6 @@ function msgTimestampSec(msg) {
     }
 }
 
-// أمر كتبه صاحب رقم البوت بنفسه (من الهاتف) لكنه وصل بنوع append
 function isOwnPhoneCommand(msg) {
     try {
         if (!msg?.key?.fromMe || !msg.key.id) return false;
@@ -373,7 +377,6 @@ function isOwnPhoneCommand(msg) {
     }
 }
 
-// نعالج كل رسالة من رقم البوت مرة واحدة فقط (حتى لو وصلت notify ثم append)
 function alreadyHandledOwn(msg) {
     const id = msg?.key?.id;
     if (!id) return false;
@@ -383,7 +386,6 @@ function alreadyHandledOwn(msg) {
     return false;
 }
 
-// رسائل القروبات ذات الرسائل المؤقتة / عرض مرة واحدة / من جهاز آخر تأتي داخل غلاف
 function unwrapMsgInPlace(msg) {
     try {
         let m = msg?.message;
@@ -476,7 +478,6 @@ async function sendDatabaseBackup(sock) {
         });
         const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
 
-        // ✅ ملف واحد بدل عشرات الرسائل النصية (كانت تُغرق القروب وتكشف كل البيانات كنص)
         await sock.sendMessage(autoSaveGroupJid, {
             document: Buffer.from(dbContent, "utf8"),
             mimetype: "application/json",
@@ -512,14 +513,12 @@ async function handleAutoReplies(sock, jid, msg, text, sender, cleanSender, db, 
     try {
         if (isSarahaActive && isSarahaActive(jid)) return;
 
-        // الحسبة: عدّاد الرسائل
         if (db.hisbaEnabled && db.hisbaEnabled[jid]) {
             if (!global.messageCounters[jid]) global.messageCounters[jid] = {};
             if (!global.messageCounters[jid][cleanSender]) global.messageCounters[jid][cleanSender] = 0;
             global.messageCounters[jid][cleanSender]++;
         }
 
-        // التفاعل التلقائي كل 13 رسالة
         if (db.reactEnabled && db.reactEnabled[jid]) {
             if (!global.reactCounters[jid]) global.reactCounters[jid] = 0;
             global.reactCounters[jid]++;
@@ -533,7 +532,6 @@ async function handleAutoReplies(sock, jid, msg, text, sender, cleanSender, db, 
             }
         }
 
-        // حماية البطاقات
         const msgContent = msg.message || {};
         if (db.protectCards && db.protectCards[jid] && !isOwner(cleanSender, sock, msg)) {
             if (msgContent.contactMessage || msgContent.contactsArrayMessage) {
@@ -548,7 +546,6 @@ async function handleAutoReplies(sock, jid, msg, text, sender, cleanSender, db, 
             }
         }
 
-        // الردود التلقائية
         if (db.repliesEnabled && db.repliesEnabled[jid]) {
             const badWords = ["كول خرا", "كول خراا", "يلعون", "يلعن امك", "يلعن ابوك"];
             const isBadWord = badWords.some(w => text.includes(w));
@@ -818,7 +815,6 @@ function startWatchdog(sock) {
             const now = Date.now();
             const idleMs = now - lastMessageAt;
 
-            // ✅ اتصال ميت (WebSocket مغلق لكن لم يُعد الاتصال): نفرض إعادة الاتصال بعد دقيقتين
             try {
                 const ws = lastSocketRef && lastSocketRef.ws;
                 const isOpen = ws ? (typeof ws.isOpen === "boolean" ? ws.isOpen : ws.readyState === 1) : true;
@@ -895,9 +891,8 @@ function findUserEntry(db, number) {
 function scheduleWelcomeExtras(sock, groupJid, pJid, userNumber, db, saveDb) {
     try {
         const first = findUserEntry(db, userNumber);
-        if (!first || !String(first.user.nickname || "").trim()) return; // للمسجلين فقط
+        if (!first || !String(first.user.nickname || "").trim()) return;
 
-        // 🎁 بعد دقيقة: 100 رصيد هدية (مرة واحدة لكل عضو)
         setTimeout(async () => {
             try {
                 const entry = findUserEntry(db, userNumber);
@@ -927,7 +922,6 @@ function scheduleWelcomeExtras(sock, groupJid, pJid, userNumber, db, saveDb) {
             }
         }, 60 * 1000);
 
-        // 📋 بعد 5 دقائق من الدخول: إرسال تفاصيله تلقائياً
         setTimeout(async () => {
             try {
                 const entry = findUserEntry(db, userNumber);
@@ -950,14 +944,12 @@ async function handleMainGroupJoin(sock, groupJid, participant, db, saveDb) {
     try {
         if (!isMainGroup(db, groupJid)) return;
 
-        // 🆕 participant قد يكون نصاً أو كائناً {id, lid, phoneNumber}
         const pJid = jf.jidOf(participant);
         const userNumber = jf.jnum(pJid);
         if (!userNumber) return;
         jf.rememberJid(userNumber, pJid);
         jf.invalidateGroup(groupJid);
 
-        // 🎁 هدية 100 + تفاصيل بعد 5 دقائق
         scheduleWelcomeExtras(sock, groupJid, pJid, userNumber, db, saveDb);
 
         if (!db.userPhotos) return;
@@ -1042,13 +1034,11 @@ function createHandlers() {
 
                 for (const msg of messages) {
                     try {
-                        // 🆕 تفريغ الأغلفة (مؤقتة / عرض مرة / جهاز آخر)
                         unwrapMsgInPlace(msg);
 
-                        // 🆕 رسائل رقم البوت نفسه: تُقبل notify و append (أوامر الهاتف) وتُعالج مرة واحدة
                         if (msg?.key?.fromMe) {
                             if (type === "append") {
-                                await _sleep(1200); // ننتظر تسجيل رسائل البوت الخاصة به
+                                await _sleep(1200);
                                 if (!isOwnPhoneCommand(msg)) continue;
                             }
                             if (alreadyHandledOwn(msg)) continue;
@@ -1068,19 +1058,14 @@ function createHandlers() {
                         const sender = getSender(msg, sock);
                         const isGroup = isGroupJid(jid);
 
-                        // 🆕 تعلّم أعضاء القروب (LID ↔ رقم) لإصلاح المنشن والألقاب
                         if (isGroup) {
                             try { await jf.getGroupParticipants(sock, jid); } catch (_) {}
                         }
 
-                        // 🆕 الرقم المعتمد (نفس المفتاح المخزّن في db.users)
                         const cleanSender = jf.canonical(db, jidToNumber(sender));
                         const botNumber = getBotNumber(sock);
                         const owner = isOwner(cleanSender, sock, msg);
 
-                        // ============================================
-                        // 🆕 مراقبة صامتة: نتائج ADS + المخالفات + استمارات الورك
-                        // ============================================
                         const rawText = getMessageTextFromMsg(msg);
                         if (!owner && rawText.startsWith(".") && isFlooding(cleanSender)) continue;
                         if (isGroup && rawText) {
@@ -1097,9 +1082,6 @@ function createHandlers() {
                             }
                         }
 
-                        // ============================================
-                        // 🆕 حظر: لا يستجيب البوت للمحظور
-                        // ============================================
                         if (!owner && banModule.isBanned(db, cleanSender)) {
                             let looksLikeCommand = rawText.startsWith(".") || Boolean(msg.message?.listResponseMessage);
                             if (!looksLikeCommand && typoModule && typeof typoModule.getCorrectedCommand === "function") {
@@ -1109,9 +1091,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // ============================================
-                        // معالجة اختيار الفعالية من List Message
-                        // ============================================
                         const listResponse = msg.message?.listResponseMessage;
                         if (listResponse) {
                             const selectedRowId = String(listResponse.singleSelectReply?.selectedRowId || "");
@@ -1203,7 +1182,6 @@ function createHandlers() {
                             }
                         }
 
-                        // 🆕 ضغطات أزرار / Submit الـFlow الخاصة بنظام التسجيل (حدث مستقل، لا انتظار)
                         if (flowRegModule && msg.message && (msg.message.interactiveResponseMessage || msg.message.buttonsResponseMessage || msg.message.templateButtonReplyMessage)) {
                             try {
                                 if (await flowRegModule.handleInteractive(sock, jid, msg, db, saveDb, cleanSender, owner)) continue;
@@ -1215,7 +1193,6 @@ function createHandlers() {
                         const text = getMessageTextFromMsg(msg);
                         if (!text) continue;
 
-                        // 🆕 التقاط اسم النقابة بعد أمر .تعديل (الإمبراطور)
                         if (aiModule && typeof aiModule.handleMessageHook === "function") {
                             try {
                                 if (await aiModule.handleMessageHook(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
@@ -1224,7 +1201,6 @@ function createHandlers() {
                             }
                         }
 
-                        // 🆕 إدخال العضو (لقب/طرف/عمر) أثناء جلسة التسجيل — يُستهلك فقط إذا كان من العضو المستهدف
                         if (flowRegModule) {
                             try {
                                 if (await flowRegModule.handleMessageHook(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
@@ -1233,7 +1209,6 @@ function createHandlers() {
                             }
                         }
 
-                        // 🆕 رمز تأكيد صفحة التسجيل القديمة (LEGACY_REGISTER=true فقط)
                         if (isGroup && registerModule && typeof registerModule.handleMessageHook === "function") {
                             try {
                                 if (await registerModule.handleMessageHook(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
@@ -1243,7 +1218,6 @@ function createHandlers() {
                         }
 
                         if (!text.startsWith(".")) {
-                            // محاولة تصحيح الأخطاء
                             if (typoModule && typeof typoModule.handleTypo === "function") {
                                 if (isGroup && !(db.typoEnabled && db.typoEnabled[jid] === false)) {
                                     try {
@@ -1258,14 +1232,19 @@ function createHandlers() {
                         }
 
                         // ============================================
-                        // معالجة الأوامر الجديدة
+                        // 🆕 نظام التسجيل التفاعلي الجديد (.جديد / .تصفير)
                         // ============================================
+                        if (flowCommands) {
+                            try {
+                                if (await flowCommands.handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
+                            } catch (e) {
+                                _originalError("flow-commands error:", e?.message);
+                            }
+                        }
 
-                        // 🆕 الذكاء الاصطناعي: .انشاء / .احضر / .تعديل
                         if (aiModule) {
                             try {
                                 if (typeof aiModule.isAiCommand === "function" && aiModule.isAiCommand(text)) {
-                                    // بدون await: لا نوقف بقية البوت أثناء إنشاء الصورة
                                     aiModule.handleAiCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)
                                         .catch(e => _originalError("Ai command error:", e?.message));
                                     continue;
@@ -1278,7 +1257,6 @@ function createHandlers() {
                             }
                         }
 
-                        // 🆕 .جديد @  /  .تصفير @  /  .رابط اساسي <رابط>  (النظام الجديد)
                         if (flowRegModule) {
                             try {
                                 if (await flowRegModule.handleCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
@@ -1287,7 +1265,6 @@ function createHandlers() {
                             }
                         }
 
-                        // (القديم — يعمل فقط مع LEGACY_REGISTER=true)
                         if (registerModule && typeof registerModule.handleCommand === "function") {
                             try {
                                 if (await registerModule.handleCommand(sock, jid, msg, text, db, saveDb, cleanSender, owner)) continue;
@@ -1296,7 +1273,6 @@ function createHandlers() {
                             }
                         }
 
-                        // 🆕 .المؤبدين → قائمة كل المحفوظين مؤبد
                         if (text === ".المؤبدين" || text.startsWith(".المؤبدين ")) {
                             try {
                                 await guildsModule.handleLifeBanList(sock, jid, msg, db, saveDb, cleanSender, owner);
@@ -1306,7 +1282,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .صورة
                         if (text === ".صورة" || text.startsWith(".صورة ")) {
                             if (photosModule && typeof photosModule.handlePhotoCommand === "function") {
                                 try {
@@ -1318,7 +1293,6 @@ function createHandlers() {
                             }
                         }
 
-                        // .اساسي on/off
                         if (text === ".اساسي on" || text === ".اساسي off") {
                             if (!owner) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
@@ -1328,7 +1302,7 @@ function createHandlers() {
                             db.organizedGroups = db.organizedGroups || {};
                             if (text === ".اساسي on") {
                                 db.mainGroup[jid] = true;
-                                db.organizedGroups[jid] = true; // 🆕 ميزة التنظيم تتفعل مع الأساسي
+                                db.organizedGroups[jid] = true;
                                 saveDb();
                                 await sock.sendMessage(jid, {
                                     text: "✅ تم تعيين هذا القروب كقروب أساسي.\n📌 تم تفعيل التنظيم تلقائياً: سيتم حذف لقب أي عضو يغادر هذا القروب (مع الاحتفاظ برصيده)."
@@ -1342,7 +1316,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .رابط الاعلانات [رابط]  /  .رابط المتجر [رابط]
                         if (text.startsWith(".رابط ")) {
                             const parts = text.split(/\s+/);
                             const kind = parts[1] || "";
@@ -1367,7 +1340,6 @@ function createHandlers() {
                             }
                         }
 
-                        // .حماية on/off
                         if (text === ".حماية on" || text === ".حماية off") {
                             if (!owner) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
@@ -1386,7 +1358,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .تنظيف
                         if (text === ".تنظيف") {
                             if (!owner) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
@@ -1409,7 +1380,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .تفاعل on/off
                         if (text === ".تفاعل on" || text === ".تفاعل off") {
                             if (!owner) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
@@ -1428,7 +1398,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .حسبة on/off
                         if (text === ".حسبة on" || text === ".حسبة off") {
                             if (!owner) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
@@ -1447,7 +1416,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .حسبة (بدون on/off)
                         if (text === ".حسبة") {
                             const isPermission1 = owner || jf.aliasesOf(cleanSender).some(a => db.permissions && db.permissions["1"] && db.permissions["1"].includes(a));
                             if (!isPermission1) {
@@ -1479,7 +1447,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .امبراطور @user
                         if (text.startsWith(".امبراطور ")) {
                             if (!owner) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
@@ -1501,7 +1468,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // .نتائج
                         if (text === ".نتائج" || text.startsWith(".نتائج ")) {
                             if (resultsModule && typeof resultsModule.handleResults === "function") {
                                 try {
@@ -1513,7 +1479,6 @@ function createHandlers() {
                             }
                         }
 
-                        // .اوامر
                         if (text === ".اوامر") {
                             if (commandsListModule && typeof commandsListModule.handleCommandsList === "function") {
                                 try {
@@ -1525,7 +1490,6 @@ function createHandlers() {
                             }
                         }
 
-                        // .عادي on/off
                         if (text === ".عادي on" || text === ".عادي off") {
                             if (!owner) {
                                 await sock.sendMessage(jid, { text: "⛔ هذا الأمر للمطور فقط." }, { quoted: msg });
@@ -1544,7 +1508,6 @@ function createHandlers() {
                             continue;
                         }
 
-                        // باقي الأوامر
                         if (text === ".استراحة") {
                             await handleRestCommand(sock, jid, msg, db);
                             continue;
@@ -1630,7 +1593,6 @@ function createHandlers() {
                             if (await handleAnimalsCommand(sock, jid, msg, db, saveDb, cleanSender, owner)) continue;
                         }
 
-                        // لعبة التخمين
                         if (text === ".تخمين") {
                             if (tahminModule && typeof tahminModule.handleTahminCommand === "function") {
                                 try {
@@ -1666,10 +1628,8 @@ function createHandlers() {
                 lastGroupUpdateAt = Date.now();
                 const db = context.db || getDb();
 
-                // ✅ استدعاء handleGroupJoin مع saveDb
                 await handleGroupJoin(sock, update, db, saveDb);
 
-                // معالجة انضمام العضو للقروب الأساسي
                 if (update && update.action === "add" && Array.isArray(update.participants)) {
                     for (const participant of update.participants) {
                         await handleMainGroupJoin(sock, update.id, participant, db, saveDb);
@@ -1681,7 +1641,6 @@ function createHandlers() {
         }
     };
 
-    // كل دفعة رسائل تمرّ عبر حارس التزامن
     const rawOnMessage = handlers.onMessage;
     handlers.onMessage = (sock, event, context) => runWithSlot(() => rawOnMessage(sock, event, context));
     return handlers;
@@ -1696,6 +1655,16 @@ async function main() {
         _originalLog("╔════════════════════════════════════╗");
         _originalLog("║        🤖 ALJESAT BOT START       ║");
         _originalLog("╚════════════════════════════════════╝");
+
+        // 🆕 تشغيل سيرفر التسجيل التفاعلي (قبل البوت حتى يعمل حتى لو تأخر الاتصال)
+        if (flowServer && typeof flowServer.startFlowServer === "function") {
+            try {
+                flowServer.startFlowServer();
+                _originalLog("✅ سيرفر التسجيل التفاعلي جاهز.");
+            } catch (e) {
+                _originalError("❌ فشل تشغيل flow-server:", e?.message);
+            }
+        }
 
         configureHandlers(createHandlers());
         const sock = await startBot();
@@ -1712,6 +1681,7 @@ main().catch(e => _originalError("Fatal:", e?.message));
 process.once("SIGINT", () => {
     stopWatchdog();
     stopAutoSave();
+    try { if (flowServer && flowServer.stopFlowServer) flowServer.stopFlowServer(); } catch (_) {}
     try { if (typeof global.saveDbNow === "function") global.saveDbNow(); } catch (_) {}
     process.exit(0);
 });
@@ -1719,6 +1689,7 @@ process.once("SIGINT", () => {
 process.once("SIGTERM", () => {
     stopWatchdog();
     stopAutoSave();
+    try { if (flowServer && flowServer.stopFlowServer) flowServer.stopFlowServer(); } catch (_) {}
     try { if (typeof global.saveDbNow === "function") global.saveDbNow(); } catch (_) {}
     process.exit(0);
 });
