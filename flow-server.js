@@ -135,10 +135,15 @@ function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }
 
     // 🔒 توليد bindingToken مرتبط بالعضو
     const bindingToken = signBinding(token, n);
+    // 🔑 كود تحقق من 4 أرقام: يكتبه العضو في القروب (.تحقق 1234) فيتأكد البوت من هويته
+    const code = String(crypto.randomInt(1000, 10000));
 
     const session = {
         token,
         bindingToken,          // 🆕
+        code,
+        verified: false,
+        intrusions: 0,
         targetUserId: n,
         targetJid: String(targetJid || ""),
         chatJid: String(chatJid || ""),
@@ -168,6 +173,35 @@ function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }
     }
 
     return session;
+}
+
+function bindingOk(s, bindingToken) {
+    const b = verifyBinding(bindingToken);
+    return Boolean(b && b.sessionId === s.token && b.userNumber === s.targetUserId);
+}
+
+/**
+ * يُستدعى من أمر .تحقق — يتأكد أن مرسل الرسالة (هوية واتساب الحقيقية) هو العضو الممنشن
+ * @returns {{status:"ok"|"not_yours"|"invalid", session?:Object}}
+ */
+function verifyCode({ chatJid, code, senderNumber }) {
+    const c = String(code || "").trim();
+    if (!/^\d{4}$/.test(c)) return { status: "invalid" };
+    let jf = null;
+    try { jf = require("./jidfix"); } catch (_) {}
+    const t = now();
+    for (const s of sessions.values()) {
+        if (s.verified || t > s.expiresAt) continue;
+        if (s.chatJid !== String(chatJid || "")) continue;
+        if (s.code !== c) continue;
+        const same = jf ? jf.sameUser(s.targetUserId, senderNumber)
+                        : cleanNumber(s.targetUserId) === cleanNumber(senderNumber);
+        if (!same) { s.intrusions++; return { status: "not_yours", session: s }; }
+        s.verified = true;
+        s.verifiedAt = t;
+        return { status: "ok", session: s };
+    }
+    return { status: "invalid" };
 }
 
 function getSession(token) {
@@ -310,17 +344,14 @@ function createApp() {
             const s = getSession(token);
             if (!s) return res.json({ ok: true, valid: false, reason: "expired" });
 
-            // 🆕 تحقق من الـ binding (لمنع فتح الرابط من غير صاحبه)
-            if (bindingToken) {
-                const b = verifyBinding(bindingToken);
-                if (!b || b.sessionId !== s.token || b.userNumber !== s.targetUserId) {
-                    return res.status(403).json({
-                        ok: false,
-                        valid: false,
-                        reason: "not_yours",
-                        message: "⛔ هذا الرابط ليس مخصصاً لك"
-                    });
-                }
+            // 🔒 الـ binding إلزامي دائماً
+            if (!bindingOk(s, String(bindingToken || ""))) {
+                return res.status(403).json({
+                    ok: false,
+                    valid: false,
+                    reason: "not_yours",
+                    message: "⛔ هذا الرابط ليس مخصصاً لك"
+                });
             }
 
             const db = getDb();
@@ -336,6 +367,8 @@ function createApp() {
             res.json({
                 ok: true,
                 valid: true,
+                verified: Boolean(s.verified),
+                code: s.verified ? "" : s.code,
                 expiresAt: s.expiresAt
             });
         } catch (e) {
@@ -351,13 +384,11 @@ function createApp() {
             const s = getSession(token);
             if (!s) return res.json({ ok: true, taken: false });
 
-            // 🆕 تحقق من binding
-            if (bindingToken) {
-                const b = verifyBinding(bindingToken);
-                if (!b || b.sessionId !== s.token || b.userNumber !== s.targetUserId) {
-                    return res.status(403).json({ ok: false, taken: false, error: "not_yours" });
-                }
+            // 🔒 binding إلزامي + لا فحص قبل التحقق من الهوية
+            if (!bindingOk(s, String(bindingToken || ""))) {
+                return res.status(403).json({ ok: false, taken: false, error: "not_yours" });
             }
+            if (!s.verified) return res.json({ ok: true, taken: false });
 
             const nick = cleanText(nickname, 30);
             if (nick.length < 2) return res.json({ ok: true, taken: false });
@@ -409,6 +440,14 @@ function createApp() {
                 return res.status(403).json({
                     ok: false,
                     error: "⛔ هذا الرابط مخصص لعضو آخر فقط. اطلب من المشرف رابطاً جديداً."
+                });
+            }
+
+            // 🔑 لا تسجيل قبل التحقق من الهوية عبر .تحقق في القروب
+            if (!s.verified) {
+                return res.status(403).json({
+                    ok: false,
+                    error: "⛔ لم يتم التحقق من هويتك بعد. اكتب في القروب: .تحقق " + s.code
                 });
             }
 
@@ -491,7 +530,9 @@ function createApp() {
                     await workSender.sendWorkFormAfterRegister(sock, db, {
                         targetUserId: key,
                         nickname,
-                        referredBy: referrer
+                        referredBy: referrer,
+                        createdBy: s.createdBy,
+                        chatJid: s.chatJid
                     });
                 } catch (e) {
                     logErr("work-form dispatch:", e?.message || e);
@@ -576,6 +617,7 @@ module.exports = {
     stopFlowServer,
     createSession,
     getSession,
+    verifyCode,
     _internals: {
         sessions,
         sessionsByUser,
