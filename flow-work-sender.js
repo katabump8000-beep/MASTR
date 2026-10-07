@@ -16,18 +16,28 @@ const log = (...a) => { try { console.log("[flow-work-sender]", ...a); } catch (
 const logErr = (...a) => { try { console.error("[flow-work-sender]", ...a); } catch (_) {} };
 
 /**
- * يحاول جلب صورة عبر أمر .احضر الموجود في Ai.js
+ * يجلب صورة الشخصية عبر نفس خط أمر .احضر (مع كتابة اللقب على الصورة)
  * @returns {Promise<Buffer|null>}
  */
-async function tryFetchImage(nickname) {
+async function tryFetchImage(nickname, db) {
     if (!aiModule) return null;
-    if (typeof aiModule.fetchCharacterImage !== "function") return null;
+
+    const job = async () => {
+        if (typeof aiModule.runFetch === "function") {
+            const r = await aiModule.runFetch(nickname, db);
+            return r && r.buffer;
+        }
+        if (typeof aiModule.fetchCharacterImage === "function") {
+            return await aiModule.fetchCharacterImage(nickname, "");
+        }
+        return null;
+    };
 
     try {
         log(`🔍 البحث عن صورة للقب: "${nickname}"`);
         const imgBuf = await Promise.race([
-            aiModule.fetchCharacterImage(nickname, ""),
-            new Promise((_, rej) => setTimeout(() => rej(new Error("timeout-90s")), 90 * 1000))
+            job(),
+            new Promise((_, rej) => setTimeout(() => rej(new Error("timeout-190s")), 190 * 1000))
         ]);
         if (imgBuf && Buffer.isBuffer(imgBuf)) {
             log(`✅ وجد صورة (${imgBuf.length} bytes)`);
@@ -49,7 +59,7 @@ async function tryFetchImage(nickname) {
 async function sendWorkFormAfterRegister(sock, db, session) {
     if (!sock || !db || !session) return false;
 
-    const { targetUserId, nickname, referredBy } = session;
+    const { targetUserId, nickname, referredBy, createdBy, chatJid } = session;
     if (!targetUserId || !nickname) return false;
 
     // 1) قروبات الورك
@@ -70,14 +80,19 @@ async function sendWorkFormAfterRegister(sock, db, session) {
     } catch (_) {}
 
     // 4) محاولة جلب الصورة (اختياري — مع timeout)
-    const imageBuf = await tryFetchImage(nickname);
+    const imageBuf = await tryFetchImage(nickname, db);
+
+    // المسؤول الذي كتب .جديد (للخانة والمنشن)
+    const adminNumber = String(createdBy || "").replace(/\D/g, "") || targetUserId;
+    let adminJid = `${adminNumber}@s.whatsapp.net`;
+    try { adminJid = await jf.resolveJid(sock, chatJid || mainJid, adminNumber); } catch (_) {}
 
     // 5) القالب الجاهز من data.js
     const { messages } = require("./data");
     const formText = messages.admin.work.form(
         nickname,
         referredBy || "—",
-        targetUserId,
+        adminNumber,
         targetUserId
     );
 
@@ -89,12 +104,12 @@ async function sendWorkFormAfterRegister(sock, db, session) {
                 await sock.sendMessage(wJid, {
                     image: imageBuf,
                     caption: formText,
-                    mentions: [targetJid]
+                    mentions: [adminJid, targetJid]
                 });
             } else {
                 await sock.sendMessage(wJid, {
                     text: formText,
-                    mentions: [targetJid]
+                    mentions: [adminJid, targetJid]
                 });
             }
             sent++;
