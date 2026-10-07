@@ -1,22 +1,13 @@
 // ============================================================
 // flow-server.js
-// ALJESAT BOT — نظام التسجيل التفاعلي
-//
-// سيرفر صغير يعمل مع البوت لاستقبال طلبات التسجيل من الموقع:
-//   https://katabump8000-beep.github.io/BOT/
+// ALJESAT BOT — نظام التسجيل التفاعلي (Multi-Bot)
 //
 // Endpoints:
-//   POST /api/flow/create-session   → ينشئ جلسة ويحفظها
-//   POST /api/flow/check-session    → يتحقق من صلاحية الجلسة
-//   POST /api/flow/check-nickname   → يفحص هل اللقب مأخوذ
-//   POST /api/flow/submit           → يسجل العضو
-//
-// مميزات:
-//   ✓ Event-Driven (بدون أي Loop معلق)
-//   ✓ Sessions تُنظف تلقائياً كل دقيقة
-//   ✓ حماية كاملة ضد التسجيل المكرر
-//   ✓ منع تعارض الألقاب بين التسجيلات المتزامنة
-//   ✓ يعمل داخل نفس عملية البوت (نفس المنفذ)
+//   POST /api/flow/create-session
+//   POST /api/flow/check-session
+//   POST /api/flow/check-nickname
+//   POST /api/flow/submit
+//   GET  /api/flow/health
 // ============================================================
 
 "use strict";
@@ -29,20 +20,11 @@ const crypto = require("crypto");
 // ============================================================
 
 const CONFIG = {
-    // مدة صلاحية الجلسة (نفس الرقم في config.js للموقع)
-    SESSION_TTL_MS: 30 * 60 * 1000,   // 30 دقيقة
-
-    // الحد الأقصى للجلسات المتزامنة (حماية الذاكرة)
+    SESSION_TTL_MS: 30 * 60 * 1000,
     MAX_SESSIONS: 500,
-
-    // حد أقصى لمحاولات نفس IP في الدقيقة
     IP_RATE_LIMIT: 60,
     IP_RATE_WINDOW_MS: 60 * 1000,
-
-    // حد أقصى لعدد الطلبات المتزامنة لحماية قاعدة البيانات
     MAX_CONCURRENT_SUBMITS: 5,
-
-    // إذا فشل الاتصال بالبوت لا نعطّل السيرفر
     AUTO_CLEANUP_INTERVAL_MS: 60 * 1000
 };
 
@@ -50,16 +32,10 @@ const CONFIG = {
 // الحالة الداخلية
 // ============================================================
 
-// جلسات التسجيل: token → session
 const sessions = new Map();
-
-// فهرس عكسي: رقم العضو → token (لمنع تسجيلين متزامنين لنفس العضو)
 const sessionsByUser = new Map();
-
-// حد الطلبات لكل IP
 const ipBuckets = new Map();
 
-// حماية من التسجيلات المتزامنة بنفس اللقب
 let activeSubmits = 0;
 
 let serverInstance = null;
@@ -91,7 +67,7 @@ function cleanText(v, max = 200) {
 }
 
 // ============================================================
-// تطبيع النص العربي (للمقارنة)
+// تطبيع النص العربي
 // ============================================================
 
 function normalizeArabic(s) {
@@ -106,7 +82,7 @@ function normalizeArabic(s) {
 }
 
 // ============================================================
-// كشف تشابه الألقاب (نفس المنطق الموجود في commands.js)
+// كشف تشابه الألقاب
 // ============================================================
 
 function isSimilarNickname(existing, newName) {
@@ -127,7 +103,7 @@ function isSimilarNickname(existing, newName) {
 }
 
 // ============================================================
-// الوصول لقاعدة البيانات (عبر global.db من bot.js)
+// الوصول لقاعدة البيانات
 // ============================================================
 
 function getDb() {
@@ -152,7 +128,6 @@ function findNicknameOwner(db, nickname, exceptUserNumbers = []) {
     if (!db || !db.users) return null;
 
     const exceptSet = new Set(exceptUserNumbers.map(cleanNumber));
-    const target = normalizeArabic(nickname);
 
     for (const key of Object.keys(db.users)) {
         const user = db.users[key];
@@ -174,10 +149,8 @@ function isRegistered(db, userNumber) {
     if (!db || !db.users) return false;
     const n = cleanNumber(userNumber);
 
-    // فحص مباشر
     if (db.users[n] && String(db.users[n].nickname || "").trim()) return true;
 
-    // فحص عبر الألقاب البديلة (jidfix)
     try {
         const jf = require("./jidfix");
         const aliases = jf.aliasesOf(n);
@@ -213,14 +186,12 @@ function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }
         attempts: 0
     };
 
-    // حماية: إذا فيه جلسة قديمة لنفس العضو → نحذفها
     const oldToken = sessionsByUser.get(n);
     if (oldToken) sessions.delete(oldToken);
 
     sessions.set(token, session);
     sessionsByUser.set(n, token);
 
-    // حماية: إذا وصلنا الحد الأقصى، نحذف الأقدم
     if (sessions.size > CONFIG.MAX_SESSIONS) {
         const sorted = [...sessions.values()].sort((a, b) => a.createdAt - b.createdAt);
         while (sessions.size > CONFIG.MAX_SESSIONS && sorted.length) {
@@ -335,7 +306,6 @@ function createApp() {
 
     // --------------------------------------------------------
     // POST /api/flow/create-session
-    // يُستدعى من البوت (داخلياً) عند أمر .جديد
     // --------------------------------------------------------
     app.post("/api/flow/create-session", rateMiddleware, (req, res) => {
         try {
@@ -351,11 +321,7 @@ function createApp() {
             }
 
             const session = createSession({
-                targetUserId,
-                targetJid,
-                chatJid,
-                createdBy,
-                groupUrl
+                targetUserId, targetJid, chatJid, createdBy, groupUrl
             });
 
             log(`✅ جلسة جديدة: ${targetUserId} (${session.token.slice(0, 8)}...)`);
@@ -374,7 +340,6 @@ function createApp() {
 
     // --------------------------------------------------------
     // POST /api/flow/check-session
-    // يتحقق الموقع من صلاحية الرابط
     // --------------------------------------------------------
     app.post("/api/flow/check-session", rateMiddleware, (req, res) => {
         try {
@@ -387,13 +352,13 @@ function createApp() {
 
             const db = getDb();
 
-            // إذا كان مسجل مسبقاً → نعرض شاشة النجاح مباشرة
+            // 🆕 إذا كان مسجل مسبقاً → نرجّع "registered" (مع رابط الدخول)
             if (db && isRegistered(db, s.targetUserId)) {
                 return res.json({
                     ok: true,
                     valid: false,
                     reason: "registered",
-                    enterLink: s.groupUrl || ""
+                    enterLink: s.groupUrl || process.env.GROUP_URL || ""
                 });
             }
 
@@ -410,7 +375,6 @@ function createApp() {
 
     // --------------------------------------------------------
     // POST /api/flow/check-nickname
-    // فحص اللقب أثناء كتابته في الموقع
     // --------------------------------------------------------
     app.post("/api/flow/check-nickname", rateMiddleware, (req, res) => {
         try {
@@ -435,10 +399,8 @@ function createApp() {
 
     // --------------------------------------------------------
     // POST /api/flow/submit
-    // استلام البيانات النهائية من الموقع
     // --------------------------------------------------------
     app.post("/api/flow/submit", rateMiddleware, async (req, res) => {
-        // حماية: نسمح بعدد محدود من التسجيلات المتزامنة فقط
         if (activeSubmits >= CONFIG.MAX_CONCURRENT_SUBMITS) {
             return res.status(429).json({
                 ok: false,
@@ -497,7 +459,7 @@ function createApp() {
                 return res.json({ ok: false, errors });
             }
 
-            // 3) فحص قاعدة البيانات
+            // 3) قاعدة البيانات
             const db = getDb();
             if (!db) {
                 return res.json({
@@ -516,7 +478,7 @@ function createApp() {
                 });
             }
 
-            // 5) فحص اللقب المأخوذ
+            // 5) فحص اللقب
             const owner = findNicknameOwner(db, nickname, [s.targetUserId]);
             if (owner) {
                 return res.json({
@@ -527,10 +489,9 @@ function createApp() {
                 });
             }
 
-            // 6) التسجيل النهائي (ذرّي)
+            // 6) التسجيل النهائي
             const key = cleanNumber(s.targetUserId);
 
-            // إنشاء كائن المستخدم
             const user = db.users[key] && typeof db.users[key] === "object"
                 ? db.users[key]
                 : { balance: 0, nickname: "", rank: "", maxInteraction: 0, friend: "" };
@@ -544,16 +505,13 @@ function createApp() {
 
             db.users[key] = user;
 
-            // تحديث قاعدة البيانات
             saveDb();
 
-            // تحديث الجلسة (لاستعمالها من طرف البوت إن احتاج)
             s.used = true;
             s.nickname = nickname;
 
-            log(`🎉 تسجيل ناجح: ${nickname} (${key})`);
+            log(`🎉 تسجيل ناجح: ${nickname} (${key}) | جنس: ${gender} | من طرف: ${referrer}`);
 
-            // 7) إرسال الرد النهائي مع رابط الدخول
             const enterLink = s.groupUrl || process.env.GROUP_URL || "";
 
             res.json({
@@ -590,7 +548,7 @@ function createApp() {
 }
 
 // ============================================================
-// دورة التنظيف التلقائي
+// التنظيف التلقائي
 // ============================================================
 
 function startCleanupTimer() {
@@ -621,7 +579,6 @@ function startFlowServer() {
         return serverInstance;
     }
 
-    // فحص وجود express
     try {
         require.resolve("express");
     } catch (_) {
@@ -670,7 +627,6 @@ module.exports = {
     stopFlowServer,
     createSession,
     getSession,
-    // للاختبار
     _internals: {
         sessions,
         sessionsByUser,
