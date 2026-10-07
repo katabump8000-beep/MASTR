@@ -1,21 +1,22 @@
 // ============================================================
 // flow-server.js
 // ALJESAT BOT — نظام التسجيل التفاعلي (Multi-Bot / Multi-Port)
-//
-// كل الإعدادات تُقرأ من Railway Variables:
-//   FLOW_PORT   → المنفذ (افتراضي: PORT أو 8080)
-//   PUBLIC_URL  → رابط البوت العام
-//   GROUP_URL   → رابط القروب الأساسي
-//   FLOW_SESSION_TTL_MIN → مدة صلاحية الجلسة بالدقائق (افتراضي: 30)
+// 🔒 محدّث: ربط الجلسة بهوية العضو + إرسال استمارة الورك تلقائياً
 // ============================================================
 
 "use strict";
 
 const express = require("express");
 const crypto = require("crypto");
+const { signBinding, verifyBinding } = require("./flow-security");
+
+let workSender = null;
+try { workSender = require("./flow-work-sender"); } catch (e) {
+    console.warn("[flow-server] ⚠️ flow-work-sender غير محمّل:", e?.message);
+}
 
 // ============================================================
-// الإعدادات (كلها من Variables)
+// الإعدادات
 // ============================================================
 
 const SESSION_TTL_MIN = Number(process.env.FLOW_SESSION_TTL_MIN) || 30;
@@ -29,19 +30,11 @@ const CONFIG = {
     AUTO_CLEANUP_INTERVAL_MS: 60 * 1000
 };
 
-// ============================================================
-// المنفذ — يُقرأ من FLOW_PORT أو PORT أو 8080
-// ============================================================
-
 function resolvePort() {
     const fromFlowPort = Number(process.env.FLOW_PORT);
-    if (Number.isFinite(fromFlowPort) && fromFlowPort > 0 && fromFlowPort < 65536) {
-        return fromFlowPort;
-    }
+    if (Number.isFinite(fromFlowPort) && fromFlowPort > 0 && fromFlowPort < 65536) return fromFlowPort;
     const fromPort = Number(process.env.PORT);
-    if (Number.isFinite(fromPort) && fromPort > 0 && fromPort < 65536) {
-        return fromPort;
-    }
+    if (Number.isFinite(fromPort) && fromPort > 0 && fromPort < 65536) return fromPort;
     return 8080;
 }
 
@@ -54,7 +47,6 @@ const sessionsByUser = new Map();
 const ipBuckets = new Map();
 
 let activeSubmits = 0;
-
 let serverInstance = null;
 let cleanupTimer = null;
 
@@ -66,14 +58,8 @@ const log = (...a) => { try { console.log("[flow-server]", ...a); } catch (_) {}
 const logErr = (...a) => { try { console.error("[flow-server]", ...a); } catch (_) {} };
 
 function now() { return Date.now(); }
-
-function randomToken(bytes = 24) {
-    return crypto.randomBytes(bytes).toString("hex");
-}
-
-function cleanNumber(v) {
-    return String(v || "").replace(/\D/g, "");
-}
+function randomToken(bytes = 24) { return crypto.randomBytes(bytes).toString("hex"); }
+function cleanNumber(v) { return String(v || "").replace(/\D/g, ""); }
 
 function cleanText(v, max = 200) {
     return String(v == null ? "" : v)
@@ -82,10 +68,6 @@ function cleanText(v, max = 200) {
         .trim()
         .slice(0, max);
 }
-
-// ============================================================
-// تطبيع النص العربي
-// ============================================================
 
 function normalizeArabic(s) {
     return String(s || "")
@@ -98,78 +80,45 @@ function normalizeArabic(s) {
         .toLowerCase();
 }
 
-// ============================================================
-// كشف تشابه الألقاب
-// ============================================================
-
 function isSimilarNickname(existing, newName) {
     const a = normalizeArabic(existing);
     const b = normalizeArabic(newName);
     if (a === b) return true;
-
     const clean = (s) => s.replace(/\s*\d+$/, "").trim();
     const ca = clean(a), cb = clean(b);
     if (ca === cb) return true;
-
     const min = Math.min(ca.length, cb.length);
     if (min < 3) return false;
-
     let matches = 0;
     for (let i = 0; i < min; i++) if (ca[i] === cb[i]) matches++;
     return (matches / min) > 0.85;
 }
 
-// ============================================================
-// قاعدة البيانات
-// ============================================================
-
-function getDb() {
-    try { return global.db || null; } catch (_) { return null; }
-}
-
-function saveDb() {
-    try { if (typeof global.saveDb === "function") global.saveDb(); } catch (_) {}
-}
-
-// ============================================================
-// البحث عن عضو باللقب
-// ============================================================
+function getDb() { try { return global.db || null; } catch (_) { return null; } }
+function saveDb() { try { if (typeof global.saveDb === "function") global.saveDb(); } catch (_) {} }
 
 function findNicknameOwner(db, nickname, exceptUserNumbers = []) {
     if (!db || !db.users) return null;
-
     const exceptSet = new Set(exceptUserNumbers.map(cleanNumber));
-
     for (const key of Object.keys(db.users)) {
         const user = db.users[key];
         if (!user || !String(user.nickname || "").trim()) continue;
         if (exceptSet.has(cleanNumber(key))) continue;
-
-        if (isSimilarNickname(user.nickname, nickname)) {
-            return { key, user };
-        }
+        if (isSimilarNickname(user.nickname, nickname)) return { key, user };
     }
     return null;
 }
 
-// ============================================================
-// التحقق من التسجيل المسبق
-// ============================================================
-
 function isRegistered(db, userNumber) {
     if (!db || !db.users) return false;
     const n = cleanNumber(userNumber);
-
     if (db.users[n] && String(db.users[n].nickname || "").trim()) return true;
-
     try {
         const jf = require("./jidfix");
-        const aliases = jf.aliasesOf(n);
-        for (const a of aliases) {
+        for (const a of jf.aliasesOf(n)) {
             if (db.users[a] && String(db.users[a].nickname || "").trim()) return true;
         }
     } catch (_) {}
-
     return false;
 }
 
@@ -184,8 +133,12 @@ function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }
     const n = cleanNumber(targetUserId);
     const t = now();
 
+    // 🔒 توليد bindingToken مرتبط بالعضو
+    const bindingToken = signBinding(token, n);
+
     const session = {
         token,
+        bindingToken,          // 🆕
         targetUserId: n,
         targetJid: String(targetJid || ""),
         chatJid: String(chatJid || ""),
@@ -303,9 +256,7 @@ function createApp() {
     app.use(express.json({ limit: "32kb" }));
     app.use(express.urlencoded({ extended: false, limit: "32kb" }));
 
-    // --------------------------------------------------------
     // GET /api/flow/health
-    // --------------------------------------------------------
     app.get("/api/flow/health", (req, res) => {
         res.json({
             ok: true,
@@ -313,13 +264,12 @@ function createApp() {
             port: resolvePort(),
             publicUrl: process.env.PUBLIC_URL || "",
             sessions: sessions.size,
-            uptime: process.uptime()
+            uptime: process.uptime(),
+            bindingEnabled: true   // 🆕
         });
     });
 
-    // --------------------------------------------------------
     // POST /api/flow/create-session
-    // --------------------------------------------------------
     app.post("/api/flow/create-session", rateMiddleware, (req, res) => {
         try {
             const body = req.body || {};
@@ -342,6 +292,7 @@ function createApp() {
             res.json({
                 ok: true,
                 token: session.token,
+                bindingToken: session.bindingToken,   // 🆕
                 expiresAt: session.expiresAt,
                 expiresIn: CONFIG.SESSION_TTL_MS
             });
@@ -351,20 +302,28 @@ function createApp() {
         }
     });
 
-    // --------------------------------------------------------
     // POST /api/flow/check-session
-    // --------------------------------------------------------
     app.post("/api/flow/check-session", rateMiddleware, (req, res) => {
         try {
-            const { token } = req.body || {};
+            const { token, bindingToken } = req.body || {};
 
             const s = getSession(token);
-            if (!s) {
-                return res.json({ ok: true, valid: false, reason: "expired" });
+            if (!s) return res.json({ ok: true, valid: false, reason: "expired" });
+
+            // 🆕 تحقق من الـ binding (لمنع فتح الرابط من غير صاحبه)
+            if (bindingToken) {
+                const b = verifyBinding(bindingToken);
+                if (!b || b.sessionId !== s.token || b.userNumber !== s.targetUserId) {
+                    return res.status(403).json({
+                        ok: false,
+                        valid: false,
+                        reason: "not_yours",
+                        message: "⛔ هذا الرابط ليس مخصصاً لك"
+                    });
+                }
             }
 
             const db = getDb();
-
             if (db && isRegistered(db, s.targetUserId)) {
                 return res.json({
                     ok: true,
@@ -385,15 +344,20 @@ function createApp() {
         }
     });
 
-    // --------------------------------------------------------
     // POST /api/flow/check-nickname
-    // --------------------------------------------------------
     app.post("/api/flow/check-nickname", rateMiddleware, (req, res) => {
         try {
-            const { token, nickname } = req.body || {};
-
+            const { token, bindingToken, nickname } = req.body || {};
             const s = getSession(token);
             if (!s) return res.json({ ok: true, taken: false });
+
+            // 🆕 تحقق من binding
+            if (bindingToken) {
+                const b = verifyBinding(bindingToken);
+                if (!b || b.sessionId !== s.token || b.userNumber !== s.targetUserId) {
+                    return res.status(403).json({ ok: false, taken: false, error: "not_yours" });
+                }
+            }
 
             const nick = cleanText(nickname, 30);
             if (nick.length < 2) return res.json({ ok: true, taken: false });
@@ -410,7 +374,7 @@ function createApp() {
     });
 
     // --------------------------------------------------------
-    // POST /api/flow/submit
+    // POST /api/flow/submit  🆕 النسخة المحمية بالكامل
     // --------------------------------------------------------
     app.post("/api/flow/submit", rateMiddleware, async (req, res) => {
         if (activeSubmits >= CONFIG.MAX_CONCURRENT_SUBMITS) {
@@ -424,6 +388,7 @@ function createApp() {
         try {
             const body = req.body || {};
             const token = cleanText(body.token, 80);
+            const bindingToken = cleanText(body.bindingToken, 120);   // 🆕
             const nickname = cleanText(body.nickname, 30);
             const referrer = cleanText(body.referrer, 40);
             const gender = cleanText(body.gender, 20);
@@ -437,32 +402,31 @@ function createApp() {
                 });
             }
 
+            // 🆕 التحقق من الـ binding: الرابط خاص بالعضو الممانشن فقط
+            const b = verifyBinding(bindingToken);
+            if (!b || b.sessionId !== s.token || b.userNumber !== s.targetUserId) {
+                log(`🚫 محاولة تسجيل من شخص آخر (sid=${s.token.slice(0,8)})`);
+                return res.status(403).json({
+                    ok: false,
+                    error: "⛔ هذا الرابط مخصص لعضو آخر فقط. اطلب من المشرف رابطاً جديداً."
+                });
+            }
+
             const errors = {};
 
-            if (nickname.length < 2) {
-                errors.nickname = "⚠️ يرجى كتابة لقب من حرفين على الأقل.";
-            } else if (nickname.length > 30) {
-                errors.nickname = "⚠️ اللقب طويل جداً (30 حرفاً كحد أقصى).";
-            }
+            if (nickname.length < 2) errors.nickname = "⚠️ يرجى كتابة لقب من حرفين على الأقل.";
+            else if (nickname.length > 30) errors.nickname = "⚠️ اللقب طويل جداً (30 حرفاً كحد أقصى).";
 
-            if (referrer.length < 2) {
-                errors.referrer = "⚠️ يرجى كتابة من طرف من دخلت.";
-            } else if (referrer.length > 40) {
-                errors.referrer = "⚠️ الاسم طويل جداً (40 حرفاً كحد أقصى).";
-            }
+            if (referrer.length < 2) errors.referrer = "⚠️ يرجى كتابة من طرف من دخلت.";
+            else if (referrer.length > 40) errors.referrer = "⚠️ الاسم طويل جداً (40 حرفاً كحد أقصى).";
 
-            if (!gender || gender.length < 1) {
-                errors.gender = "⚠️ يرجى اختيار جنسك.";
-            }
+            if (!gender || gender.length < 1) errors.gender = "⚠️ يرجى اختيار جنسك.";
 
             let age = null;
             if (ageRaw !== undefined && ageRaw !== null && ageRaw !== "") {
                 const n = parseInt(ageRaw, 10);
-                if (!Number.isFinite(n) || n < 5 || n > 99) {
-                    errors.age = "⚠️ العمر يجب أن يكون بين 5 و 99.";
-                } else {
-                    age = n;
-                }
+                if (!Number.isFinite(n) || n < 5 || n > 99) errors.age = "⚠️ العمر يجب أن يكون بين 5 و 99.";
+                else age = n;
             }
 
             if (Object.keys(errors).length) {
@@ -470,20 +434,11 @@ function createApp() {
             }
 
             const db = getDb();
-            if (!db) {
-                return res.json({
-                    ok: false,
-                    error: "⚠️ خطأ داخلي: قاعدة البيانات غير متاحة."
-                });
-            }
-
+            if (!db) return res.json({ ok: false, error: "⚠️ خطأ داخلي: قاعدة البيانات غير متاحة." });
             if (!db.users) db.users = {};
 
             if (isRegistered(db, s.targetUserId)) {
-                return res.json({
-                    ok: false,
-                    error: "❌ أنت مسجل في مملكة النار بالفعل."
-                });
+                return res.json({ ok: false, error: "❌ أنت مسجل في مملكة النار بالفعل." });
             }
 
             const owner = findNicknameOwner(db, nickname, [s.targetUserId]);
@@ -497,7 +452,6 @@ function createApp() {
             }
 
             const key = cleanNumber(s.targetUserId);
-
             const user = db.users[key] && typeof db.users[key] === "object"
                 ? db.users[key]
                 : { balance: 0, nickname: "", rank: "", maxInteraction: 0, friend: "" };
@@ -510,33 +464,49 @@ function createApp() {
             user.registrationDate = new Date().toISOString();
 
             db.users[key] = user;
-
             saveDb();
 
             s.used = true;
             s.nickname = nickname;
 
-            log(`🎉 تسجيل ناجح: ${nickname} (${key}) | جنس: ${gender} | من طرف: ${referrer}`);
+            log(`🎉 تسجيل ناجح: ${nickname} (${key}) | من طرف: ${referrer}`);
 
             const enterLink = s.groupUrl || process.env.GROUP_URL || "";
 
-            res.json({
-                ok: true,
-                nickname,
-                enterLink
+            // ✅ الرد للواجهة أولاً (سريع)
+            res.json({ ok: true, nickname, enterLink });
+
+            // 🆕 إرسال الاستمارة + الصورة **بعد** الرد (لا يعطّل الواجهة)
+            setImmediate(async () => {
+                try {
+                    const sock = global.currentSocket;
+                    if (!sock) {
+                        logErr("⚠️ لا يوجد socket متاح — لم تُرسل الاستمارة");
+                        return;
+                    }
+                    if (!workSender || typeof workSender.sendWorkFormAfterRegister !== "function") {
+                        logErr("⚠️ flow-work-sender غير جاهز");
+                        return;
+                    }
+                    await workSender.sendWorkFormAfterRegister(sock, db, {
+                        targetUserId: key,
+                        nickname,
+                        referredBy: referrer
+                    });
+                } catch (e) {
+                    logErr("work-form dispatch:", e?.message || e);
+                }
             });
 
         } catch (e) {
             logErr("submit error:", e?.message || e);
-            res.status(500).json({ ok: false, error: "internal_error" });
+            if (!res.headersSent) res.status(500).json({ ok: false, error: "internal_error" });
         } finally {
             activeSubmits--;
         }
     });
 
-    app.use((req, res) => {
-        res.status(404).json({ ok: false, error: "not_found" });
-    });
+    app.use((req, res) => res.status(404).json({ ok: false, error: "not_found" }));
 
     app.use((err, req, res, next) => {
         logErr("express error:", err?.message || err);
@@ -563,10 +533,7 @@ function startCleanupTimer() {
 }
 
 function stopCleanupTimer() {
-    if (cleanupTimer) {
-        clearInterval(cleanupTimer);
-        cleanupTimer = null;
-    }
+    if (cleanupTimer) { clearInterval(cleanupTimer); cleanupTimer = null; }
 }
 
 // ============================================================
@@ -574,17 +541,10 @@ function stopCleanupTimer() {
 // ============================================================
 
 function startFlowServer() {
-    if (serverInstance) {
-        log("السيرفر يعمل بالفعل");
-        return serverInstance;
-    }
+    if (serverInstance) { log("السيرفر يعمل بالفعل"); return serverInstance; }
 
-    try {
-        require.resolve("express");
-    } catch (_) {
-        logErr("❌ مكتبة express غير مثبتة. شغّل: npm install express");
-        return null;
-    }
+    try { require.resolve("express"); }
+    catch (_) { logErr("❌ مكتبة express غير مثبتة. شغّل: npm install express"); return null; }
 
     const app = createApp();
     const PORT = resolvePort();
@@ -595,15 +555,10 @@ function startFlowServer() {
             log(`🔗 PUBLIC_URL = ${process.env.PUBLIC_URL || "(غير محدد)"}`);
             log(`🌐 GROUP_URL = ${process.env.GROUP_URL ? "موجود" : "(غير محدد)"}`);
             log(`⏱️ مدة الجلسة: ${SESSION_TTL_MIN} دقيقة`);
-            log(`📊 الحد الأقصى للجلسات: ${CONFIG.MAX_SESSIONS}`);
+            log(`🔒 نظام binding مُفعّل (منع التسجيل باسم الغير)`);
         });
-
-        serverInstance.on("error", (err) => {
-            logErr("❌ خطأ في السيرفر:", err?.message || err);
-        });
-
+        serverInstance.on("error", (err) => logErr("❌ خطأ في السيرفر:", err?.message || err));
         startCleanupTimer();
-
         return serverInstance;
     } catch (e) {
         logErr("❌ فشل تشغيل السيرفر:", e?.message || e);
@@ -613,15 +568,8 @@ function startFlowServer() {
 
 function stopFlowServer() {
     stopCleanupTimer();
-    if (serverInstance) {
-        try { serverInstance.close(); } catch (_) {}
-        serverInstance = null;
-    }
+    if (serverInstance) { try { serverInstance.close(); } catch (_) {} serverInstance = null; }
 }
-
-// ============================================================
-// التصدير
-// ============================================================
 
 module.exports = {
     startFlowServer,

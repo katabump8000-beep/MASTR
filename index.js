@@ -6,6 +6,7 @@
 // + JidFix + Ban + Shop + Guilds + Hads (اتبع حدسك)
 // + Ai (إنشاء/إحضار الصور) + المؤبدين + أوامر رقم البوت نفسه
 // + 🆕 Flow Registration (نظام التسجيل التفاعلي)
+// 🔒 محدّث: global.currentSocket لتمكين flow-server من إرسال الاستمارة
 // ============================================================
 
 "use strict";
@@ -1005,6 +1006,9 @@ async function handleMainGroupJoin(sock, groupJid, participant, db, saveDb) {
 function createHandlers() {
     const handlers = {
         onConnectionOpen: async (sock) => {
+            // 🔒 مطلوب لـ flow-server (إرسال استمارة الورك تلقائياً بعد التسجيل)
+            global.currentSocket = sock;
+
             trackSentMessages(sock);
             setupAdminMonitoring(sock);
 
@@ -1232,7 +1236,7 @@ function createHandlers() {
                         }
 
                         // ============================================
-                        // 🆕 نظام التسجيل التفاعلي الجديد (.جديد / .تصفير)
+                        // 🆕 نظام التسجيل التفاعلي الجديد (.جديد / .عيد)
                         // ============================================
                         if (flowCommands) {
                             try {

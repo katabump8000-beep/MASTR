@@ -6,6 +6,7 @@
 //   .عيد @user       → يمسح التسجيل والجلسة (يحتاج .سماح 1)
 //
 // يعتمد على flow-server.js (نفس العملية).
+// 🔒 محدّث: إضافة binding token لمنع التسجيل باسم الغير
 // ============================================================
 
 "use strict";
@@ -263,8 +264,11 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         groupUrl
     });
 
-    // 8) بناء رابط التسجيل (Multi-Bot: مع api parameter)
-    const registerUrl = `${CFG.GITHUB_PAGES_URL}/?token=${session.token}&api=${encodeURIComponent(publicUrl)}`;
+    // 8) بناء رابط التسجيل 🔒 مع binding token
+    const registerUrl =
+        `${CFG.GITHUB_PAGES_URL}/?token=${session.token}` +
+        `&binding=${encodeURIComponent(session.bindingToken)}` +
+        `&api=${encodeURIComponent(publicUrl)}`;
 
     // 9) الرسالة الأولى: النص مع المنشن
     await safeSend(sock, jid, {
