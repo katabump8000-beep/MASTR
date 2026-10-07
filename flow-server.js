@@ -1,13 +1,12 @@
 // ============================================================
 // flow-server.js
-// ALJESAT BOT — نظام التسجيل التفاعلي (Multi-Bot)
+// ALJESAT BOT — نظام التسجيل التفاعلي (Multi-Bot / Multi-Port)
 //
-// Endpoints:
-//   POST /api/flow/create-session
-//   POST /api/flow/check-session
-//   POST /api/flow/check-nickname
-//   POST /api/flow/submit
-//   GET  /api/flow/health
+// كل الإعدادات تُقرأ من Railway Variables:
+//   FLOW_PORT   → المنفذ (افتراضي: PORT أو 8080)
+//   PUBLIC_URL  → رابط البوت العام
+//   GROUP_URL   → رابط القروب الأساسي
+//   FLOW_SESSION_TTL_MIN → مدة صلاحية الجلسة بالدقائق (افتراضي: 30)
 // ============================================================
 
 "use strict";
@@ -16,17 +15,35 @@ const express = require("express");
 const crypto = require("crypto");
 
 // ============================================================
-// الإعدادات
+// الإعدادات (كلها من Variables)
 // ============================================================
 
+const SESSION_TTL_MIN = Number(process.env.FLOW_SESSION_TTL_MIN) || 30;
+
 const CONFIG = {
-    SESSION_TTL_MS: 30 * 60 * 1000,
-    MAX_SESSIONS: 500,
-    IP_RATE_LIMIT: 60,
+    SESSION_TTL_MS: SESSION_TTL_MIN * 60 * 1000,
+    MAX_SESSIONS: Number(process.env.FLOW_MAX_SESSIONS) || 500,
+    IP_RATE_LIMIT: Number(process.env.FLOW_IP_RATE_LIMIT) || 60,
     IP_RATE_WINDOW_MS: 60 * 1000,
-    MAX_CONCURRENT_SUBMITS: 5,
+    MAX_CONCURRENT_SUBMITS: Number(process.env.FLOW_MAX_SUBMITS) || 5,
     AUTO_CLEANUP_INTERVAL_MS: 60 * 1000
 };
+
+// ============================================================
+// المنفذ — يُقرأ من FLOW_PORT أو PORT أو 8080
+// ============================================================
+
+function resolvePort() {
+    const fromFlowPort = Number(process.env.FLOW_PORT);
+    if (Number.isFinite(fromFlowPort) && fromFlowPort > 0 && fromFlowPort < 65536) {
+        return fromFlowPort;
+    }
+    const fromPort = Number(process.env.PORT);
+    if (Number.isFinite(fromPort) && fromPort > 0 && fromPort < 65536) {
+        return fromPort;
+    }
+    return 8080;
+}
 
 // ============================================================
 // الحالة الداخلية
@@ -103,21 +120,15 @@ function isSimilarNickname(existing, newName) {
 }
 
 // ============================================================
-// الوصول لقاعدة البيانات
+// قاعدة البيانات
 // ============================================================
 
 function getDb() {
-    try {
-        return global.db || null;
-    } catch (_) {
-        return null;
-    }
+    try { return global.db || null; } catch (_) { return null; }
 }
 
 function saveDb() {
-    try {
-        if (typeof global.saveDb === "function") global.saveDb();
-    } catch (_) {}
+    try { if (typeof global.saveDb === "function") global.saveDb(); } catch (_) {}
 }
 
 // ============================================================
@@ -163,7 +174,7 @@ function isRegistered(db, userNumber) {
 }
 
 // ============================================================
-// إدارة الجلسات
+// الجلسات
 // ============================================================
 
 function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }) {
@@ -299,6 +310,8 @@ function createApp() {
         res.json({
             ok: true,
             service: "flow-server",
+            port: resolvePort(),
+            publicUrl: process.env.PUBLIC_URL || "",
             sessions: sessions.size,
             uptime: process.uptime()
         });
@@ -352,7 +365,6 @@ function createApp() {
 
             const db = getDb();
 
-            // 🆕 إذا كان مسجل مسبقاً → نرجّع "registered" (مع رابط الدخول)
             if (db && isRegistered(db, s.targetUserId)) {
                 return res.json({
                     ok: true,
@@ -417,7 +429,6 @@ function createApp() {
             const gender = cleanText(body.gender, 20);
             const ageRaw = body.age;
 
-            // 1) فحص الجلسة
             const s = getSession(token);
             if (!s) {
                 return res.json({
@@ -426,7 +437,6 @@ function createApp() {
                 });
             }
 
-            // 2) فحص الحقول
             const errors = {};
 
             if (nickname.length < 2) {
@@ -459,7 +469,6 @@ function createApp() {
                 return res.json({ ok: false, errors });
             }
 
-            // 3) قاعدة البيانات
             const db = getDb();
             if (!db) {
                 return res.json({
@@ -470,7 +479,6 @@ function createApp() {
 
             if (!db.users) db.users = {};
 
-            // 4) فحص التسجيل المسبق
             if (isRegistered(db, s.targetUserId)) {
                 return res.json({
                     ok: false,
@@ -478,7 +486,6 @@ function createApp() {
                 });
             }
 
-            // 5) فحص اللقب
             const owner = findNicknameOwner(db, nickname, [s.targetUserId]);
             if (owner) {
                 return res.json({
@@ -489,7 +496,6 @@ function createApp() {
                 });
             }
 
-            // 6) التسجيل النهائي
             const key = cleanNumber(s.targetUserId);
 
             const user = db.users[key] && typeof db.users[key] === "object"
@@ -528,16 +534,10 @@ function createApp() {
         }
     });
 
-    // --------------------------------------------------------
-    // 404
-    // --------------------------------------------------------
     app.use((req, res) => {
         res.status(404).json({ ok: false, error: "not_found" });
     });
 
-    // --------------------------------------------------------
-    // Error handler
-    // --------------------------------------------------------
     app.use((err, req, res, next) => {
         logErr("express error:", err?.message || err);
         if (res.headersSent) return next(err);
@@ -587,13 +587,14 @@ function startFlowServer() {
     }
 
     const app = createApp();
-    const PORT = Number(process.env.PORT) || 8080;
+    const PORT = resolvePort();
 
     try {
         serverInstance = app.listen(PORT, "0.0.0.0", () => {
             log(`🚀 يعمل على المنفذ ${PORT}`);
             log(`🔗 PUBLIC_URL = ${process.env.PUBLIC_URL || "(غير محدد)"}`);
             log(`🌐 GROUP_URL = ${process.env.GROUP_URL ? "موجود" : "(غير محدد)"}`);
+            log(`⏱️ مدة الجلسة: ${SESSION_TTL_MIN} دقيقة`);
             log(`📊 الحد الأقصى للجلسات: ${CONFIG.MAX_SESSIONS}`);
         });
 
@@ -633,6 +634,7 @@ module.exports = {
         findNicknameOwner,
         isRegistered,
         normalizeArabic,
+        resolvePort,
         CONFIG
     }
 };
