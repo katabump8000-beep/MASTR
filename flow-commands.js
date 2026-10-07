@@ -244,7 +244,9 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
     }
 
     // 5) قراءة PUBLIC_URL (رابط البوت الحالي)
-    const publicUrl = String(process.env.PUBLIC_URL || "").trim().replace(/\/$/, "");
+    // 🛠️ نأخذ الـ origin فقط (يصلح الخطأ لو لُصق مسار مثل /api/flow/health داخل PUBLIC_URL)
+    let publicUrl = String(process.env.PUBLIC_URL || "").trim();
+    try { publicUrl = new URL(publicUrl).origin; } catch (_) { publicUrl = publicUrl.replace(/\/$/, ""); }
     if (!publicUrl) {
         await safeSend(sock, jid, {
             text: "⚠️ خطأ في الإعداد: PUBLIC_URL غير محدد في Railway Variables.\nأبلغ المشرف."
@@ -276,7 +278,10 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
             "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
             "━━━━━━━━━━━━━━━\n\n" +
             `العضو @${targetNumber}\n` +
-            "رجاءاً قم بتسجيل بياناتك:\n" +
+            "رجاءاً قم بتسجيل بياناتك:\n\n" +
+            "1️⃣ افتح الرابط من الزر بالأسفل\n" +
+            "2️⃣ ستظهر لك أرقام تحقق\n" +
+            "3️⃣ اكتبها هنا هكذا: *.تحقق 1234*\n" +
             "━━━━━━━━━━━━━━━",
         mentions: [targetJid]
     }, { quoted: msg });
@@ -294,6 +299,45 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
     }
 
     log(`📨 جلسة جديدة: ${targetNumber} (api=${publicUrl})`);
+    return true;
+}
+
+// ============================================================
+// أمر .تحقق <كود>  — يثبت هوية العضو عبر رقمه الحقيقي في واتساب
+// ============================================================
+
+async function handleVerifyCommand(sock, jid, msg, text, cleanSender) {
+    const m = String(text || "").trim().match(/^\.\s*\S+\s+(\d{4})\s*$/);
+    if (!m) {
+        await safeSend(sock, jid, { text: "⚠️ اكتب الكود هكذا: .تحقق 1234" }, { quoted: msg });
+        return true;
+    }
+
+    const r = flowServer.verifyCode({ chatJid: jid, code: m[1], senderNumber: cleanSender });
+
+    if (r.status === "ok") {
+        const s = r.session;
+        await safeSend(sock, jid, {
+            text:
+                "✅ تم التحقق من هويتك @" + s.targetUserId + "\n" +
+                "ارجع إلى صفحة التسجيل وأكمل بياناتك 🔥",
+            mentions: [s.targetJid]
+        }, { quoted: msg });
+        log("✅ تحقق ناجح: " + s.targetUserId);
+        return true;
+    }
+
+    if (r.status === "not_yours") {
+        await safeSend(sock, jid, {
+            text: "⛔ هذا الكود مخصص لعضو آخر، لا يمكنك استخدامه."
+        }, { quoted: msg });
+        log("🚫 محاولة تحقق من غير صاحب الجلسة: " + cleanSender);
+        return true;
+    }
+
+    await safeSend(sock, jid, {
+        text: "❌ كود غير صحيح أو منتهي. اطلب من المشرف .جديد من جديد."
+    }, { quoted: msg });
     return true;
 }
 
@@ -424,6 +468,15 @@ async function handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, 
             await safeSend(sock, jid, {
                 text: "⚠️ حدث خطأ أثناء إنشاء جلسة التسجيل."
             }, { quoted: msg });
+            return true;
+        }
+    }
+
+    if (cmd === "تحقق") {
+        try {
+            return await handleVerifyCommand(sock, jid, msg, text, cleanSender);
+        } catch (e) {
+            logErr("handleVerifyCommand:", e?.message || e);
             return true;
         }
     }
