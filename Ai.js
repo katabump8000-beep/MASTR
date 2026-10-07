@@ -1757,6 +1757,9 @@ module.exports = {
     handleAiCommand,
     handleEditCommand,
     handleMessageHook,
+    // 🆕 مطلوبان لـ flow-work-sender (صورة الاستمارة)
+    fetchCharacterImage,
+    runFetch,
     // للاختبار
     parseTarget,
     toTokens,
