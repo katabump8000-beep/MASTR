@@ -1,9 +1,9 @@
 // ============================================================
 // flow-commands.js
-// ALJESAT BOT — أوامر التسجيل التفاعلي
+// ALJESAT BOT — أوامر التسجيل التفاعلي (Multi-Bot)
 //
-//   .جديد @user      → ينشئ جلسة + يرسل النص + البطاقة
-//   .تصفير @user     → يمسح التسجيل والجلسة
+//   .جديد @user      → ينشئ جلسة + يرسل النص + البطاقة (يحتاج .سماح 2)
+//   .عيد @user       → يمسح التسجيل والجلسة (يحتاج .سماح 1)
 //
 // يعتمد على flow-server.js (نفس العملية).
 // ============================================================
@@ -17,15 +17,18 @@ const flowServer = require("./flow-server");
 // ============================================================
 
 const CFG = {
-    // المستويات التي تستطيع استخدام .جديد
-    REGISTER_LEVELS: ["2", "1", "5"],
+    // المستويات التي تستطيع استخدام .جديد (فقط .سماح 2 والمالك)
+    REGISTER_LEVELS: ["2"],
 
-    // المستويات التي تستطيع استخدام .تصفير
+    // المستويات التي تستطيع استخدام .عيد
     RESET_LEVELS: ["1", "5"],
 
-    // صلاحية الأمر (يظهر في الأخطاء)
+    // اسم الأمر (للعرض)
     REGISTER_PERM_NAME: ".سماح 2",
-    RESET_PERM_NAME: ".سماح 1"
+    RESET_PERM_NAME: ".سماح 1",
+
+    // موقع GitHub Pages (ثابت)
+    GITHUB_PAGES_URL: "https://katabump8000-beep.github.io/BOT"
 };
 
 // ============================================================
@@ -60,7 +63,6 @@ function getMentionedJids(msg) {
         if (Array.isArray(ctx.mentionedJid) && ctx.mentionedJid.length) {
             return ctx.mentionedJid;
         }
-        // إذا كان رداً على رسالة → نأخذ المُرسل الأصلي
         if (ctx.participant && ctx.quotedMessage) {
             return [ctx.participant];
         }
@@ -83,7 +85,6 @@ function hasPermission(db, userNumber, levels, isOwner) {
     const n = cleanNumber(userNumber);
     if (!n) return false;
 
-    // استخدام jidfix للبحث عن كل الأرقام المكافئة
     let aliases = [n];
     try {
         const jf = require("./jidfix");
@@ -100,19 +101,11 @@ function hasPermission(db, userNumber, levels, isOwner) {
 }
 
 // ============================================================
-// بناء رسالة البطاقة التفاعلية
+// إرسال البطاقة التفاعلية
 // ============================================================
 
-/**
- * ترسل البطاقة التفاعلية باستخدام nativeFlow.
- *
- * ⚠️ مهم: هذه الطريقة تستخدم nativeFlow مباشرة (بدون مكتبات إضافية)
- * لأنها الطريقة الوحيدة الموثوقة والمتوافقة مع Baileys الحالي.
- */
 async function sendFlowCard(sock, jid, url, mentionedJid, quoted) {
     try {
-        // محاولة استخدام مكتبة @qadeerxtech/qadeer-btns إذا كانت مثبتة
-        // (موجودة في package.json عندك، تستعملها .العاب)
         let sendInteractiveMessage = null;
         try {
             const qbtns = require("@qadeerxtech/qadeer-btns");
@@ -120,7 +113,6 @@ async function sendFlowCard(sock, jid, url, mentionedJid, quoted) {
         } catch (_) {}
 
         if (typeof sendInteractiveMessage === "function") {
-            // الطريقة 1: عبر qadeer-btns (نفس المستعمل في .العاب)
             await sendInteractiveMessage(sock, jid, {
                 text:
                     "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
@@ -145,7 +137,6 @@ async function sendFlowCard(sock, jid, url, mentionedJid, quoted) {
             return true;
         }
 
-        // الطريقة 2 (Fallback): nativeFlow مباشرة
         const { generateWAMessageFromContent } = require("@whiskeysockets/baileys");
 
         const interactiveMessage = {
@@ -199,7 +190,7 @@ async function sendFlowCard(sock, jid, url, mentionedJid, quoted) {
 // ============================================================
 
 async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner) {
-    // 1) فحص الصلاحية
+    // 1) فحص الصلاحية (فقط .سماح 2)
     if (!hasPermission(db, cleanSender, CFG.REGISTER_LEVELS, isOwner)) {
         await safeSend(sock, jid, {
             text: `⛔ ليس لديك صلاحية لاستخدام أمر .جديد (يحتاج ${CFG.REGISTER_PERM_NAME}).`
@@ -226,7 +217,7 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         return true;
     }
 
-    // 3) تسجيل الـ JID في jidfix (لضمان منشن صحيح)
+    // 3) تسجيل JID في jidfix
     try {
         const jf = require("./jidfix");
         jf.rememberJid(targetNumber, targetJid, true);
@@ -243,7 +234,7 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
             const u = db.users[a];
             if (u && String(u.nickname || "").trim()) {
                 await safeSend(sock, jid, {
-                    text: `❌ العضو @${targetNumber} مسجل في مملكة النار بالفعل.\n\nإذا أردت إعادة تسجيله، استعمل:\n.تصفير @`,
+                    text: `❌ العضو @${targetNumber} مسجل في مملكة النار بالفعل.\n\nإذا أردت إعادة تسجيله، استعمل:\n.عيد @`,
                     mentions: [targetJid]
                 }, { quoted: msg });
                 return true;
@@ -251,7 +242,7 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         }
     }
 
-    // 5) إنشاء الجلسة عبر flow-server
+    // 5) قراءة PUBLIC_URL (رابط البوت الحالي)
     const publicUrl = String(process.env.PUBLIC_URL || "").trim().replace(/\/$/, "");
     if (!publicUrl) {
         await safeSend(sock, jid, {
@@ -260,12 +251,10 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         return true;
     }
 
-    // 6) بناء رابط التسجيل (GitHub Pages)
-    const GITHUB_PAGES_URL = "https://katabump8000-beep.github.io/BOT";
-
+    // 6) قراءة GROUP_URL
     const groupUrl = String(process.env.GROUP_URL || "").trim();
 
-    // إنشاء الجلسة محلياً (بدون HTTP - أسرع وأبسط)
+    // 7) إنشاء الجلسة
     const session = flowServer.createSession({
         targetUserId: targetNumber,
         targetJid: targetJid,
@@ -274,9 +263,10 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         groupUrl
     });
 
-    const registerUrl = `${GITHUB_PAGES_URL}/?token=${session.token}`;
+    // 8) بناء رابط التسجيل (Multi-Bot: مع api parameter)
+    const registerUrl = `${CFG.GITHUB_PAGES_URL}/?token=${session.token}&api=${encodeURIComponent(publicUrl)}`;
 
-    // 7) الرسالة الأولى: النص مع المنشن
+    // 9) الرسالة الأولى: النص مع المنشن
     await safeSend(sock, jid, {
         text:
             "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
@@ -287,11 +277,10 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         mentions: [targetJid]
     }, { quoted: msg });
 
-    // 8) الرسالة الثانية: البطاقة التفاعلية
+    // 10) الرسالة الثانية: البطاقة التفاعلية
     const ok = await sendFlowCard(sock, jid, registerUrl, [targetJid]);
 
     if (!ok) {
-        // Fallback: نص مع الرابط
         await safeSend(sock, jid, {
             text:
                 "⚠️ تعذّر إرسال البطاقة التفاعلية.\n\n" +
@@ -300,18 +289,18 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         });
     }
 
-    log(`📨 تم إنشاء تسجيل للعضو ${targetNumber}`);
+    log(`📨 جلسة جديدة: ${targetNumber} (api=${publicUrl})`);
     return true;
 }
 
 // ============================================================
-// أمر .تصفير
+// أمر .عيد  (بدل .تصفير)
 // ============================================================
 
 async function handleResetCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner) {
     if (!hasPermission(db, cleanSender, CFG.RESET_LEVELS, isOwner)) {
         await safeSend(sock, jid, {
-            text: `⛔ ليس لديك صلاحية لاستخدام أمر .تصفير (يحتاج ${CFG.RESET_PERM_NAME}).`
+            text: `⛔ ليس لديك صلاحية لاستخدام أمر .عيد (يحتاج ${CFG.RESET_PERM_NAME}).`
         }, { quoted: msg });
         return true;
     }
@@ -319,7 +308,7 @@ async function handleResetCommand(sock, jid, msg, db, saveDb, cleanSender, isOwn
     const mentions = getMentionedJids(msg);
     if (!mentions.length) {
         await safeSend(sock, jid, {
-            text: "⚠️ يرجى عمل Mention للعضو.\nمثال: .تصفير @user"
+            text: "⚠️ يرجى عمل Mention للعضو.\nمثال: .عيد @user"
         }, { quoted: msg });
         return true;
     }
@@ -357,7 +346,6 @@ async function handleResetCommand(sock, jid, msg, db, saveDb, cleanSender, isOwn
         }
     }
 
-    // مسح التسجيل
     if (!db) db = {};
     if (!db.users) db.users = {};
 
@@ -380,7 +368,7 @@ async function handleResetCommand(sock, jid, msg, db, saveDb, cleanSender, isOwn
         }
     }
 
-    // حذف الجلسات النشطة لنفس العضو
+    // حذف الجلسات النشطة
     try {
         const internals = flowServer._internals;
         if (internals && internals.sessionsByUser) {
@@ -413,7 +401,7 @@ async function handleResetCommand(sock, jid, msg, db, saveDb, cleanSender, isOwn
 }
 
 // ============================================================
-// المعالج الرئيسي (يُستدعى من index.js)
+// المعالج الرئيسي
 // ============================================================
 
 async function handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, isOwner) {
@@ -436,7 +424,7 @@ async function handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, 
         }
     }
 
-    if (cmd === "تصفير") {
+    if (cmd === "عيد") {
         try {
             return await handleResetCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner);
         } catch (e) {
@@ -459,6 +447,5 @@ module.exports = {
     handleFlowCommand,
     handleNewCommand,
     handleResetCommand,
-    // للاستخدام الداخلي
     _sendFlowCard: sendFlowCard
 };
