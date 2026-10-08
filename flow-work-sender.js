@@ -135,22 +135,7 @@ async function sendWorkFormAfterRegister(sock, db, session) {
         }
     }
 
-    // 7) ترحيب للعضو في القروب الأساسي (إن كان عضواً بالفعل)
-    if (mainJid) {
-        try {
-            const welcomeModule = require("./welcome");
-            const photoEntry = jf.pickByAlias(db.userPhotos || {}, targetUserId)?.value;
-
-            if (photoEntry) {
-                await welcomeModule.sendWelcome(sock, mainJid, targetUserId, photoEntry, db);
-            } else if (typeof welcomeModule.sendWelcomeTextOnly === "function") {
-                await welcomeModule.sendWelcomeTextOnly(sock, mainJid, targetUserId, nickname, db);
-            }
-            log(`✅ أُرسل ترحيب إلى القروب الأساسي`);
-        } catch (e) {
-            logErr("welcome error:", e?.message);
-        }
-    }
+    // ℹ️ الترحيب في القروب الأساسي يتولاه flow-join.js بعد قبول الطلب فقط (مرة واحدة)
 
     return sent > 0;
 }
