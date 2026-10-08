@@ -2,11 +2,11 @@
 // flow-commands.js
 // ALJESAT BOT — أوامر التسجيل التفاعلي (Multi-Bot)
 //
-//   .جديد @user      → ينشئ جلسة + يرسل النص + البطاقة (يحتاج .سماح 2)
+//   .جديد @user      → منشن + زر «التالي»؛ الضغط من العضو المقصود يرسل له زر التسجيل (يحتاج .سماح 2)
 //   .عيد @user       → يمسح التسجيل والجلسة (يحتاج .سماح 1)
 //
 // يعتمد على flow-server.js (نفس العملية).
-// 🔒 محدّث: إضافة binding token لمنع التسجيل باسم الغير
+// 🔒 الهوية: تُؤخذ من واتساب نفسه عند ضغط الزر (لا كود يدوي)
 // ============================================================
 
 "use strict";
@@ -28,9 +28,14 @@ const CFG = {
     REGISTER_PERM_NAME: ".سماح 2",
     RESET_PERM_NAME: ".سماح 1",
 
-    // موقع GitHub Pages (ثابت)
+    // موقع GitHub Pages (الافتراضي) — يمكن تغييره من Railway عبر REG_PAGE_URL
     GITHUB_PAGES_URL: "https://katabump8000-beep.github.io/BOT"
 };
+
+function pageBaseUrl() {
+    const custom = String(process.env.REG_PAGE_URL || "").trim();
+    return (custom || CFG.GITHUB_PAGES_URL).replace(/\/+$/, "");
+}
 
 // ============================================================
 // أدوات
@@ -106,82 +111,54 @@ function hasPermission(db, userNumber, levels, isOwner) {
 // ============================================================
 
 async function sendFlowCard(sock, jid, url, mentionedJid, quoted) {
+    const body =
+        "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
+        "━━━━━━━━━━━━━━━\n" +
+        "رجاءً سجّل بياناتك هنا 👇\n" +
+        "━━━━━━━━━━━━━━━";
     try {
-        let sendInteractiveMessage = null;
-        try {
-            const qbtns = require("@qadeerxtech/qadeer-btns");
-            sendInteractiveMessage = qbtns?.sendInteractiveMessage;
-        } catch (_) {}
-
-        if (typeof sendInteractiveMessage === "function") {
-            await sendInteractiveMessage(sock, jid, {
-                text:
-                    "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
-                    "━━━━━━━━━━━━━━━\n\n" +
-                    "📝 *نموذج التسجيل*\n\n" +
-                    "اضغط على الزر بالأسفل\n" +
-                    "لملء بياناتك والانضمام للمملكة\n\n" +
-                    "⚠️ الرابط مخصص لك وحدك.\n" +
-                    "━━━━━━━━━━━━━━━",
-                footer: "𝑭. 𝑰. 𝑹 🔥",
-                interactiveButtons: [
-                    {
-                        name: "cta_url",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "🔥 التسجيل",
-                            url: url,
-                            merchant_url: url
-                        })
-                    }
-                ]
-            });
-            return true;
-        }
-
-        const { generateWAMessageFromContent } = require("@whiskeysockets/baileys");
-
-        const interactiveMessage = {
-            body: {
-                text:
-                    "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
-                    "━━━━━━━━━━━━━━━\n\n" +
-                    "📝 *نموذج التسجيل*\n\n" +
-                    "اضغط على الزر بالأسفل\n" +
-                    "لملء بياناتك والانضمام للمملكة\n\n" +
-                    "⚠️ الرابط مخصص لك وحدك.\n" +
-                    "━━━━━━━━━━━━━━━"
-            },
-            footer: { text: "𝑭. 𝑰. 𝑹 🔥" },
-            header: { hasMediaAttachment: false },
-            nativeFlowMessage: {
-                buttons: [
-                    {
-                        name: "cta_url",
-                        buttonParamsJson: JSON.stringify({
-                            display_text: "🔥 التسجيل",
-                            url: url,
-                            merchant_url: url
-                        })
-                    }
-                ]
-            },
-            contextInfo: mentionedJid ? { mentionedJid } : {}
-        };
-
-        const msg = generateWAMessageFromContent(
-            jid,
-            { interactiveMessage },
-            { userJid: sock.user.id, quoted }
-        );
-
-        await sock.relayMessage(jid, msg.message, {
-            messageId: msg.key.id
+        const { sendInteractiveMessage } = require("@qadeerxtech/qadeer-btns");
+        await sendInteractiveMessage(sock, jid, {
+            text: body,
+            footer: "𝑭. 𝑰. 𝑹 🔥",
+            interactiveButtons: [
+                {
+                    name: "cta_url",
+                    buttonParamsJson: JSON.stringify({
+                        display_text: "🔥 التسجيل",
+                        url: url,
+                        merchant_url: url
+                    })
+                }
+            ]
         });
-
         return true;
-
     } catch (e) {
         logErr("sendFlowCard:", e?.message || e);
+        return false;
+    }
+}
+
+/** زر «التالي» (quick_reply) — الضغط عليه يصل للبوت مع هوية الضاغط الحقيقية */
+async function sendNextButton(sock, jid, token) {
+    try {
+        const { sendInteractiveMessage } = require("@qadeerxtech/qadeer-btns");
+        await sendInteractiveMessage(sock, jid, {
+            text: "🔥 *𝑭. 𝑰. 𝑹* 🔥\nللتسجيل اضغط «التالي»",
+            footer: "𝑭. 𝑰. 𝑹 🔥",
+            interactiveButtons: [
+                {
+                    name: "quick_reply",
+                    buttonParamsJson: JSON.stringify({
+                        display_text: "التالي ➡️",
+                        id: "flowgo|" + token
+                    })
+                }
+            ]
+        });
+        return true;
+    } catch (e) {
+        logErr("sendNextButton:", e?.message || e);
         return false;
     }
 }
@@ -266,34 +243,17 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
         groupUrl
     });
 
-    // 8) بناء رابط التسجيل 🔒 مع binding token
-    const registerUrl =
-        `${CFG.GITHUB_PAGES_URL}/?token=${session.token}` +
-        `&binding=${encodeURIComponent(session.bindingToken)}` +
-        `&api=${encodeURIComponent(publicUrl)}`;
-
-    // 9) الرسالة الأولى: النص مع المنشن
+    // 8) الرسالة الأولى: منشن + «اضغط على الزر»
     await safeSend(sock, jid, {
-        text:
-            "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
-            "━━━━━━━━━━━━━━━\n\n" +
-            `العضو @${targetNumber}\n` +
-            "رجاءاً قم بتسجيل بياناتك:\n\n" +
-            "1️⃣ افتح الرابط من الزر بالأسفل\n" +
-            "2️⃣ ستظهر لك أرقام تحقق\n" +
-            "3️⃣ اكتبها هنا هكذا: *.تحقق 1234*\n" +
-            "━━━━━━━━━━━━━━━",
+        text: `@${targetNumber}\nاضغط على الزر 👇`,
         mentions: [targetJid]
     }, { quoted: msg });
 
-    // 10) الرسالة الثانية: البطاقة التفاعلية
-    const ok = await sendFlowCard(sock, jid, registerUrl, [targetJid]);
-
+    // 9) الرسالة الثانية: زر «التالي»
+    const ok = await sendNextButton(sock, jid, session.token);
     if (!ok) {
         await safeSend(sock, jid, {
-            text:
-                "⚠️ تعذّر إرسال البطاقة التفاعلية.\n\n" +
-                `🔗 افتح رابط التسجيل:\n${registerUrl}`,
+            text: `⚠️ تعذّر إظهار الزر.\n@${targetNumber} اكتب: *.التالي*`,
             mentions: [targetJid]
         });
     }
@@ -303,42 +263,118 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
 }
 
 // ============================================================
-// أمر .تحقق <كود>  — يثبت هوية العضو عبر رقمه الحقيقي في واتساب
+// ضغط «التالي»: هوية الضاغط تأتي من واتساب نفسه (لا يمكن تزويرها)
 // ============================================================
 
-async function handleVerifyCommand(sock, jid, msg, text, cleanSender) {
-    const m = String(text || "").trim().match(/^\.\s*\S+\s+(\d{4})\s*$/);
-    if (!m) {
-        await safeSend(sock, jid, { text: "⚠️ اكتب الكود هكذا: .تحقق 1234" }, { quoted: msg });
-        return true;
-    }
+const lastPress = new Map();   // number -> time
 
-    const r = flowServer.verifyCode({ chatJid: jid, code: m[1], senderNumber: cleanSender });
+function registerOrigin() {
+    let u = String(process.env.PUBLIC_URL || "").trim();
+    try { u = new URL(u).origin; } catch (_) { u = u.replace(/\/$/, ""); }
+    return u;
+}
 
-    if (r.status === "ok") {
-        const s = r.session;
+async function processNext(sock, jid, msg, db, cleanSender, token) {
+    const presser = cleanNumber(cleanSender);
+    const presserJid = msg?.key?.participant || (presser ? presser + "@s.whatsapp.net" : "");
+
+    // منع الضغط المتكرر السريع
+    const t = Date.now();
+    if (t - (lastPress.get(presser) || 0) < 2500) return true;
+    lastPress.set(presser, t);
+    if (lastPress.size > 2000) lastPress.clear();
+
+    const s = flowServer.getSession(token);
+    if (!s) {
         await safeSend(sock, jid, {
-            text:
-                "✅ تم التحقق من هويتك @" + s.targetUserId + "\n" +
-                "ارجع إلى صفحة التسجيل وأكمل بياناتك 🔥",
-            mentions: [s.targetJid]
+            text: "⌛ انتهت صلاحية هذه الجلسة. اطلب من المشرف: .جديد @ من جديد."
         }, { quoted: msg });
-        log("✅ تحقق ناجح: " + s.targetUserId);
         return true;
     }
 
-    if (r.status === "not_yours") {
+    let jf = null;
+    try { jf = require("./jidfix"); } catch (_) {}
+    const isTarget = jf ? jf.sameUser(s.targetUserId, presser)
+                        : cleanNumber(s.targetUserId) === presser;
+
+    // غير المقصود: ❌ + رفض بدون رابط
+    if (!isTarget) {
+        flowServer.issueClaim({ token, presserNumber: presser, isTarget: false });
+        try { await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } }); } catch (_) {}
         await safeSend(sock, jid, {
-            text: "⛔ هذا الكود مخصص لعضو آخر، لا يمكنك استخدامه."
+            text: `⛔ عذراً @${presser}\nأنت لست العضو المقصود تسجيله.`,
+            mentions: presserJid ? [presserJid] : []
         }, { quoted: msg });
-        log("🚫 محاولة تحقق من غير صاحب الجلسة: " + cleanSender);
+        log(`🚫 ضغط من غير المقصود: ${presser} (الجلسة لـ ${s.targetUserId})`);
         return true;
     }
 
-    await safeSend(sock, jid, {
-        text: "❌ كود غير صحيح أو منتهي. اطلب من المشرف .جديد من جديد."
-    }, { quoted: msg });
+    // مسجل مسبقاً؟
+    try {
+        if (flowServer._internals.isRegistered(db, s.targetUserId)) {
+            await safeSend(sock, jid, { text: "✅ أنت مسجل في مملكة النار بالفعل." }, { quoted: msg });
+            return true;
+        }
+    } catch (_) {}
+
+    // المقصود: ✅ + كود جديد + بطاقة التسجيل
+    const claim = flowServer.issueClaim({ token, presserNumber: presser, isTarget: true });
+    if (!claim) {
+        await safeSend(sock, jid, { text: "⌛ انتهت صلاحية الجلسة." }, { quoted: msg });
+        return true;
+    }
+    try { await sock.sendMessage(jid, { react: { text: "✅", key: msg.key } }); } catch (_) {}
+
+    const origin = registerOrigin();
+    const url = `${pageBaseUrl()}/?c=${claim.code}&api=${encodeURIComponent(origin)}`;
+
+    // REG_PRIVATE=1 → البطاقة تصل للعضو في الخاص فقط (الأكثر أماناً)
+    const priv = String(process.env.REG_PRIVATE || "") === "1" && presserJid;
+    const dest = priv ? presserJid : jid;
+
+    let sent = await sendFlowCard(sock, dest, url, null, msg);
+    if (!sent && priv) sent = await sendFlowCard(sock, jid, url, null, msg);
+    if (!sent) {
+        await safeSend(sock, dest, { text: "🔗 رابط التسجيل:\n" + url });
+    } else if (priv) {
+        await safeSend(sock, jid, {
+            text: `✅ @${presser} أرسلنا لك رابط التسجيل في الخاص.`,
+            mentions: presserJid ? [presserJid] : []
+        }, { quoted: msg });
+    }
+
+    log(`✅ ضغط صحيح من ${presser} → كود ${claim.code.slice(0, 6)}...`);
     return true;
+}
+
+/** يُستدعى من flowreg.handleInteractive عند وصول زر لا يخص نظام flowreg القديم */
+async function handleFlowButton(sock, jid, msg, db, saveDb, cleanSender, id) {
+    const sid = String(id || "");
+    if (!sid.startsWith("flowgo|")) return false;
+    try {
+        await processNext(sock, jid, msg, db, cleanSender, sid.split("|")[1] || "");
+    } catch (e) {
+        logErr("handleFlowButton:", e?.message || e);
+    }
+    return true;
+}
+
+/** بديل نصي: .التالي (لو لم يظهر الزر عند العضو) */
+async function handleNextText(sock, jid, msg, db, cleanSender) {
+    let aliases = [cleanNumber(cleanSender)];
+    try { aliases = require("./jidfix").aliasesOf(cleanNumber(cleanSender)); } catch (_) {}
+
+    const internals = flowServer._internals;
+    let token = "";
+    for (const a of aliases) {
+        const tk = internals.sessionsByUser.get(a);
+        if (tk) { token = tk; break; }
+    }
+    if (!token) {
+        await safeSend(sock, jid, { text: "⚠️ لا توجد جلسة تسجيل مخصصة لك. اطلب من المشرف: .جديد @" }, { quoted: msg });
+        return true;
+    }
+    return processNext(sock, jid, msg, db, cleanSender, token);
 }
 
 // ============================================================
@@ -472,11 +508,11 @@ async function handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, 
         }
     }
 
-    if (cmd === "تحقق") {
+    if (cmd === "التالي") {
         try {
-            return await handleVerifyCommand(sock, jid, msg, text, cleanSender);
+            return await handleNextText(sock, jid, msg, db, cleanSender);
         } catch (e) {
-            logErr("handleVerifyCommand:", e?.message || e);
+            logErr("handleNextText:", e?.message || e);
             return true;
         }
     }
@@ -502,6 +538,7 @@ async function handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, 
 
 module.exports = {
     handleFlowCommand,
+    handleFlowButton,
     handleNewCommand,
     handleResetCommand,
     _sendFlowCard: sendFlowCard
