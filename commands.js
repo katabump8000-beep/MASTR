@@ -592,7 +592,19 @@ async function handleFriendRelation(sock, jid, msg, parts, senderNumber, owner, 
 function buildMyDetailsText(user) {
     const dn = (user && String(user.nickname || "").trim()) || "غير مسجل";
     const fn = (user && String(user.friend || "").trim()) || "لا يوجد";
-    return "╗═════『   بياناتك  』═════╔\n\n💰 رصـــيـــــــدك:     `{" + (user?.balance || 0) + "}`\n\n🏷️ لقبك:    `{" + dn + "}`\n\n🎖️ رتبتك:   `{" + (user?.rank || "عضو") + "}`\n\n📈 أعلى تفاعل لك: `{" + (user?.maxInteraction || 0) + "}`\n\n🫂 صـــديق:  `{" + fn + "}`\n╝════════════════════╚";
+    const gender = (user && String(user.gender || "").trim()) || "غير محدد";
+    const age = (user && user.age) ? String(user.age) : "غير محدد";
+    return (
+        "*╗════『   بياناتك  』════╔*\n" +
+        "💰 رصـــيـــــــدك:  `{" + (user?.balance || 0) + "}`\n" +
+        "🏷️ لقبك:    `{" + dn + "}`\n" +
+        "🎖️ رتبتك:   `{" + (user?.rank || "عضو") + "}`\n" +
+        "📈 أعلى تفاعل لك: `{" + (user?.maxInteraction || 0) + "}`\n" +
+        "🫂 صـــديق:  `{" + fn + "}`\n" +
+        "⚧ الجنس:  `{" + gender + "}`\n" +
+        "👤 العمر:  `{" + age + "}`\n" +
+        "*╝══════════════════╚*"
+    );
 }
 
 async function handleMyDetails(sock, jid, msg, senderNumber, db) {
