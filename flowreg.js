@@ -717,6 +717,16 @@ async function handleInteractive(sock, jid, msg, db, saveDb, cleanSender, owner)
     } else if (fromFlow) {
         sid = fromFlow.sid; token = fromFlow.token; action = "submit"; flowPayload = ev.params;
     } else {
+        // 🆕 أزرار نظام التسجيل الجديد (زر «التالي» من أمر .جديد)
+        try {
+            const fc = require("./flow-commands");
+            if (fc && typeof fc.handleFlowButton === "function") {
+                const handled = await fc.handleFlowButton(sock, jid, msg, db, saveDb, cleanSender, ev.params.id);
+                if (handled) return true;
+            }
+        } catch (e) {
+            logErr("flow button:", e && e.message);
+        }
         return false;   // ليس لنا
     }
 
