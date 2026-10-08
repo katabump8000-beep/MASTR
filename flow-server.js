@@ -8,7 +8,13 @@
 
 const express = require("express");
 const crypto = require("crypto");
-const { signBinding, verifyBinding } = require("./flow-security");
+const path = require("path");
+const fs = require("fs");
+
+let joinFlow = null;
+try { joinFlow = require("./flow-join"); } catch (e) {
+    console.warn("[flow-server] ⚠️ flow-join غير محمّل:", e?.message);
+}
 
 let workSender = null;
 try { workSender = require("./flow-work-sender"); } catch (e) {
@@ -133,17 +139,8 @@ function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }
     const n = cleanNumber(targetUserId);
     const t = now();
 
-    // 🔒 توليد bindingToken مرتبط بالعضو
-    const bindingToken = signBinding(token, n);
-    // 🔑 كود تحقق من 4 أرقام: يكتبه العضو في القروب (.تحقق 1234) فيتأكد البوت من هويته
-    const code = String(crypto.randomInt(1000, 10000));
-
     const session = {
         token,
-        bindingToken,          // 🆕
-        code,
-        verified: false,
-        intrusions: 0,
         targetUserId: n,
         targetJid: String(targetJid || ""),
         chatJid: String(chatJid || ""),
@@ -156,7 +153,7 @@ function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }
     };
 
     const oldToken = sessionsByUser.get(n);
-    if (oldToken) sessions.delete(oldToken);
+    if (oldToken) { sessions.delete(oldToken); revokeClaimsOf(oldToken); }
 
     sessions.set(token, session);
     sessionsByUser.set(n, token);
@@ -175,33 +172,80 @@ function createSession({ targetUserId, targetJid, chatJid, createdBy, groupUrl }
     return session;
 }
 
-function bindingOk(s, bindingToken) {
-    const b = verifyBinding(bindingToken);
-    return Boolean(b && b.sessionId === s.token && b.userNumber === s.targetUserId);
+// ============================================================
+// 🎫 الأكواد (claims): كل ضغطة على زر "التالي" تُنتج كوداً عشوائياً خاصاً بالضاغط
+//   • هوية الضاغط يعرفها البوت من واتساب نفسه (لا يمكن تزويرها)
+//   • كود العضو المقصود → isTarget=true  | أي شخص آخر → isTarget=false
+// ============================================================
+
+const claims = new Map();   // code -> claim
+
+function revokeClaimsOf(sessionToken) {
+    for (const c of claims.values()) {
+        if (c.sessionToken === sessionToken) c.revoked = true;
+    }
+}
+
+/** يُستدعى من flow-commands عند ضغط زر "التالي" */
+function issueClaim({ token, presserNumber, isTarget }) {
+    const s = getSession(token);
+    if (!s) return null;
+
+    // كود جديد للعضو المقصود يُبطل أكواده القديمة (لو ضغط مرة ثانية)
+    if (isTarget) {
+        for (const c of claims.values()) {
+            if (c.sessionToken === token && c.isTarget) c.revoked = true;
+        }
+    }
+
+    // سقف أمان على عدد الأكواد
+    if (claims.size > 3000) {
+        const t = now();
+        for (const [k, c] of claims) if (c.revoked || t > c.expiresAt) claims.delete(k);
+    }
+
+    const code = crypto.randomBytes(9).toString("hex");   // 18 خانة عشوائية
+    const claim = {
+        code,
+        sessionToken: token,
+        number: cleanNumber(presserNumber),
+        isTarget: Boolean(isTarget),
+        dev: "",                       // بصمة المتصفح الأول الذي فتح الرابط
+        createdAt: now(),
+        expiresAt: s.expiresAt,
+        revoked: false
+    };
+    claims.set(code, claim);
+    return claim;
 }
 
 /**
- * يُستدعى من أمر .تحقق — يتأكد أن مرسل الرسالة (هوية واتساب الحقيقية) هو العضو الممنشن
- * @returns {{status:"ok"|"not_yours"|"invalid", session?:Object}}
+ * يتحقق من الكود القادم من الصفحة
+ * @returns {{status:number, json:Object}|{claim:Object, session:Object}}
  */
-function verifyCode({ chatJid, code, senderNumber }) {
-    const c = String(code || "").trim();
-    if (!/^\d{4}$/.test(c)) return { status: "invalid" };
-    let jf = null;
-    try { jf = require("./jidfix"); } catch (_) {}
-    const t = now();
-    for (const s of sessions.values()) {
-        if (s.verified || t > s.expiresAt) continue;
-        if (s.chatJid !== String(chatJid || "")) continue;
-        if (s.code !== c) continue;
-        const same = jf ? jf.sameUser(s.targetUserId, senderNumber)
-                        : cleanNumber(s.targetUserId) === cleanNumber(senderNumber);
-        if (!same) { s.intrusions++; return { status: "not_yours", session: s }; }
-        s.verified = true;
-        s.verifiedAt = t;
-        return { status: "ok", session: s };
-    }
-    return { status: "invalid" };
+function authClaim(body, ip) {
+    const code = cleanText((body || {}).code, 60).toLowerCase();
+    const dev = cleanText((body || {}).dev, 64);
+
+    const expired = { status: 200, json: { ok: true, valid: false, reason: "expired" } };
+
+    const c = claims.get(code);
+    if (!c || c.revoked || now() > c.expiresAt) return expired;
+
+    const s = getSession(c.sessionToken);
+    if (!s) return expired;
+
+    const notYours = { status: 403, json: { ok: false, valid: false, reason: "not_yours", error: "not_yours" } };
+
+    if (!c.isTarget) return notYours;
+    if (dev.length < 8) return { status: 400, json: { ok: false, valid: false, reason: "bad_request" } };
+
+    // أول جهاز يفتح الرابط يُقفل عليه (بصمة المتصفح أو نفس الـ IP، لأن متصفح واتساب الداخلي
+    // وكروم قد يختلفان في التخزين لكنهما يشتركان بنفس الشبكة). غيره يُرفض.
+    if (c.dev && c.dev !== dev && c.ip !== ip) return notYours;
+    if (!c.dev) { c.dev = dev; c.ip = ip; }
+
+    return { claim: c, session: s };
 }
 
 function getSession(token) {
@@ -229,6 +273,9 @@ function cleanupSessions() {
             }
             removed++;
         }
+    }
+    for (const [k, c] of claims) {
+        if (c.revoked || t > c.expiresAt) claims.delete(k);
     }
     return removed;
 }
@@ -290,6 +337,13 @@ function createApp() {
     app.use(express.json({ limit: "32kb" }));
     app.use(express.urlencoded({ extended: false, limit: "32kb" }));
 
+    // 🌐 (اختياري) استضافة صفحة التسجيل من نفس السيرفر: ضع index.html والأصوات داخل مجلد public/
+    const publicDir = path.join(__dirname, "public");
+    if (fs.existsSync(path.join(publicDir, "index.html"))) {
+        app.use(express.static(publicDir, { maxAge: "1d", index: "index.html" }));
+        log("🌐 تُستضاف صفحة التسجيل من public/");
+    }
+
     // GET /api/flow/health
     app.get("/api/flow/health", (req, res) => {
         res.json({
@@ -299,7 +353,9 @@ function createApp() {
             publicUrl: process.env.PUBLIC_URL || "",
             sessions: sessions.size,
             uptime: process.uptime(),
-            bindingEnabled: true   // 🆕
+            bindingEnabled: true,
+            claims: claims.size,
+            pageHosted: fs.existsSync(path.join(__dirname, "public", "index.html"))
         });
     });
 
@@ -326,7 +382,6 @@ function createApp() {
             res.json({
                 ok: true,
                 token: session.token,
-                bindingToken: session.bindingToken,   // 🆕
                 expiresAt: session.expiresAt,
                 expiresIn: CONFIG.SESSION_TTL_MS
             });
@@ -336,67 +391,41 @@ function createApp() {
         }
     });
 
-    // POST /api/flow/check-session
+    // POST /api/flow/check-session   { code, dev }
     app.post("/api/flow/check-session", rateMiddleware, (req, res) => {
         try {
-            const { token, bindingToken } = req.body || {};
-
-            const s = getSession(token);
-            if (!s) return res.json({ ok: true, valid: false, reason: "expired" });
-
-            // 🔒 الـ binding إلزامي دائماً
-            if (!bindingOk(s, String(bindingToken || ""))) {
-                return res.status(403).json({
-                    ok: false,
-                    valid: false,
-                    reason: "not_yours",
-                    message: "⛔ هذا الرابط ليس مخصصاً لك"
-                });
-            }
+            const r = authClaim(req.body, getClientIp(req));
+            if (!r.claim) return res.status(r.status).json(r.json);
 
             const db = getDb();
-            if (db && isRegistered(db, s.targetUserId)) {
+            if (db && isRegistered(db, r.session.targetUserId)) {
                 return res.json({
                     ok: true,
                     valid: false,
                     reason: "registered",
-                    enterLink: s.groupUrl || process.env.GROUP_URL || ""
+                    enterLink: r.session.groupUrl || process.env.GROUP_URL || ""
                 });
             }
-
-            res.json({
-                ok: true,
-                valid: true,
-                verified: Boolean(s.verified),
-                code: s.verified ? "" : s.code,
-                expiresAt: s.expiresAt
-            });
+            res.json({ ok: true, valid: true, expiresAt: r.session.expiresAt });
         } catch (e) {
             logErr("check-session error:", e?.message || e);
             res.status(500).json({ ok: false, error: "internal_error" });
         }
     });
 
-    // POST /api/flow/check-nickname
+    // POST /api/flow/check-nickname   { code, dev, nickname }
     app.post("/api/flow/check-nickname", rateMiddleware, (req, res) => {
         try {
-            const { token, bindingToken, nickname } = req.body || {};
-            const s = getSession(token);
-            if (!s) return res.json({ ok: true, taken: false });
+            const r = authClaim(req.body, getClientIp(req));
+            if (!r.claim) return res.status(r.status === 200 ? 200 : r.status).json({ ok: true, taken: false });
 
-            // 🔒 binding إلزامي + لا فحص قبل التحقق من الهوية
-            if (!bindingOk(s, String(bindingToken || ""))) {
-                return res.status(403).json({ ok: false, taken: false, error: "not_yours" });
-            }
-            if (!s.verified) return res.json({ ok: true, taken: false });
-
-            const nick = cleanText(nickname, 30);
+            const nick = cleanText((req.body || {}).nickname, 30);
             if (nick.length < 2) return res.json({ ok: true, taken: false });
 
             const db = getDb();
             if (!db) return res.json({ ok: true, taken: false });
 
-            const owner = findNicknameOwner(db, nick, [s.targetUserId]);
+            const owner = findNicknameOwner(db, nick, [r.session.targetUserId]);
             res.json({ ok: true, taken: Boolean(owner) });
         } catch (e) {
             logErr("check-nickname error:", e?.message || e);
@@ -418,38 +447,23 @@ function createApp() {
 
         try {
             const body = req.body || {};
-            const token = cleanText(body.token, 80);
-            const bindingToken = cleanText(body.bindingToken, 120);   // 🆕
             const nickname = cleanText(body.nickname, 30);
             const referrer = cleanText(body.referrer, 40);
             const gender = cleanText(body.gender, 20);
             const ageRaw = body.age;
 
-            const s = getSession(token);
-            if (!s) {
+            const auth = authClaim(body, getClientIp(req));
+            if (!auth.claim) {
+                if (auth.status === 403) {
+                    log("🚫 محاولة تسجيل من غير العضو المقصود");
+                    return res.status(403).json({ ok: false, reason: "not_yours", error: "⛔ عذراً، أنت لست العضو المقصود تسجيله." });
+                }
                 return res.json({
                     ok: false,
-                    error: "⌛ انتهت صلاحية الرابط، اطلب من المشرف رابطاً جديداً عبر .جديد"
+                    error: "⌛ انتهت صلاحية الرابط. اضغط زر «التالي» في القروب مرة أخرى."
                 });
             }
-
-            // 🆕 التحقق من الـ binding: الرابط خاص بالعضو الممانشن فقط
-            const b = verifyBinding(bindingToken);
-            if (!b || b.sessionId !== s.token || b.userNumber !== s.targetUserId) {
-                log(`🚫 محاولة تسجيل من شخص آخر (sid=${s.token.slice(0,8)})`);
-                return res.status(403).json({
-                    ok: false,
-                    error: "⛔ هذا الرابط مخصص لعضو آخر فقط. اطلب من المشرف رابطاً جديداً."
-                });
-            }
-
-            // 🔑 لا تسجيل قبل التحقق من الهوية عبر .تحقق في القروب
-            if (!s.verified) {
-                return res.status(403).json({
-                    ok: false,
-                    error: "⛔ لم يتم التحقق من هويتك بعد. اكتب في القروب: .تحقق " + s.code
-                });
-            }
+            const s = auth.session;
 
             const errors = {};
 
@@ -527,6 +541,16 @@ function createApp() {
                         logErr("⚠️ flow-work-sender غير جاهز");
                         return;
                     }
+                    try {
+                        if (joinFlow && typeof joinFlow.start === "function") {
+                            joinFlow.start(sock, db, saveDb, {
+                                targetUserId: key,
+                                targetJid: s.targetJid,
+                                nickname
+                            });
+                        }
+                    } catch (e) { logErr("join-flow start:", e?.message || e); }
+
                     await workSender.sendWorkFormAfterRegister(sock, db, {
                         targetUserId: key,
                         nickname,
@@ -596,7 +620,7 @@ function startFlowServer() {
             log(`🔗 PUBLIC_URL = ${process.env.PUBLIC_URL || "(غير محدد)"}`);
             log(`🌐 GROUP_URL = ${process.env.GROUP_URL ? "موجود" : "(غير محدد)"}`);
             log(`⏱️ مدة الجلسة: ${SESSION_TTL_MIN} دقيقة`);
-            log(`🔒 نظام binding مُفعّل (منع التسجيل باسم الغير)`);
+            log(`🔒 نظام الأكواد (claims) مُفعّل — الهوية من واتساب مباشرة`);
         });
         serverInstance.on("error", (err) => logErr("❌ خطأ في السيرفر:", err?.message || err));
         startCleanupTimer();
@@ -617,10 +641,11 @@ module.exports = {
     stopFlowServer,
     createSession,
     getSession,
-    verifyCode,
+    issueClaim,
     _internals: {
         sessions,
         sessionsByUser,
+        claims,
         findNicknameOwner,
         isRegistered,
         normalizeArabic,
