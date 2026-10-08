@@ -50,6 +50,22 @@ async function tryFetchImage(nickname, db) {
     }
 }
 
+// كاش: نبحث عن الصورة مرة واحدة فقط ونستعملها للورك وللترحيب معاً
+const imageCache = new Map();   // number -> { promise, at }
+
+function getImageCached(number, nickname, db) {
+    const key = String(number || "").replace(/\D/g, "") || String(nickname || "");
+    const t = Date.now();
+    for (const [k, v] of imageCache) if (t - v.at > 30 * 60 * 1000) imageCache.delete(k);
+
+    const hit = imageCache.get(key);
+    if (hit) return hit.promise;
+
+    const promise = tryFetchImage(nickname, db);
+    imageCache.set(key, { promise, at: t });
+    return promise;
+}
+
 /**
  * يرسل استمارة الورك + يحاول إرفاق صورة AI
  * @param {Object} sock
@@ -80,7 +96,7 @@ async function sendWorkFormAfterRegister(sock, db, session) {
     } catch (_) {}
 
     // 4) محاولة جلب الصورة (اختياري — مع timeout)
-    const imageBuf = await tryFetchImage(nickname, db);
+    const imageBuf = await getImageCached(targetUserId, nickname, db);
 
     // المسؤول الذي كتب .جديد (للخانة والمنشن)
     const adminNumber = String(createdBy || "").replace(/\D/g, "") || targetUserId;
@@ -139,4 +155,8 @@ async function sendWorkFormAfterRegister(sock, db, session) {
     return sent > 0;
 }
 
-module.exports = { sendWorkFormAfterRegister, tryFetchImage };
+module.exports = {
+    sendWorkFormAfterRegister,
+    tryFetchImage,
+    getImageCached
+};
