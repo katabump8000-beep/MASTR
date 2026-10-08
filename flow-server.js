@@ -113,6 +113,8 @@ function referrerProblem(r) {
     return "";
 }
 
+const PENDING_TTL_MS = 15 * 60 * 1000;   // مهلة تأكيد البيانات في القروب
+
 const ALLOWED_GENDERS = ["ذكر", "أنثى", "مخصص"];
 
 function getDb() { try { return global.db || null; } catch (_) { return null; } }
@@ -211,6 +213,7 @@ function issueClaim({ token, presserNumber, isTarget }) {
         for (const c of claims.values()) {
             if (c.sessionToken === token && c.isTarget) c.revoked = true;
         }
+        if (s.pending && s.pending.state === "pending") s.pending.state = "rejected";
     }
 
     // سقف أمان على عدد الأكواد
@@ -232,6 +235,86 @@ function issueClaim({ token, presserNumber, isTarget }) {
     };
     claims.set(code, claim);
     return claim;
+}
+
+/** يعيد الطلب المعلّق إن كان بانتظار التأكيد وبنفس المعرّف */
+function getPending(token, subId) {
+    const s = getSession(token);
+    if (!s || !s.pending) return null;
+    const p = s.pending;
+    if (p.state !== "pending") return null;
+    if (subId && p.subId !== subId) return null;
+    if (now() - p.createdAt > PENDING_TTL_MS) { p.state = "expired"; return null; }
+    return { session: s, pending: p };
+}
+
+/** ضغط ✅ من العضو المقصود: الآن فقط نحفظ التسجيل فعلياً */
+function confirmPending(token, subId) {
+    const r = getPending(token, subId);
+    if (!r) return { ok: false, reason: "stale" };
+    const { session: s, pending: p } = r;
+
+    const db = getDb();
+    if (!db) return { ok: false, reason: "no_db" };
+    if (!db.users) db.users = {};
+
+    const key = cleanNumber(s.targetUserId);
+    if (isRegistered(db, key)) { p.state = "confirmed"; return { ok: false, reason: "registered" }; }
+
+    const owner = findNicknameOwner(db, p.nickname, [key]);
+    if (owner) { p.state = "rejected"; return { ok: false, reason: "taken" }; }
+
+    const user = db.users[key] && typeof db.users[key] === "object"
+        ? db.users[key]
+        : { balance: 0, nickname: "", rank: "", maxInteraction: 0, friend: "" };
+
+    user.nickname = p.nickname;
+    user.gender = p.gender;
+    user.age = p.age;
+    user.referredBy = p.referrer;
+    user.registeredAt = now();
+    user.registrationDate = new Date().toISOString();
+    db.users[key] = user;
+    saveDb();
+
+    p.state = "confirmed";
+    s.used = true;
+    s.nickname = p.nickname;
+    log(`🎉 تسجيل ناجح (بعد التأكيد): ${p.nickname} (${key}) | من طرف: ${p.referrer}`);
+
+    setImmediate(async () => {
+        try {
+            const sock = global.currentSocket;
+            if (!sock) { logErr("⚠️ لا يوجد socket — لم تُرسل الاستمارة"); return; }
+            try {
+                if (joinFlow && typeof joinFlow.start === "function") {
+                    joinFlow.start(sock, db, saveDb, { targetUserId: key, targetJid: s.targetJid, nickname: p.nickname });
+                }
+            } catch (e) { logErr("join-flow start:", e?.message || e); }
+            if (workSender && typeof workSender.sendWorkFormAfterRegister === "function") {
+                await workSender.sendWorkFormAfterRegister(sock, db, {
+                    targetUserId: key,
+                    nickname: p.nickname,
+                    referredBy: p.referrer,
+                    createdBy: s.createdBy,
+                    chatJid: s.chatJid
+                });
+            }
+        } catch (e) {
+            logErr("post-confirm dispatch:", e?.message || e);
+        }
+    });
+
+    return { ok: true, session: s, pending: p };
+}
+
+/** ضغط ❌ «ليس أنا» */
+function rejectPending(token, subId) {
+    const r = getPending(token, subId);
+    if (!r) return { ok: false, reason: "stale" };
+    r.pending.state = "rejected";
+    log(`❌ رُفض الطلب المعلّق للعضو ${r.session.targetUserId}`);
+    return { ok: true, session: r.session, pending: r.pending };
 }
 
 /** تسجيل مفتاح رسالة بطاقة التسجيل (لحذفها عند أول فتح) */
@@ -444,7 +527,14 @@ function createApp() {
                     enterLink: r.session.groupUrl || process.env.GROUP_URL || ""
                 });
             }
-            res.json({ ok: true, valid: true, expiresAt: r.session.expiresAt });
+            const pd = r.session.pending;
+            const waiting = pd && pd.state === "pending" && now() - pd.createdAt < PENDING_TTL_MS;
+            res.json({
+                ok: true,
+                valid: true,
+                expiresAt: r.session.expiresAt,
+                pending: waiting ? { nickname: pd.nickname } : null
+            });
         } catch (e) {
             logErr("check-session error:", e?.message || e);
             res.status(500).json({ ok: false, error: "internal_error" });
@@ -469,6 +559,23 @@ function createApp() {
         } catch (e) {
             logErr("check-nickname error:", e?.message || e);
             res.json({ ok: true, taken: false });
+        }
+    });
+
+    // POST /api/flow/status   { code, dev }  — الصفحة تسأل: هل أكّد العضو في القروب؟
+    app.post("/api/flow/status", rateMiddleware, (req, res) => {
+        try {
+            const r = authClaim(req.body, getClientIp(req));
+            if (!r.claim) return res.status(r.status).json(r.json);
+            const s = r.session;
+            const enterLink = s.groupUrl || process.env.GROUP_URL || "";
+            const p = s.pending;
+            if (!p) return res.json({ ok: true, state: "none" });
+            if (p.state === "pending" && now() - p.createdAt > PENDING_TTL_MS) p.state = "expired";
+            res.json({ ok: true, state: p.state, nickname: p.nickname, enterLink });
+        } catch (e) {
+            logErr("status error:", e?.message || e);
+            res.status(500).json({ ok: false, error: "internal_error" });
         }
     });
 
@@ -545,62 +652,43 @@ function createApp() {
                 });
             }
 
-            const key = cleanNumber(s.targetUserId);
-            const user = db.users[key] && typeof db.users[key] === "object"
-                ? db.users[key]
-                : { balance: 0, nickname: "", rank: "", maxInteraction: 0, friend: "" };
+            // 🔒 بياناتك لا تُحفظ الآن: تُوضع «معلّقة» حتى يضغط العضو المقصود زر ✅ تأكيد في القروب.
+            //    (هوية الضاغط يعرفها واتساب — لا يمكن لأحد التسجيل باسم غيره)
+            if (s.pending && s.pending.state === "pending" && now() - s.pending.createdAt < PENDING_TTL_MS) {
+                return res.json({
+                    ok: false,
+                    error: "⏳ بياناتك أُرسلت وهي بانتظار تأكيدك في القروب.\nاضغط زر «✅ تأكيد» هناك. وإن لم تكن بياناتك فاضغط «❌ ليس أنا»."
+                });
+            }
 
-            user.nickname = nickname;
-            user.gender = gender;
-            user.age = age;
-            user.referredBy = referrer;
-            user.registeredAt = now();
-            user.registrationDate = new Date().toISOString();
+            const subId = randomToken(6);
+            s.pending = {
+                subId,
+                nickname, referrer, gender, age,
+                state: "pending",
+                createdAt: now()
+            };
+            // نمدّد صلاحية الجلسة والأكواد لتكفي وقت التأكيد
+            s.expiresAt = Math.max(s.expiresAt, now() + PENDING_TTL_MS);
+            for (const c of claims.values()) {
+                if (c.sessionToken === s.token) c.expiresAt = s.expiresAt;
+            }
 
-            db.users[key] = user;
-            saveDb();
+            log(`📝 طلب تسجيل معلّق: ${nickname} (${s.targetUserId}) بانتظار تأكيد صاحبه`);
+            res.json({ ok: true, pending: true, nickname });
 
-            s.used = true;
-            s.nickname = nickname;
-
-            log(`🎉 تسجيل ناجح: ${nickname} (${key}) | من طرف: ${referrer}`);
-
-            const enterLink = s.groupUrl || process.env.GROUP_URL || "";
-
-            // ✅ الرد للواجهة أولاً (سريع)
-            res.json({ ok: true, nickname, enterLink });
-
-            // 🆕 إرسال الاستمارة + الصورة **بعد** الرد (لا يعطّل الواجهة)
+            // بطاقة التأكيد في القروب (أزرار ✅ / ❌)
             setImmediate(async () => {
                 try {
                     const sock = global.currentSocket;
-                    if (!sock) {
-                        logErr("⚠️ لا يوجد socket متاح — لم تُرسل الاستمارة");
+                    const fc = require("./flow-commands");
+                    if (!sock || !fc || typeof fc.sendConfirmCard !== "function") {
+                        logErr("⚠️ تعذّر إرسال بطاقة التأكيد (socket/flow-commands)");
                         return;
                     }
-                    if (!workSender || typeof workSender.sendWorkFormAfterRegister !== "function") {
-                        logErr("⚠️ flow-work-sender غير جاهز");
-                        return;
-                    }
-                    try {
-                        if (joinFlow && typeof joinFlow.start === "function") {
-                            joinFlow.start(sock, db, saveDb, {
-                                targetUserId: key,
-                                targetJid: s.targetJid,
-                                nickname
-                            });
-                        }
-                    } catch (e) { logErr("join-flow start:", e?.message || e); }
-
-                    await workSender.sendWorkFormAfterRegister(sock, db, {
-                        targetUserId: key,
-                        nickname,
-                        referredBy: referrer,
-                        createdBy: s.createdBy,
-                        chatJid: s.chatJid
-                    });
+                    await fc.sendConfirmCard(sock, s, s.pending);
                 } catch (e) {
-                    logErr("work-form dispatch:", e?.message || e);
+                    logErr("confirm-card:", e?.message || e);
                 }
             });
 
@@ -683,6 +771,9 @@ module.exports = {
     createSession,
     getSession,
     issueClaim,
+    confirmPending,
+    rejectPending,
+    getPending,
     setClaimCard,
     _internals: {
         sessions,
