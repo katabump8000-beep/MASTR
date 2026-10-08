@@ -110,7 +110,11 @@ function hasPermission(db, userNumber, levels, isOwner) {
 // إرسال البطاقة التفاعلية
 // ============================================================
 
+// REG_BUTTONS=0 → يعطّل كل الأزرار التفاعلية (أمان أكبر لحساب واتساب): يعمل كل شيء بأوامر نصية
+const buttonsEnabled = () => String(process.env.REG_BUTTONS || "1") !== "0";
+
 async function sendFlowCard(sock, jid, url, mentionedJid, quoted) {
+    if (!buttonsEnabled()) return false;
     const body =
         "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
         "━━━━━━━━━━━━━━━\n" +
@@ -141,6 +145,7 @@ async function sendFlowCard(sock, jid, url, mentionedJid, quoted) {
 
 /** زر «التالي» (quick_reply) — الضغط عليه يصل للبوت مع هوية الضاغط الحقيقية */
 async function sendNextButton(sock, jid, token) {
+    if (!buttonsEnabled()) return false;
     try {
         const { sendInteractiveMessage } = require("@qadeerxtech/qadeer-btns");
         await sendInteractiveMessage(sock, jid, {
@@ -253,7 +258,7 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
     const ok = await sendNextButton(sock, jid, session.token);
     if (!ok) {
         await safeSend(sock, jid, {
-            text: `⚠️ تعذّر إظهار الزر.\n@${targetNumber} اكتب: *.التالي*`,
+            text: `@${targetNumber}\nللمتابعة اكتب: *.التالي*`,
             mentions: [targetJid]
         });
     }
@@ -310,20 +315,6 @@ async function sendCardCaptured(sock, dest, url, code) {
         if (sock.sendMessage === wrapSend) sock.sendMessage = origSend;
     }
     return { ok, card: captured };
-}
-
-/** مرشحو الخاص: JID الضاغط كما وصل + صيغة الرقم الصريح */
-function dmCandidates(presserJid, presser) {
-    const out = [];
-    if (presserJid) out.push(bareJid(presserJid));
-    try {
-        const al = require("./jidfix").aliasesOf(presser) || [];
-        for (const a of al) {
-            const n = cleanNumber(a);
-            if (n.length >= 8 && n.length <= 15) out.push(n + "@s.whatsapp.net");
-        }
-    } catch (_) {}
-    return [...new Set(out)];
 }
 
 async function processNext(sock, jid, msg, db, cleanSender, token) {
@@ -385,57 +376,134 @@ async function processNext(sock, jid, msg, db, cleanSender, token) {
     const origin = registerOrigin();
     const url = `${pageBaseUrl()}/?c=${claim.code}&api=${encodeURIComponent(origin)}`;
 
-    // 🔒 الافتراضي: البطاقة تصل للعضو في الخاص فقط، فلا يراها أحد غيره.
-    //    REG_PRIVATE=0 → ترسل في القروب (مع حذفها فور فتح الصفحة).
-    const wantPrivate = String(process.env.REG_PRIVATE || "1") !== "0";
+    // 📌 كل رسائل البوت داخل القروب فقط (لا رسائل خاصة إطلاقاً — تفادياً لحظر واتساب).
+    //    الحماية: القفل على أول جهاز + حذف البطاقة فور فتح الصفحة + تأكيد صاحب الرقم داخل القروب.
+    const r = await sendCardCaptured(sock, jid, url, claim.code);
+    if (r.card) flowServer.setClaimCard(claim.code, r.card);
+    if (!r.ok) await safeSend(sock, jid, { text: "🔥 رجاءً سجّل بياناتك هنا 👇\n" + url });
 
-    let delivered = false;
-    if (wantPrivate) {
-        for (const dm of dmCandidates(presserJid, presser)) {
-            const r = await sendCardCaptured(sock, dm, url, claim.code);
-            if (r.ok) {
-                if (r.card) flowServer.setClaimCard(claim.code, r.card);
-                delivered = true;
-                await safeSend(sock, jid, {
-                    text: `✅ @${presser} أرسلنا لك رابط التسجيل في الخاص 📩\n(إن لم يصلك اضغط «التالي» مرة أخرى)`,
-                    mentions: presserJid ? [presserJid] : []
-                }, { quoted: msg });
-                break;
-            }
-            // الزر التفاعلي غير متاح → نص عادي في الخاص (يبقى سرياً)
-            const plain = await safeSend(sock, dm, { text: "🔥 رجاءً سجّل بياناتك هنا 👇\n" + url });
-            if (plain) {
-                delivered = true;
-                await safeSend(sock, jid, {
-                    text: `✅ @${presser} أرسلنا لك رابط التسجيل في الخاص 📩\n(إن لم يصلك اضغط «التالي» مرة أخرى)`,
-                    mentions: presserJid ? [presserJid] : []
-                }, { quoted: msg });
-                break;
-            }
+    log(`✅ ضغط صحيح من ${presser} → كود ${claim.code.slice(0, 6)}...`);
+    return true;
+}
+
+// ============================================================
+// بطاقة التأكيد: بعد إرسال الصفحة، العضو المقصود وحده يستطيع تثبيت التسجيل
+// ============================================================
+
+async function sendConfirmCard(sock, s, p) {
+    const chat = s.chatJid;
+    if (!chat) return false;
+    const num = cleanNumber(s.targetUserId);
+    const noButtons = !buttonsEnabled();
+
+    await safeSend(sock, chat, {
+        text: `@${num}\nأكّد بياناتك 👇`,
+        mentions: s.targetJid ? [s.targetJid] : []
+    });
+
+    const body =
+        "🔥 *𝑭. 𝑰. 𝑹* 🔥\n" +
+        "━━━━━━━━━━━━━━━\n" +
+        `🏷️ اللقب: ${p.nickname}\n` +
+        `🔰 من طرف: ${p.referrer}\n` +
+        `⚧ الجنس: ${p.gender}   👤 العمر: ${p.age || "—"}\n` +
+        "━━━━━━━━━━━━━━━\n" +
+        "هل هذه بياناتك؟";
+    if (noButtons) {
+        await safeSend(sock, chat, { text: body + "\n\nللتأكيد اكتب: *.تأكيد*\nإن لم تكن بياناتك: *.ليس_انا*" });
+        return true;
+    }
+    try {
+        const { sendInteractiveMessage } = require("@qadeerxtech/qadeer-btns");
+        await sendInteractiveMessage(sock, chat, {
+            text: body,
+            footer: "𝑭. 𝑰. 𝑹 🔥",
+            interactiveButtons: [
+                { name: "quick_reply", buttonParamsJson: JSON.stringify({ display_text: "✅ تأكيد", id: `flowok|${s.token}|${p.subId}` }) },
+                { name: "quick_reply", buttonParamsJson: JSON.stringify({ display_text: "❌ ليس أنا", id: `flowno|${s.token}|${p.subId}` }) }
+            ]
+        });
+        return true;
+    } catch (e) {
+        logErr("sendConfirmCard:", e?.message || e);
+        await safeSend(sock, chat, { text: body + "\n\nاكتب: *.تأكيد*  أو  *.ليس_انا*" });
+        return false;
+    }
+}
+
+async function processDecision(sock, jid, msg, db, cleanSender, token, subId, accept) {
+    const presser = cleanNumber(cleanSender);
+    const presserJid = msg?.key?.participant || (presser ? presser + "@s.whatsapp.net" : "");
+
+    const s = flowServer.getSession(token);
+    if (!s) {
+        await safeSend(sock, jid, { text: "⌛ انتهت صلاحية هذه البطاقة." }, { quoted: msg });
+        return true;
+    }
+
+    let jf = null;
+    try { jf = require("./jidfix"); } catch (_) {}
+    const isTarget =
+        (s.targetJid && bareJid(s.targetJid) === bareJid(presserJid)) ||
+        (jf ? jf.sameUser(s.targetUserId, presser) : cleanNumber(s.targetUserId) === presser);
+
+    // غير صاحب الرقم: ❌ مرة واحدة فقط ثم صمت
+    if (!isTarget) {
+        const rk = "d|" + token + "|" + presser;
+        if (rejectedOnce.has(rk)) return true;
+        rejectedOnce.add(rk);
+        try { await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } }); } catch (_) {}
+        await safeSend(sock, jid, {
+            text: `⛔ تعذّر الضغط @${presser}\nهذا الزر لصاحب الطلب فقط.`,
+            mentions: presserJid ? [presserJid] : []
+        }, { quoted: msg });
+        log(`🚫 محاولة تأكيد من غير صاحب الرقم: ${presser}`);
+        return true;
+    }
+
+    if (accept) {
+        const r = flowServer.confirmPending(token, subId);
+        if (!r.ok) {
+            const why = r.reason === "taken" ? "❌ اللقب أُخذ قبل التأكيد، سجّل بلقب آخر."
+                      : r.reason === "registered" ? "✅ أنت مسجل بالفعل."
+                      : "⌛ هذه البطاقة قديمة. اضغط «التالي» للبدء من جديد.";
+            await safeSend(sock, jid, { text: why }, { quoted: msg });
+            return true;
         }
+        try { await sock.sendMessage(jid, { react: { text: "✅", key: msg.key } }); } catch (_) {}
+        await safeSend(sock, jid, {
+            text: `🎉 تم تسجيلك @${presser}\nارجع للصفحة وادخل مملكة النار 🔥`,
+            mentions: presserJid ? [presserJid] : []
+        }, { quoted: msg });
+    } else {
+        const r = flowServer.rejectPending(token, subId);
+        try { await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } }); } catch (_) {}
+        await safeSend(sock, jid, {
+            text: r.ok ? "❌ أُلغي الطلب. اضغط «التالي» لتسجيل من جديد."
+                       : "⌛ هذه البطاقة قديمة."
+        }, { quoted: msg });
     }
-
-    if (!delivered) {
-        // الخاص غير ممكن (أو REG_PRIVATE=0) → في القروب
-        const r = await sendCardCaptured(sock, jid, url, claim.code);
-        if (r.card) flowServer.setClaimCard(claim.code, r.card);
-        if (!r.ok) await safeSend(sock, jid, { text: "🔗 رابط التسجيل:\n" + url });
-    }
-
-    log(`✅ ضغط صحيح من ${presser} → كود ${claim.code.slice(0, 6)}... (${delivered ? "خاص" : "قروب"})`);
     return true;
 }
 
 /** يُستدعى من flowreg.handleInteractive عند وصول زر لا يخص نظام flowreg القديم */
 async function handleFlowButton(sock, jid, msg, db, saveDb, cleanSender, id) {
     const sid = String(id || "");
-    if (!sid.startsWith("flowgo|")) return false;
+    const parts = sid.split("|");
     try {
-        await processNext(sock, jid, msg, db, cleanSender, sid.split("|")[1] || "");
+        if (parts[0] === "flowgo") {
+            await processNext(sock, jid, msg, db, cleanSender, parts[1] || "");
+            return true;
+        }
+        if (parts[0] === "flowok" || parts[0] === "flowno") {
+            await processDecision(sock, jid, msg, db, cleanSender, parts[1] || "", parts[2] || "", parts[0] === "flowok");
+            return true;
+        }
     } catch (e) {
         logErr("handleFlowButton:", e?.message || e);
+        return true;
     }
-    return true;
+    return false;
 }
 
 /** بديل نصي: .التالي (لو لم يظهر الزر عند العضو) */
@@ -587,6 +655,27 @@ async function handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, 
         }
     }
 
+    if (cmd === "تأكيد" || cmd === "ليس_انا") {
+        try {
+            let aliases = [cleanNumber(cleanSender)];
+            try { aliases = require("./jidfix").aliasesOf(cleanNumber(cleanSender)); } catch (_) {}
+            let token = "";
+            for (const a of aliases) {
+                const tk = flowServer._internals.sessionsByUser.get(a);
+                if (tk) { token = tk; break; }
+            }
+            const sess = token ? flowServer.getSession(token) : null;
+            if (!sess || !sess.pending || sess.pending.state !== "pending") {
+                await safeSend(sock, jid, { text: "⚠️ لا يوجد طلب تسجيل معلّق باسمك." }, { quoted: msg });
+                return true;
+            }
+            return await processDecision(sock, jid, msg, db, cleanSender, token, sess.pending.subId, cmd === "تأكيد");
+        } catch (e) {
+            logErr("decision text:", e?.message || e);
+            return true;
+        }
+    }
+
     if (cmd === "التالي") {
         try {
             return await handleNextText(sock, jid, msg, db, cleanSender);
@@ -618,6 +707,7 @@ async function handleFlowCommand(sock, jid, msg, text, db, saveDb, cleanSender, 
 module.exports = {
     handleFlowCommand,
     handleFlowButton,
+    sendConfirmCard,
     handleNewCommand,
     handleResetCommand,
     _sendFlowCard: sendFlowCard
