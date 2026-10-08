@@ -266,7 +266,8 @@ async function handleNewCommand(sock, jid, msg, db, saveDb, cleanSender, isOwner
 // ضغط «التالي»: هوية الضاغط تأتي من واتساب نفسه (لا يمكن تزويرها)
 // ============================================================
 
-const lastPress = new Map();   // number -> time
+const lastPress = new Map();      // number -> time (منع الضغط السريع)
+const rejectedOnce = new Set();   // "token|number" — الرفض يظهر مرة واحدة فقط
 
 function registerOrigin() {
     let u = String(process.env.PUBLIC_URL || "").trim();
@@ -274,15 +275,60 @@ function registerOrigin() {
     return u;
 }
 
+function bareJid(j) {
+    // 966500000001:12@s.whatsapp.net → 966500000001@s.whatsapp.net
+    const s = String(j || "");
+    const at = s.indexOf("@");
+    if (at === -1) return s;
+    return s.slice(0, at).split(":")[0] + s.slice(at);
+}
+
+/** يرسل بطاقة التسجيل ويلتقط مفتاح الرسالة (لحذفها فور فتح الصفحة) */
+async function sendCardCaptured(sock, dest, url, code) {
+    let captured = null;
+    const origRelay = sock.relayMessage;
+    const origSend = sock.sendMessage;
+    const has = (x) => { try { return JSON.stringify(x).includes(code); } catch (_) { return false; } };
+
+    const wrapRelay = async function (j, m, opts) {
+        if (!captured && j === dest && has(m) && opts && opts.messageId) captured = { jid: j, id: opts.messageId };
+        return origRelay.apply(this, arguments);
+    };
+    const wrapSend = async function (j, c) {
+        const r = await origSend.apply(this, arguments);
+        if (!captured && j === dest && r && r.key && r.key.id && has(c)) captured = { jid: j, id: r.key.id };
+        return r;
+    };
+    if (typeof origRelay === "function") sock.relayMessage = wrapRelay;
+    sock.sendMessage = wrapSend;
+
+    let ok = false;
+    try {
+        ok = await sendFlowCard(sock, dest, url, null);
+    } finally {
+        if (sock.relayMessage === wrapRelay) sock.relayMessage = origRelay;
+        if (sock.sendMessage === wrapSend) sock.sendMessage = origSend;
+    }
+    return { ok, card: captured };
+}
+
+/** مرشحو الخاص: JID الضاغط كما وصل + صيغة الرقم الصريح */
+function dmCandidates(presserJid, presser) {
+    const out = [];
+    if (presserJid) out.push(bareJid(presserJid));
+    try {
+        const al = require("./jidfix").aliasesOf(presser) || [];
+        for (const a of al) {
+            const n = cleanNumber(a);
+            if (n.length >= 8 && n.length <= 15) out.push(n + "@s.whatsapp.net");
+        }
+    } catch (_) {}
+    return [...new Set(out)];
+}
+
 async function processNext(sock, jid, msg, db, cleanSender, token) {
     const presser = cleanNumber(cleanSender);
     const presserJid = msg?.key?.participant || (presser ? presser + "@s.whatsapp.net" : "");
-
-    // منع الضغط المتكرر السريع
-    const t = Date.now();
-    if (t - (lastPress.get(presser) || 0) < 2500) return true;
-    lastPress.set(presser, t);
-    if (lastPress.size > 2000) lastPress.clear();
 
     const s = flowServer.getSession(token);
     if (!s) {
@@ -294,20 +340,31 @@ async function processNext(sock, jid, msg, db, cleanSender, token) {
 
     let jf = null;
     try { jf = require("./jidfix"); } catch (_) {}
-    const isTarget = jf ? jf.sameUser(s.targetUserId, presser)
-                        : cleanNumber(s.targetUserId) === presser;
+    const isTarget =
+        (s.targetJid && bareJid(s.targetJid) === bareJid(presserJid)) ||
+        (jf ? jf.sameUser(s.targetUserId, presser) : cleanNumber(s.targetUserId) === presser);
 
-    // غير المقصود: ❌ + رفض بدون رابط
+    // ❌ غير المقصود: «تعذّر الضغط» مرة واحدة فقط، وبعدها يُتجاهل بصمت. ولا يُعطى أي رابط.
     if (!isTarget) {
-        flowServer.issueClaim({ token, presserNumber: presser, isTarget: false });
+        const rk = token + "|" + presser;
+        if (rejectedOnce.has(rk)) return true;
+        rejectedOnce.add(rk);
+        if (rejectedOnce.size > 5000) rejectedOnce.clear();
+
         try { await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } }); } catch (_) {}
         await safeSend(sock, jid, {
-            text: `⛔ عذراً @${presser}\nأنت لست العضو المقصود تسجيله.`,
+            text: `⛔ تعذّر الضغط @${presser}\nهذا الزر ليس لك، أنت لست العضو المقصود تسجيله.`,
             mentions: presserJid ? [presserJid] : []
         }, { quoted: msg });
         log(`🚫 ضغط من غير المقصود: ${presser} (الجلسة لـ ${s.targetUserId})`);
         return true;
     }
+
+    // منع الضغط المتكرر السريع من المقصود
+    const t = Date.now();
+    if (t - (lastPress.get(presser) || 0) < 2500) return true;
+    lastPress.set(presser, t);
+    if (lastPress.size > 2000) lastPress.clear();
 
     // مسجل مسبقاً؟
     try {
@@ -317,7 +374,7 @@ async function processNext(sock, jid, msg, db, cleanSender, token) {
         }
     } catch (_) {}
 
-    // المقصود: ✅ + كود جديد + بطاقة التسجيل
+    // ✅ المقصود: كود جديد خاص به (يُبطل القديم)
     const claim = flowServer.issueClaim({ token, presserNumber: presser, isTarget: true });
     if (!claim) {
         await safeSend(sock, jid, { text: "⌛ انتهت صلاحية الجلسة." }, { quoted: msg });
@@ -328,22 +385,44 @@ async function processNext(sock, jid, msg, db, cleanSender, token) {
     const origin = registerOrigin();
     const url = `${pageBaseUrl()}/?c=${claim.code}&api=${encodeURIComponent(origin)}`;
 
-    // REG_PRIVATE=1 → البطاقة تصل للعضو في الخاص فقط (الأكثر أماناً)
-    const priv = String(process.env.REG_PRIVATE || "") === "1" && presserJid;
-    const dest = priv ? presserJid : jid;
+    // 🔒 الافتراضي: البطاقة تصل للعضو في الخاص فقط، فلا يراها أحد غيره.
+    //    REG_PRIVATE=0 → ترسل في القروب (مع حذفها فور فتح الصفحة).
+    const wantPrivate = String(process.env.REG_PRIVATE || "1") !== "0";
 
-    let sent = await sendFlowCard(sock, dest, url, null, msg);
-    if (!sent && priv) sent = await sendFlowCard(sock, jid, url, null, msg);
-    if (!sent) {
-        await safeSend(sock, dest, { text: "🔗 رابط التسجيل:\n" + url });
-    } else if (priv) {
-        await safeSend(sock, jid, {
-            text: `✅ @${presser} أرسلنا لك رابط التسجيل في الخاص.`,
-            mentions: presserJid ? [presserJid] : []
-        }, { quoted: msg });
+    let delivered = false;
+    if (wantPrivate) {
+        for (const dm of dmCandidates(presserJid, presser)) {
+            const r = await sendCardCaptured(sock, dm, url, claim.code);
+            if (r.ok) {
+                if (r.card) flowServer.setClaimCard(claim.code, r.card);
+                delivered = true;
+                await safeSend(sock, jid, {
+                    text: `✅ @${presser} أرسلنا لك رابط التسجيل في الخاص 📩\n(إن لم يصلك اضغط «التالي» مرة أخرى)`,
+                    mentions: presserJid ? [presserJid] : []
+                }, { quoted: msg });
+                break;
+            }
+            // الزر التفاعلي غير متاح → نص عادي في الخاص (يبقى سرياً)
+            const plain = await safeSend(sock, dm, { text: "🔥 رجاءً سجّل بياناتك هنا 👇\n" + url });
+            if (plain) {
+                delivered = true;
+                await safeSend(sock, jid, {
+                    text: `✅ @${presser} أرسلنا لك رابط التسجيل في الخاص 📩\n(إن لم يصلك اضغط «التالي» مرة أخرى)`,
+                    mentions: presserJid ? [presserJid] : []
+                }, { quoted: msg });
+                break;
+            }
+        }
     }
 
-    log(`✅ ضغط صحيح من ${presser} → كود ${claim.code.slice(0, 6)}...`);
+    if (!delivered) {
+        // الخاص غير ممكن (أو REG_PRIVATE=0) → في القروب
+        const r = await sendCardCaptured(sock, jid, url, claim.code);
+        if (r.card) flowServer.setClaimCard(claim.code, r.card);
+        if (!r.ok) await safeSend(sock, jid, { text: "🔗 رابط التسجيل:\n" + url });
+    }
+
+    log(`✅ ضغط صحيح من ${presser} → كود ${claim.code.slice(0, 6)}... (${delivered ? "خاص" : "قروب"})`);
     return true;
 }
 
