@@ -100,6 +100,21 @@ function isSimilarNickname(existing, newName) {
     return (matches / min) > 0.85;
 }
 
+// 🔤 اللقب: حروف عربية فقط (بدون تشكيل/تطويل/زخرفة/أرقام/رموز/إيموجي)، كلمات مفصولة بمسافة واحدة
+const ARABIC_NICK_RE = /^[\u0621-\u063A\u0641-\u064A]+(?: [\u0621-\u063A\u0641-\u064A]+)*$/;
+const NICK_RULE_MSG = "⚠️ اللقب بالحروف العربية فقط — بدون زخرفة أو تشكيل أو أرقام أو رموز أو إيموجي.";
+function isValidNickname(n) { return ARABIC_NICK_RE.test(String(n || "")); }
+
+// 🔰 حقل «من طرف»: نمنع رموز تنسيق واتساب والمنشن والروابط (حقن داخل رسائل البوت)
+function referrerProblem(r) {
+    const t = String(r || "");
+    if (/[*_~`@#<>\\\/|{}\[\]]/.test(t)) return "⚠️ اسم من دعاك لا يجوز أن يحتوي رموزاً خاصة.";
+    if (/https?:|www\.|\.(com|net|org|me|io|ly|gl)\b/i.test(t)) return "⚠️ ممنوع كتابة روابط في هذا الحقل.";
+    return "";
+}
+
+const ALLOWED_GENDERS = ["ذكر", "أنثى", "مخصص"];
+
 function getDb() { try { return global.db || null; } catch (_) { return null; } }
 function saveDb() { try { if (typeof global.saveDb === "function") global.saveDb(); } catch (_) {} }
 
@@ -219,6 +234,26 @@ function issueClaim({ token, presserNumber, isTarget }) {
     return claim;
 }
 
+/** تسجيل مفتاح رسالة بطاقة التسجيل (لحذفها عند أول فتح) */
+function setClaimCard(code, card) {
+    const c = claims.get(String(code || ""));
+    if (c && card && card.jid && card.id) c.cardKey = { jid: card.jid, id: card.id };
+}
+
+async function deleteCard(c) {
+    try {
+        if (!c || !c.cardKey) return;
+        const sock = global.currentSocket;
+        if (!sock) return;
+        await sock.sendMessage(c.cardKey.jid, {
+            delete: { remoteJid: c.cardKey.jid, fromMe: true, id: c.cardKey.id }
+        });
+        log("🗑️ حُذفت بطاقة التسجيل بعد فتح الصفحة");
+    } catch (e) {
+        logErr("deleteCard:", e?.message || e);
+    }
+}
+
 /**
  * يتحقق من الكود القادم من الصفحة
  * @returns {{status:number, json:Object}|{claim:Object, session:Object}}
@@ -243,7 +278,10 @@ function authClaim(body, ip) {
     // أول جهاز يفتح الرابط يُقفل عليه (بصمة المتصفح أو نفس الـ IP، لأن متصفح واتساب الداخلي
     // وكروم قد يختلفان في التخزين لكنهما يشتركان بنفس الشبكة). غيره يُرفض.
     if (c.dev && c.dev !== dev && c.ip !== ip) return notYours;
-    if (!c.dev) { c.dev = dev; c.ip = ip; }
+    if (!c.dev) {
+        c.dev = dev; c.ip = ip;
+        setImmediate(() => deleteCard(c));      // 🗑️ حذف رسالة/زر التسجيل فور فتح الصفحة
+    }
 
     return { claim: c, session: s };
 }
@@ -421,6 +459,7 @@ function createApp() {
 
             const nick = cleanText((req.body || {}).nickname, 30);
             if (nick.length < 2) return res.json({ ok: true, taken: false });
+            if (!isValidNickname(nick)) return res.json({ ok: true, taken: false, invalid: true });
 
             const db = getDb();
             if (!db) return res.json({ ok: true, taken: false });
@@ -469,11 +508,13 @@ function createApp() {
 
             if (nickname.length < 2) errors.nickname = "⚠️ يرجى كتابة لقب من حرفين على الأقل.";
             else if (nickname.length > 30) errors.nickname = "⚠️ اللقب طويل جداً (30 حرفاً كحد أقصى).";
+            else if (!isValidNickname(nickname)) errors.nickname = NICK_RULE_MSG;
 
             if (referrer.length < 2) errors.referrer = "⚠️ يرجى كتابة من طرف من دخلت.";
             else if (referrer.length > 40) errors.referrer = "⚠️ الاسم طويل جداً (40 حرفاً كحد أقصى).";
+            else if (referrerProblem(referrer)) errors.referrer = referrerProblem(referrer);
 
-            if (!gender || gender.length < 1) errors.gender = "⚠️ يرجى اختيار جنسك.";
+            if (ALLOWED_GENDERS.indexOf(gender) === -1) errors.gender = "⚠️ يرجى اختيار جنسك من القائمة.";
 
             let age = null;
             if (ageRaw !== undefined && ageRaw !== null && ageRaw !== "") {
@@ -642,11 +683,13 @@ module.exports = {
     createSession,
     getSession,
     issueClaim,
+    setClaimCard,
     _internals: {
         sessions,
         sessionsByUser,
         claims,
         findNicknameOwner,
+        isValidNickname,
         isRegistered,
         normalizeArabic,
         resolvePort,
